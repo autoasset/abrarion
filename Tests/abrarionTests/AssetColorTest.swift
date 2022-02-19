@@ -12,7 +12,7 @@ import Stem
 
 class AssetColorTest: AbrarionTests {
     
-    func testOutColorsets() throws {
+    func testOutColorsets() async throws {
         let config = """
         [
             {"注释": "紫 Purple", "any": "#f1ebff" },
@@ -79,12 +79,18 @@ class AssetColorTest: AbrarionTests {
         """
         let json = JSON(parseJSON: config)
         let sets = XCAssetsColor.parse(colorSets: json)
-        try XCAssetsColor.createColorsetFiles(sets: sets,
-                                              folder: .init(sanbox: .document).create(folder: "Abrarion").create(folder: "colorset"))
         
-        try XCAssetsColor.createCodeFiles(sets: sets,
-                                          template: XCAssetsColor.parse(template: nil),
-                                          folder: .init(sanbox: .document).create(folder: "Abrarion").create(folder: "codes"))
+        await withThrowingTaskGroup(of: Void.self, returning: Void.self) { group in
+            group.addTask {
+                try await XCAssetsColor.createColorsetFiles(sets: sets,
+                                                            folder: .init(sanbox: .document).create(folder: "Abrarion").create(folder: "colorset"))
+            }
+            group.addTask {
+                try await XCAssetsColor.createCodeFiles(sets: sets,
+                                                        template: XCAssetsColor.parse(template: nil),
+                                                        folder: .init(sanbox: .document).create(folder: "Abrarion").create(folder: "codes"))
+            }
+        }
     }
     
     func testContentFile() throws {

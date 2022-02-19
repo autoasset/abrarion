@@ -31,31 +31,29 @@ public final class XCAssetsColor: ParsableCommand {
     
     public init() {}
     
-    public func run() throws {
+    public func run() async throws {
         guard let colors = try json(from: colors) else {
             return
         }
         
         let sets = XCAssetsColor.parse(colorSets: colors)
         let folder = try FilePath.Folder(path: xcassetsPath)
-        try XCAssetsColor.createColorsetFiles(sets: sets, folder: folder)
         
-        if let output = codePath {
-            let template = XCAssetsColor.parse(template: try? json(from: template))
-            let folder = try FilePath.Folder(path: output)
-            try XCAssetsColor.createCodeFiles(sets: sets, template: template, folder: folder)
+        try await withThrowingTaskGroup(of: Void.self, returning: Void.self) { group in
+           group.addTask {
+               try await XCAssetsColor.createColorsetFiles(sets: sets, folder: folder)
+           }
+           if let output = codePath {
+               let template = XCAssetsColor.parse(template: try? json(from: template))
+               let folder = try FilePath.Folder(path: output)
+               try await XCAssetsColor.createCodeFiles(sets: sets, template: template, folder: folder)
+           }
         }
     }
     
 }
 
-
-
 extension XCAssetsColor {
-    
-    static func useCommandLine() throws {
-        
-    }
     
     static func parse(template json: JSON?) -> XCColorTemplate {
         if let json = json {
@@ -110,7 +108,7 @@ extension XCAssetsColor {
             }
     }
     
-    static func createColorsetFiles(sets: [XCColorSet], folder: FilePath.Folder) throws {
+    static func createColorsetFiles(sets: [XCColorSet], folder: FilePath.Folder) async throws {
         try sets.map { set in
             try XCColorsetController(set: set).output()
         }
@@ -124,7 +122,7 @@ extension XCAssetsColor {
         })
     }
     
-    static func createCodeFiles(sets: [XCColorSet], template: XCColorTemplate, folder: FilePath.Folder) throws {
+    static func createCodeFiles(sets: [XCColorSet], template: XCColorTemplate, folder: FilePath.Folder) async throws {
         try XCColorCodesController(template: template, sets: sets)
             .output()
             .forEach { output in
