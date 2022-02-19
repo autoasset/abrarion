@@ -7,14 +7,14 @@
 
 import Foundation
 
-struct XCColorSetTemplateController {
+struct XCColorCodesController {
 
     struct Output {
         let name: String
         let code: String
     }
     
-    let template: XCColorTemplateController
+    let template: XCColorTemplateDataSource
     
     init(template: XCColorTemplate, sets: [XCColorSet]) {
         self.template = .init(model: template, colors: sets)
@@ -22,7 +22,7 @@ struct XCColorSetTemplateController {
     
 }
 
-extension XCColorSetTemplateController {
+extension XCColorCodesController {
     
     func output() -> [Output] {
         return [

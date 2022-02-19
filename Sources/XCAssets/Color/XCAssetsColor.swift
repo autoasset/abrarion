@@ -112,7 +112,7 @@ extension XCAssetsColor {
     
     static func createColorsetFiles(sets: [XCColorSet], folder: FilePath.Folder) throws {
         try sets.map { set in
-            try XCColorSetFileIOController(set: set).output()
+            try XCColorsetController(set: set).output()
         }
         .joined()
         .map({ $0 })
@@ -125,7 +125,7 @@ extension XCAssetsColor {
     }
     
     static func createCodeFiles(sets: [XCColorSet], template: XCColorTemplate, folder: FilePath.Folder) throws {
-        try XCColorSetTemplateController(template: template, sets: sets)
+        try XCColorCodesController(template: template, sets: sets)
             .output()
             .forEach { output in
                 guard let data = output.code.data(using: .utf8) else {

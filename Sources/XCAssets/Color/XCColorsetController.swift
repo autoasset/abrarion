@@ -8,7 +8,7 @@
 import Foundation
 import Stem
 
-struct XCColorSetFileIOController {
+struct XCColorsetController {
     
     struct Output {
         let name: String
@@ -18,7 +18,7 @@ struct XCColorSetFileIOController {
     let set: XCColorSet
 }
 
-extension XCColorSetFileIOController {
+extension XCColorsetController {
     
     func output() throws -> [Output] {
         var content = [String: Any]()
@@ -54,7 +54,7 @@ extension XCColorSetFileIOController {
 }
 
 
-extension XCColorSetFileIOController {
+extension XCColorsetController {
     
     func components(_ color: StemColor) -> [String: String] {
         let formatter = NumberFormatter()

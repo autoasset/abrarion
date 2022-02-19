@@ -1,6 +1,6 @@
 import Stem
 
-class XCColorTemplateController {
+class XCColorTemplateDataSource {
     
     let model: XCColorTemplate
     let colors: [XCColorSet]
