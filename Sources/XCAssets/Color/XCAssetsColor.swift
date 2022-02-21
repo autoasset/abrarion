@@ -24,7 +24,7 @@ public final class XCAssetsColor: ParsableCommand {
     var codePath: String?
     
     @Option(name: [.short, .long], help: "配置文件路径")
-    public var colors: String?
+    public var config: String?
     
     @Option(name: [.short, .long], help: "模板文件路径")
     public var template: String?
@@ -32,7 +32,7 @@ public final class XCAssetsColor: ParsableCommand {
     public init() {}
     
     public func run() async throws {
-        guard let colors = try json(from: colors) else {
+        guard let colors = try json(from: config) else {
             return
         }
         

@@ -14,61 +14,27 @@ struct XCColorSet {
         case displayP3 = "display-p3"
     }
     
-    enum Luminosity: String {
-        case light
-        case dark
-    }
-    
-    enum Contrast: String {
-        case high
-    }
-    
-    enum Appearances {
-        case luminosity(Luminosity)
-        case contrast(Contrast)
-    }
-    
-    enum DisplayGamut: String {
-        case sRGB
-        case displayP3 = "display-P3"
-    }
-    
-    enum Subtype: String {
-        case macCatalyst = "mac-catalyst"
-    }
-    
-    enum Idiom: String {
-        case universal
-        case iphone
-        case ipad
-        case tv
-        case mac
-    }
-    
     struct Color {
         
-        let appearances: [Appearances]
+        let appearances: [Appearance]
         let space: ColorSpace
         let value: StemColor
         let displayGamut: DisplayGamut?
         let locale: Locale?
-        let idiom: Idiom
-        let subtype: Subtype?
+        let devices: Devices
         
-        internal init(appearances: [XCColorSet.Appearances],
+        internal init(appearances: [Appearance],
                       space: XCColorSet.ColorSpace,
                       value: StemColor,
-                      displayGamut: XCColorSet.DisplayGamut? = nil,
+                      displayGamut: DisplayGamut? = nil,
                       locale: Locale? = nil,
-                      idiom: XCColorSet.Idiom = .universal,
-                      subtype: XCColorSet.Subtype? = nil) {
+                      devices: Devices = .init(idiom: .universal, subtype: nil)) {
             self.appearances = appearances
             self.space = space
             self.value = value
             self.displayGamut = displayGamut
             self.locale = locale
-            self.idiom = idiom
-            self.subtype = subtype
+            self.devices = devices
         }
     }
     
@@ -77,13 +43,13 @@ struct XCColorSet {
     let colors: [Color]
     
     let properties: [String: Any]
-    let info: [String : Any]
+    let info: Info
     
     init(names: [String],
          ivars: [String],
          colors: [XCColorSet.Color],
          properties: [String: Any] = ["localizable": true],
-         info: [String : Any] = ["author": "xcode", "version": 1]) {
+         info: Info = .xcode) {
         self.names = names
         self.colors = colors
         self.properties = properties
@@ -95,7 +61,7 @@ struct XCColorSet {
         self.names = []
         self.ivars = []
         self.properties = json["properties"].dictionaryObject ?? [:]
-        self.info = json["info"].dictionaryObject ?? [:]
+        self.info = .init(from: json["info"])
         self.colors = try json["colors"].arrayValue.map({ json in
             
             let components = json["color"]["components"]
@@ -123,77 +89,13 @@ struct XCColorSet {
                 let space = StemColor.RGBSpace(list)
                 color = .init(rgb: space, alpha: alpha)
             }
-            
-            let appearances = json["appearances"].arrayValue.compactMap({ json -> Appearances? in
-                let appearance = json["appearance"].stringValue
-                let value = json["value"].stringValue
-                switch appearance {
-                    case "luminosity":
-                    guard let item = Luminosity(rawValue: value) else {
-                        return nil
-                    }
-                    return Appearances.luminosity(item)
-                case "contrast":
-                    guard let item = Contrast(rawValue: value) else {
-                        return nil
-                    }
-                    return Appearances.contrast(item)
-                default:
-                    return nil
-                }
-            })
-                        
-            return Color(appearances: appearances,
+                                    
+            return Color(appearances: [Appearance](from: json["appearances"]),
                          space: ColorSpace(rawValue: json["color"]["color-space"].stringValue) ?? .displayP3,
                          value: color,
-                         displayGamut: DisplayGamut(rawValue: json["display-gamut"].stringValue),
+                         displayGamut: DisplayGamut(from: json),
                          locale: json["locale"].string.flatMap(Locale.init(identifier:)),
-                         idiom: json["idiom"].string.flatMap(Idiom.init(rawValue:)) ?? .universal,
-                         subtype: json["subtype"].string.flatMap(Subtype.init(rawValue:)))
+                         devices: .init(from: json) ?? .init(idiom: .universal, subtype: nil))
         })
     }
-}
-
-
-extension Array where Element == XCColorSet.Color {
-
-    func firstNoLuminosity() -> Element? {
-        for item in self {
-            if item.appearances.isEmpty {
-                return item
-            }
-        }
-        return nil
-    }
-    
-    func first(by luminosity: XCColorSet.Luminosity) -> Element? {
-        for item in self {
-            for appearance in item.appearances {
-                switch appearance {
-                case .luminosity(let value):
-                    if luminosity == value {
-                        return item
-                    }
-                case .contrast:
-                    break
-                }
-            }
-        }
-        return nil
-    }
-    
-    
-}
-
-extension XCColorSet.Appearances {
-    
-    var toJSON: [String: String] {
-        switch self {
-        case .luminosity(let luminosity):
-            return ["luminosity": luminosity.rawValue]
-        case .contrast(let contrast):
-            return ["contrast": contrast.rawValue]
-        }
-    }
-    
 }

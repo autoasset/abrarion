@@ -38,7 +38,7 @@ extension XCColorsetController {
                 dict["appearance"] = color.appearances.map(\.toJSON)
             }
             
-            dict["idiom"] = color.idiom.rawValue
+            dict.merge(color.devices.toJSON, uniquingKeysWith: { $1 })
             
             colors.append(dict)
         }

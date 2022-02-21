@@ -12,7 +12,7 @@ import Stem
 
 class AssetColorTest: AbrarionTests {
     
-    func testOutColorsets() async throws {
+    func testParseConfig() async throws {
         let config = """
         [
             {"注释": "紫 Purple", "any": "#f1ebff" },
@@ -93,7 +93,7 @@ class AssetColorTest: AbrarionTests {
         }
     }
     
-    func testContentFile() throws {
+    func testParseContent() throws {
         let content = """
 {
   "colors" : [

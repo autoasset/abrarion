@@ -11,7 +11,9 @@ import Stem
 
 public final class XCAssets: ParsableCommand {
     
-    public static let configuration = CommandConfiguration(commandName: "xcassets", subcommands: [XCAssetsColor.self])
+    public static let configuration = CommandConfiguration(commandName: "xcassets",
+                                                           subcommands: [XCAssetsColor.self,
+                                                                         XCAssetsImage.self])
     
     public init() {}
     

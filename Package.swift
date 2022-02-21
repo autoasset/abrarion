@@ -35,9 +35,6 @@ let package = Package(
                 Stem,
                 .init(stringLiteral: Core),
                 ArgumentParser
-            ],
-            resources: [
-                .copy("color_core.template")
             ]
         ),
         .target(
