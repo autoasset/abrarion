@@ -11,41 +11,81 @@ import Core
 import Stem
 import SwiftGit
 
-public final class Download: ParsableCommand {
+public final class Download: AsyncParsableCommand {
     
     public static let configuration = CommandConfiguration(commandName: "download",
-                                                           subcommands: [])
-    
-    @Argument
-    public var source: String?
-    @Argument
-    public var output: String?
-    
-    
-    @Option(name: [.customLong("config")], help: "配置文件路径")
-    public var config: String?
-    
-    public func validate() throws {
-        if source == nil, config == nil {
-            throw ParsableCommandError.parsableFail
-        }
-    }
+                                                           subcommands: [ConfigCommand.self,
+                                                                         DefaultCommand.self],
+                                                           defaultSubcommand: DefaultCommand.self)
     
     public init() {}
-    
-    public func run() async throws {
-        guard let source = source, let source = URL(string: source) else {
-            throw ParsableCommandError.parsableFail
-        }
-        switch Self.checkSourceType(source: source) {
-            case .http:
-            let model = DownloadModel(mode: .http, source: source, output: output!)
-            try await Download.useHttp(model)
-            case .git:
-            let model = DownloadModel(mode: .git, source: source, output: output!)
-            try Download.useGit(model)
-        }
 
+    public func run() async throws { }
+}
+
+extension Download {
+    
+    final class DefaultCommand: AsyncParsableCommand {
+
+        public static let configuration = CommandConfiguration(commandName: "default")
+        
+        @Option(name: [.long, .short])
+        public var source: String
+        @Option(name: [.long, .short])
+        public var output: String
+        
+        public init() {}
+
+        public func run() async throws {
+            guard let source = URL(string: source) else {
+                throw ParsableCommandError.parsableFail
+            }
+            switch Download.checkSourceType(source: source) {
+                case .http:
+                let model = DownloadModel(mode: .http, source: source, output: output)
+                try await Download.useHttp(model)
+                case .git:
+                let model = DownloadModel(mode: .git, source: source, output: output)
+                try Download.useGit(model)
+            case .auto:
+                break
+            }
+        }
+        
+    }
+    
+    final class ConfigCommand: ParsableCommand {
+        public static let configuration = CommandConfiguration(commandName: "config",
+                                                               subcommands: [])
+        
+        @Argument(help: "配置文件路径", completion: CompletionKind.file())
+        public var source: String
+        
+        public init() {}
+
+        public func run() async throws {
+            guard let json = try json(from: source) else {
+                throw ParsableCommandError.parsableFail
+            }
+            
+            let config = DownloadConfig(from: json)
+            for model in config.models {
+              await withThrowingTaskGroup(of: Void.self) { group in
+                    group.addTask(priority: .high) {
+                        switch Download.checkSourceType(source: model.source) {
+                        case .http:
+                            let model = DownloadModel(mode: .http, source: model.source, output: model.output)
+                            try await Download.useHttp(model)
+                        case .git:
+                            let model = DownloadModel(mode: .git, source: model.source, output: model.output)
+                            try Download.useGit(model)
+                        case .auto:
+                            break
+                        }
+                    }
+                }
+            }
+        }
     }
     
 }
@@ -86,7 +126,7 @@ extension Download {
                                                                                                       passphrase: passphrase)) {
         case .failure(let error):
             throw error
-        case .success(let value):
+        case .success:
             break
         }
     }

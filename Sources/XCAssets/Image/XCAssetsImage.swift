@@ -14,129 +14,137 @@ public final class XCAssetsImage: ParsableCommand {
     
     public static let configuration = CommandConfiguration(commandName: "image", subcommands: [])
     
-    @Argument(parsing: .unconditionalRemaining)
-    var names: [String]
-    
     @Option(name: [.short, .long], help: "配置文件路径")
     public var config: String?
     
-    @Option(name: [.short, .long], help: "输出文件夹路径")
-    var xcassetsPath: String
-    
-    @Option(name: [.short, .long], help: "输出文件夹路径")
-    var codePath: String?
-    
-    @Option(name: [.short, .long], help: "配置文件路径")
-    public var contents: String?
-    
-    @Option(name: [.short, .long], help: "配置文件路径")
-    public var input: [String]
-
     @Option(name: [.short, .long], help: "模板文件路径")
     public var template: String?
     
     public init() {}
     
     public func run() async throws {
-        guard let colors = try json(from: config) else {
-            return
-        }
-        
-        let sets = XCAssetsColor.parse(colorSets: colors)
-        let folder = try FilePath.Folder(path: xcassetsPath)
-        
-        try await withThrowingTaskGroup(of: Void.self, returning: Void.self) { group in
-           group.addTask {
-               try await XCAssetsColor.createColorsetFiles(sets: sets, folder: folder)
-           }
-           if let output = codePath {
-               let template = XCAssetsColor.parse(template: try? json(from: template))
-               let folder = try FilePath.Folder(path: output)
-               try await XCAssetsColor.createCodeFiles(sets: sets, template: template, folder: folder)
-           }
-        }
+        guard let json = try json(from: config),
+              let config = try XCImageConfig(from: json) else {
+                  return
+              }
+        try await Self.createColorsetFiles(config: config)
     }
     
 }
 
 extension XCAssetsImage {
     
-    static func parse(template json: JSON?) -> XCColorTemplate {
-        if let json = json {
-            return XCColorTemplate(instanceName: json["instance_name"].string ?? "AbrarionColor",
-                                   protocolName: json["protocol_name"].string ?? "AbrarionColorProtocol")
-        }
-        return XCColorTemplate(instanceName: "AbrarionColor", protocolName: "AbrarionColorProtocol")
-    }
-    
-    static func parse(colorSets json: JSON) -> [XCColorSet] {
-        return json.arrayValue
-            .map { json -> XCColorSet in
-                
-                var any: XCColorSet.Color?
-                var light: XCColorSet.Color?
-                var dark: XCColorSet.Color?
-                
-                if let hex = json["dark"].string {
-                    dark = XCColorSet.Color(appearances: [.luminosity(.dark)],
-                                            space: .displayP3,
-                                            value: .init(hex: hex))
+    static func createColorsetFiles(config: XCImageConfig) async throws {
+        let xcassets = try FilePath.Folder(path: config.paths.xcassets)
+        
+        let output = try await withThrowingTaskGroup(of: XCImagesetController.Output.self,
+                                                     returning: XCImagesetController.Output.self) { group in
+            for path in config.paths.images {
+                group.addTask(priority: .background) {
+                    let folder = try FilePath.Folder(path: path)
+                    return try await XCImagesetController.output(from: folder.allSubFilePaths().compactMap(\.asFile),
+                                                                 darkModePatterns: config.darkModePatterns)
                 }
-                
-                if let hex = json["any"].string {
-                    any = XCColorSet.Color(appearances: [],
-                                           space: .displayP3,
-                                           value: .init(hex: hex))
-                }
-                
-                if let hex = json["light"].string {
-                    light = XCColorSet.Color(appearances: [.luminosity(.light)],
-                                             space: .displayP3,
-                                             value: .init(hex: hex))
-                } else if dark != nil, let temp = any {
-                    light = XCColorSet.Color(appearances: [.luminosity(.light)],
-                                             space: .displayP3,
-                                             value: temp.value)
-                }
-                
-                var names = json["names"].arrayValue.compactMap(\.string)
-                var ivars = names
-                
-                if names.isEmpty,
-                   let hex = (light ?? any)?.value.hexString(.auto, prefix: .none) {
-                    names.append(hex)
-                    ivars.append("_\(hex)")
-                }
-                
-                return XCColorSet(names: names,
-                                  ivars: ivars,
-                                  colors: [any, light, dark].compactMap({ $0 }))
             }
-    }
-    
-    static func createColorsetFiles(sets: [XCColorSet], folder: FilePath.Folder) async throws {
-        try sets.map { set in
-            try XCColorsetController(set: set).output()
+            
+            var result = XCImagesetController.Output()
+            for try await item in group {
+                result.merge(item, uniquingKeysWith: { $0 + $1 })
+            }
+            
+            return result
         }
-        .joined()
-        .map({ $0 })
-        .forEach({ output in
-            let folder = folder.folder(name: output.name + ".colorset")
+        
+        let contents = try config.paths.contents
+            .map(FilePath.Folder.init(path:))
+            .map({ try $0.allSubFilePaths() })
+            .joined()
+            .compactMap(\.asFile)
+            .filter({ $0.attributes.name.lowercased().hasSuffix(".json") })
+            .reduce([String: FilePath.File](), { result, item in
+                guard let filename = item.attributes.name.split(separator: ".").first?.description else {
+                    return result
+                }
+                
+                var result = result
+                result[filename] = item
+                return result
+            })
+        
+        
+        for (key, value) in output {
+            
+            let folder = try xcassets.create(folder: key + ".imageset")
             try folder.delete()
             try folder.create()
-            try folder.create(file: "Contents.json", data: output.content)
-        })
-    }
-    
-    static func createCodeFiles(sets: [XCColorSet], template: XCColorTemplate, folder: FilePath.Folder) async throws {
-        try XCColorCodesController(template: template, sets: sets)
-            .output()
-            .forEach { output in
-                guard let data = output.code.data(using: .utf8) else {
-                    return
+            
+            let items = value.map(\.item)
+            
+            /// 存在 content 文件
+            if let data = try contents[key]?.data(),
+               let json = try? JSON(data: data),
+               let content = try? await XCImageSet(contentFile: json) {
+                /// 使用矢量文件 [pdf, svg]
+                let filenames = content.images.compactMap(\.filename)
+                
+                if content.properties.preservesVectorRepresentation {
+                    let vectors = items.filter(\.isVector)
+                    let vectorNames = vectors.map(\.file.attributes.name)
+                    
+                    for filename in filenames {
+                        if vectorNames.contains(filename) == false {
+                            throw StemError(code: 1, message: "在 \(key).json 里包含不存在的文件 \(filename)")
+                        }
+                    }
+                    
+                    try vectors.map(\.file).forEach { file in
+                        try file.copy(into: folder)
+                    }
+                    
+                    try folder.create(file: "Contents.json", data: data)
+                } else {
+                    let itemNames = items.map(\.file.attributes.name)
+                    for filename in filenames {
+                        if itemNames.contains(filename) == false {
+                            throw StemError(code: 1, message: "在 \(key).json 里包含不存在的文件 \(filename)")
+                        }
+                    }
+                    
+                    try items.map(\.file).forEach { file in
+                        try file.copy(into: folder)
+                    }
+                    
+                    try folder.create(file: "Contents.json", data: data)
                 }
-                try folder.open(name: output.name + ".swift").write(data)
+            } else {
+                
+                let vectors = value.filter(\.item.isVector)
+                if vectors.isEmpty {
+                    try value.map(\.item.file).forEach { file in
+                        try file.copy(into: folder)
+                    }
+                    let imageSet = XCImageSet(name: key,
+                                              ivar: key,
+                                              images: value.map(\.image),
+                                              properties: .init())
+                    let data = try await XCImagesetController.contentFile(from: imageSet)
+                    try folder.create(file: "Contents.json", data: data)
+                } else {
+                    try vectors.map(\.item.file).forEach { file in
+                        try file.copy(into: folder)
+                    }
+                    let imageSet = XCImageSet(name: key,
+                                              ivar: key,
+                                              images: vectors.map(\.image),
+                                              properties: .init(renderAs: .template,
+                                                                compressionType: nil,
+                                                                preservesVectorRepresentation: true))
+                    let data = try await XCImagesetController.contentFile(from: imageSet)
+                    try folder.create(file: "Contents.json", data: data)
+                }
+                
             }
+        }
     }
     
 }

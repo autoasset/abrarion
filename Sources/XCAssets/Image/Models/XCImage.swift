@@ -20,9 +20,29 @@ struct XCImage {
     let size: XCImageSizeClass?
     let memory: XCImageMemory?
     
+    init(filename: String?,
+         appearances: [Appearance] = [],
+         displayGamut: DisplayGamut? = nil,
+         scale: XCImageScale? = nil,
+         locale: Locale? = nil,
+         devices: Devices = .init(idiom: .universal, subtype: nil),
+         direction: XCImageDirection? = nil,
+         size: XCImageSizeClass? = nil,
+         memory: XCImageMemory? = nil) {
+        self.filename = filename
+        self.appearances = appearances
+        self.displayGamut = displayGamut
+        self.scale = scale
+        self.locale = locale
+        self.devices = devices
+        self.direction = direction
+        self.size = size
+        self.memory = memory
+    }
+    
     init(json: JSON) {
         filename = json["filename"].string
-        appearances = .init(from: json)
+        appearances = .init(from: json["appearances"])
         displayGamut = .init(from: json)
         scale = .init(from: json)
         devices = .init(from: json) ?? .init(idiom: .universal, subtype: nil)
@@ -30,6 +50,20 @@ struct XCImage {
         size = .init(from: json)
         memory = .init(from: json)
         locale = json["locale"].string.flatMap(Locale.init(identifier:))
+    }
+    
+    var toJSON: [String: Any] {
+        var dict = [String: Any]()
+        dict["filename"] = filename
+        dict["appearances"] = appearances.map(\.toJSON)
+        dict["locale"] = locale?.currencyCode
+        dict.merge(displayGamut?.toJSON ?? [:], uniquingKeysWith: { $1 })
+        dict.merge(scale?.toJSON ?? [:], uniquingKeysWith: { $1 })
+        dict.merge(devices.toJSON, uniquingKeysWith: { $1 })
+        dict.merge(direction?.toJSON ?? [:], uniquingKeysWith: { $1 })
+        dict.merge(size?.toJSON ?? [:], uniquingKeysWith: { $1 })
+        dict.merge(memory?.toJSON ?? [:], uniquingKeysWith: { $1 })
+        return dict
     }
     
 }

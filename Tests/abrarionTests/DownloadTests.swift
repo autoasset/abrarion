@@ -19,6 +19,10 @@ final class DownloadTests: AbrarionTests {
         print(data)
     }
     
+    func testHttp() throws {
+        try runApp(bash: "download --source https://github.com --output ./github")
+    }
+    
     func testGitHttpDownload() throws {
         try Download.useGit(.init(mode: .git,
                                   source: "https://github.com/linhay/Stem.git",

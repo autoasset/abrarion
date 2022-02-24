@@ -24,7 +24,7 @@ enum Appearance {
     
 }
 
-extension Array where Element == XCColorSet.Color {
+extension Array where Element == XCColor {
 
     func firstNoLuminosity() -> Element? {
         for item in self {

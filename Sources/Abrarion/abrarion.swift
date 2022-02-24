@@ -1,18 +1,20 @@
 import Foundation
 import ArgumentParser
 import Download
+import XCAssets
+
 
 @main
-public struct Abrarion: ParsableCommand {
+enum Main: AsyncMainProtocol {
+    typealias Command = Abrarion
+}
+
+public struct Abrarion: AsyncParsableCommand {
 
     public static let configuration = CommandConfiguration(commandName: "abrarion",
                                                            version: "1",
                                                            subcommands: [Download.self])
     
     public init() {}
-    
-    public func run() throws {
-
-    }
     
 }

@@ -40,14 +40,14 @@ public final class XCAssetsColor: ParsableCommand {
         let folder = try FilePath.Folder(path: xcassetsPath)
         
         try await withThrowingTaskGroup(of: Void.self, returning: Void.self) { group in
-           group.addTask {
-               try await XCAssetsColor.createColorsetFiles(sets: sets, folder: folder)
-           }
-           if let output = codePath {
-               let template = XCAssetsColor.parse(template: try? json(from: template))
-               let folder = try FilePath.Folder(path: output)
-               try await XCAssetsColor.createCodeFiles(sets: sets, template: template, folder: folder)
-           }
+            group.addTask {
+                try await XCAssetsColor.createColorsetFiles(sets: sets, folder: folder)
+            }
+            if let output = codePath {
+                let template = XCAssetsColor.parse(template: try? json(from: template))
+                let folder = try FilePath.Folder(path: output)
+                try await XCAssetsColor.createCodeFiles(sets: sets, template: template, folder: folder)
+            }
         }
     }
     
@@ -67,30 +67,30 @@ extension XCAssetsColor {
         return json.arrayValue
             .map { json -> XCColorSet in
                 
-                var any: XCColorSet.Color?
-                var light: XCColorSet.Color?
-                var dark: XCColorSet.Color?
+                var any: XCColor?
+                var light: XCColor?
+                var dark: XCColor?
                 
                 if let hex = json["dark"].string {
-                    dark = XCColorSet.Color(appearances: [.luminosity(.dark)],
-                                            space: .displayP3,
-                                            value: .init(hex: hex))
+                    dark = XCColor(appearances: [.luminosity(.dark)],
+                                   space: .displayP3,
+                                   value: .init(hex: hex))
                 }
                 
                 if let hex = json["any"].string {
-                    any = XCColorSet.Color(appearances: [],
-                                           space: .displayP3,
-                                           value: .init(hex: hex))
+                    any = XCColor(appearances: [],
+                                  space: .displayP3,
+                                  value: .init(hex: hex))
                 }
                 
                 if let hex = json["light"].string {
-                    light = XCColorSet.Color(appearances: [.luminosity(.light)],
-                                             space: .displayP3,
-                                             value: .init(hex: hex))
+                    light = XCColor(appearances: [.luminosity(.light)],
+                                    space: .displayP3,
+                                    value: .init(hex: hex))
                 } else if dark != nil, let temp = any {
-                    light = XCColorSet.Color(appearances: [.luminosity(.light)],
-                                             space: .displayP3,
-                                             value: temp.value)
+                    light = XCColor(appearances: [.luminosity(.light)],
+                                    space: .displayP3,
+                                    value: temp.value)
                 }
                 
                 var names = json["names"].arrayValue.compactMap(\.string)

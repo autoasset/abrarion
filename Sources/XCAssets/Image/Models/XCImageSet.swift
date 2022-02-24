@@ -19,6 +19,20 @@ struct XCImageSet {
         let onDemandResourceTags: [String]
         let autoScaling: Bool
         let localizable: Bool
+        
+        init(renderAs: XCImageRenderAs? = nil,
+             compressionType: XCImageCompressionType? = nil,
+             preservesVectorRepresentation: Bool = false,
+             onDemandResourceTags: [String] = [],
+             autoScaling: Bool = false,
+             localizable: Bool = false) {
+            self.renderAs = renderAs
+            self.compressionType = compressionType
+            self.preservesVectorRepresentation = preservesVectorRepresentation
+            self.onDemandResourceTags = onDemandResourceTags
+            self.autoScaling = autoScaling
+            self.localizable = localizable
+        }
 
         init(from json: JSON) {
             renderAs = .init(from: json)
@@ -53,31 +67,39 @@ struct XCImageSet {
         }
     }
     
-    let names: [String]
-    let ivars: [String]
+    let name: String
+    let ivar: String
     let images: [XCImage]
     
     let properties: Properties
     let info: Info
     
-    init(names: [String],
-         ivars: [String],
+    init(name: String,
+         ivar: String,
          images: [XCImage],
          properties: Properties,
          info: Info = .xcode) {
-        self.names = names
+        self.name = name
+        self.ivar = ivar
         self.images = images
         self.properties = properties
         self.info = info
-        self.ivars = ivars
     }
     
     init(contentFile json: JSON) async throws {
-        self.names = []
-        self.ivars = []
+        self.name = ""
+        self.ivar = ""
         self.properties = Properties.init(from: json["properties"])
         self.info = .init(from: json["info"])
         self.images = json["images"].arrayValue.map(XCImage.init(json:))
     }
    
+    var toJSON: [String: Any] {
+        var dict = [String: Any]()
+        dict["properties"] = properties.toJSON
+        dict["info"] = info.toJSON
+        dict["images"] = images.map(\.toJSON)
+        return dict
+    }
+    
 }
