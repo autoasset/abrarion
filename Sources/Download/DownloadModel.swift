@@ -68,6 +68,10 @@ struct DownloadConfig {
     
     let models: [DownloadModel]
     
+    init(models: [DownloadModel]) {
+        self.models = models
+    }
+    
     init(from json: JSON) {
         self.models = json["models"].arrayValue.compactMap({ try? DownloadModel(from: $0) })
     }

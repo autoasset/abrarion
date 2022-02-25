@@ -19,6 +19,20 @@ final class DownloadTests: AbrarionTests {
         print(data)
     }
     
+    func testConfig() async throws {
+        let config = DownloadConfig(models: [
+            .init(mode: .auto,
+                  source: "https://github.com/linhay/Stem.git",
+                  output: "/Users/linhey/Desktop/ABRARION-TEST-DOWNLOAD-GIT-PRIVATE-COMMAND",
+                  credentials: nil),
+            .init(mode: .auto,
+                  source: "http://n.sinaimg.cn/sinakd20220225s/318/w640h478/20220225/dc42-ff86243dc0cfe464a03b240e19b72dcd.jpg",
+                  output: "/Users/linhey/Desktop/dc42-ff86243dc0cfe464a03b240e19b72dcd.jpg",
+                  credentials: nil)
+        ])
+        try await Download.configTask(config: config)
+    }
+    
     func testGitCommand() throws {
         try runApp(bash: "download --source https://github.com/AxApp/abrarion --output /Users/linhey/Desktop/ABRARION-TEST-DOWNLOAD-GIT-PRIVATE-COMMAND --username linhay --password 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")
     }

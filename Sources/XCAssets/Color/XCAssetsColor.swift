@@ -12,7 +12,10 @@ import Stem
 
 public final class XCAssetsColor: AsyncParsableCommand {
     
-    public static let configuration = CommandConfiguration(commandName: "color", subcommands: [])
+    public static let configuration = CommandConfiguration(commandName: "color",
+                                                           subcommands: [
+                                                            ConfigCommand.self
+                                                           ])
     
     @Argument(parsing: .unconditionalRemaining)
     var names: [String]
@@ -49,6 +52,42 @@ public final class XCAssetsColor: AsyncParsableCommand {
                 try await XCAssetsColor.createCodeFiles(sets: sets, template: template, folder: folder)
             }
         }
+    }
+    
+}
+
+extension XCAssetsColor {
+
+    final class DefaultCommand: AsyncParsableCommand {
+
+        static let configuration = CommandConfiguration(commandName: "default", subcommands: [])
+
+        init() {}
+        
+        func run() async throws {
+            
+        }
+        
+    }
+    
+    final class ConfigCommand: AsyncParsableCommand {
+        
+        static let configuration = CommandConfiguration(commandName: "config", subcommands: [])
+        
+        @Option(name: [.long], help: "配置文件路径", completion: CompletionKind.file())
+        public var source: String
+        @Option(name: [.long], help: "模板文件路径", completion: CompletionKind.file())
+        public var template: String?
+        
+        init() {}
+        
+        func run() async throws {
+            guard let source = try json(from: source) else {
+                return
+            }
+            
+        }
+        
     }
     
 }

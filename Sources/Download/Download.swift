@@ -27,22 +27,22 @@ extension Download {
     
     final class DefaultCommand: AsyncParsableCommand {
         
-        public static let configuration = CommandConfiguration(commandName: "default")
+        static let configuration = CommandConfiguration(commandName: "default")
         
         @Option(name: [.long, .short])
-        public var source: String
+        var source: String
         @Option(name: [.long, .short])
-        public var output: String
+        var output: String
         @Option(name: [.long, .short])
-        public var mode: String = "auto"
+        var mode: String = "auto"
         @Option(name: [.long])
-        public var username: String = ""
+        var username: String = ""
         @Option(name: [.long])
-        public var password: String = ""
+        var password: String = ""
         
-        public init() {}
+        init() {}
         
-        public func run() async throws {
+        func run() async throws {
             guard let source = URL(string: source) else {
                 throw ParsableCommandError.parsableFail
             }
@@ -55,34 +55,36 @@ extension Download {
         
     }
     
-    final class ConfigCommand: ParsableCommand {
-        public static let configuration = CommandConfiguration(commandName: "config",
-                                                               subcommands: [])
+    final class ConfigCommand: AsyncParsableCommand {
         
-        @Argument(help: "配置文件路径", completion: CompletionKind.file())
-        public var source: String
+        static let configuration = CommandConfiguration(commandName: "config")
         
-        public init() {}
+        @Option(name: [.long], help: "配置文件路径", completion: CompletionKind.file())
+        var source: String
         
-        public func run() async throws {
+        init() {}
+        
+        func run() async throws {
             guard let json = try json(from: source) else {
                 throw ParsableCommandError.parsableFail
             }
-            
-            let config = DownloadConfig(from: json)
-            for model in config.models {
-                await withThrowingTaskGroup(of: Void.self) { group in
-                    group.addTask(priority: .high) {
-                        try await Download.auto(model)
-                    }
-                }
-            }
+            try await Download.configTask(config: DownloadConfig(from: json))
         }
     }
     
 }
 
 extension Download {
+    
+    static func configTask(config: DownloadConfig) async throws {
+        for model in config.models {
+            await withThrowingTaskGroup(of: Void.self) { group in
+                group.addTask(priority: .high) {
+                    try await Download.auto(model)
+                }
+            }
+        }
+    }
     
     static func auto(_ model: DownloadModel) async throws {
         switch model.mode {
@@ -97,7 +99,6 @@ extension Download {
         case .http:
             try await Download.http(model)
         }
-        
     }
     
     static func folder(_ model: DownloadModel) async throws -> FilePath.Folder {
