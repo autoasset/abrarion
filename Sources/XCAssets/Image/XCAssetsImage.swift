@@ -10,7 +10,7 @@ import ArgumentParser
 import Core
 import Stem
 
-public final class XCAssetsImage: ParsableCommand {
+public final class XCAssetsImage: AsyncParsableCommand {
     
     public static let configuration = CommandConfiguration(commandName: "image", subcommands: [])
     

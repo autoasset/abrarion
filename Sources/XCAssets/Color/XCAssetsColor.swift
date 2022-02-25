@@ -10,7 +10,7 @@ import ArgumentParser
 import Core
 import Stem
 
-public final class XCAssetsColor: ParsableCommand {
+public final class XCAssetsColor: AsyncParsableCommand {
     
     public static let configuration = CommandConfiguration(commandName: "color", subcommands: [])
     

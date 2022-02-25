@@ -5,10 +5,17 @@ import PackageDescription
 
 let ArgumentParser = Target.Dependency.product(name: "ArgumentParser", package: "swift-argument-parser")
 let Stem = Target.Dependency.product(name: "Stem", package: "Stem")
+let Yams = Target.Dependency.product(name: "Yams", package: "Yams")
 let Abrarion = "Abrarion"
 let Download = "Download"
 let XCAssets = "XCAssets"
 let Core = "Core"
+
+let TargetDefaultdependencies: [Target.Dependency] = [
+    .init(stringLiteral: Core),
+    ArgumentParser,
+    Stem,
+]
 
 let package = Package(
     name: Abrarion,
@@ -27,29 +34,23 @@ let package = Package(
             dependencies: [
                 Stem,
                 ArgumentParser,
-                .product(name: "Yams", package: "Yams")
+                Yams
             ]),
         .target(
             name: XCAssets,
-            dependencies: [
-                Stem,
-                .init(stringLiteral: Core),
-                ArgumentParser
-            ]
+            dependencies: TargetDefaultdependencies
         ),
         .target(
             name: Download,
-            dependencies: [
+            dependencies: TargetDefaultdependencies + [
                 "SwiftGit",
-                .init(stringLiteral: Core),
-                Stem,
-                ArgumentParser
             ]),
         .executableTarget(
             name: Abrarion,
             dependencies: [
                 ArgumentParser,
-                .init(stringLiteral: Download)
+                .init(stringLiteral: Download),
+                .init(stringLiteral: XCAssets)
             ]),
         .testTarget(
             name: "abrarionTests",

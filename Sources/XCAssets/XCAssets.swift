@@ -9,14 +9,14 @@ import Foundation
 import ArgumentParser
 import Stem
 
-public final class XCAssets: ParsableCommand {
+public final class XCAssets: AsyncParsableCommand {
     
     public static let configuration = CommandConfiguration(commandName: "xcassets",
-                                                           subcommands: [XCAssetsColor.self,
-                                                                         XCAssetsImage.self])
+                                                           subcommands: [
+                                                            XCAssetsColor.self,
+                                                            XCAssetsImage.self
+                                                           ])
     
     public init() {}
-    
-    public func run() throws {}
     
 }
