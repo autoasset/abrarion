@@ -19,20 +19,26 @@ final class DownloadTests: AbrarionTests {
         print(data)
     }
     
-    func testHttp() throws {
-        try runApp(bash: "download --source https://github.com --output ./github")
+    func testGitCommand() throws {
+        try runApp(bash: "download --source https://github.com/AxApp/abrarion --output /Users/linhey/Desktop/ABRARION-TEST-DOWNLOAD-GIT-PRIVATE-COMMAND --username linhay --password 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")
     }
     
-    func testGitHttpDownload() throws {
-        try Download.useGit(.init(mode: .git,
-                                  source: "https://github.com/linhay/Stem.git",
-                                  output: "/Users/linhey/Desktop/ABRARION-TEST-DOWNLOAD-GIT-HTTP"))
+    func testHttpCommand() throws {
+        try runApp(bash: "download --source http://n.sinaimg.cn/sinakd20220225s/318/w640h478/20220225/dc42-ff86243dc0cfe464a03b240e19b72dcd.jpg --output /Users/linhey/Desktop/ABRARION-TEST-DOWNLOAD-HTTP")
     }
     
-    func testGitPrivateHttpDownload() throws {
-        try Download.useGit(.init(mode: .git,
-                                  source: "https://github.com/AxApp/abrarion",
-                                  output: "/Users/linhey/Desktop/ABRARION-TEST-DOWNLOAD-GIT-PRIVATE-HTTP"))
+    func testGitDownload() async throws {
+       try await Download.auto(.init(mode: .auto,
+                                     source: "https://github.com/linhay/Stem.git",
+                                     output: "/Users/linhey/Desktop/ABRARION-TEST-DOWNLOAD-GIT-HTTP",
+                                     credentials: nil))
+    }
+    
+    func testGitPrivateDownload() async throws {
+        try await Download.auto(.init(mode: .git,
+                                      source: "https://github.com/AxApp/abrarion",
+                                      output: "/Users/linhey/Desktop/ABRARION-TEST-DOWNLOAD-GIT-PRIVATE-HTTP",
+                                      credentials: .init(username: "linhay", password: "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")))
     }
     
 }

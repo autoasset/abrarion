@@ -19,37 +19,38 @@ public final class Download: AsyncParsableCommand {
                                                            defaultSubcommand: DefaultCommand.self)
     
     public init() {}
-
+    
     public func run() async throws { }
 }
 
 extension Download {
     
     final class DefaultCommand: AsyncParsableCommand {
-
+        
         public static let configuration = CommandConfiguration(commandName: "default")
         
         @Option(name: [.long, .short])
         public var source: String
         @Option(name: [.long, .short])
         public var output: String
+        @Option(name: [.long, .short])
+        public var mode: String = "auto"
+        @Option(name: [.long])
+        public var username: String = ""
+        @Option(name: [.long])
+        public var password: String = ""
         
         public init() {}
-
+        
         public func run() async throws {
             guard let source = URL(string: source) else {
                 throw ParsableCommandError.parsableFail
             }
-            switch Download.checkSourceType(source: source) {
-                case .http:
-                let model = DownloadModel(mode: .http, source: source, output: output)
-                try await Download.useHttp(model)
-                case .git:
-                let model = DownloadModel(mode: .git, source: source, output: output)
-                try Download.useGit(model)
-            case .auto:
-                break
-            }
+            let model = DownloadModel(mode: .init(rawValue: mode) ?? .auto,
+                                      source: source,
+                                      output: output,
+                                      credentials: .init(username: username, password: password))
+            try await Download.auto(model)
         }
         
     }
@@ -62,7 +63,7 @@ extension Download {
         public var source: String
         
         public init() {}
-
+        
         public func run() async throws {
             guard let json = try json(from: source) else {
                 throw ParsableCommandError.parsableFail
@@ -70,18 +71,9 @@ extension Download {
             
             let config = DownloadConfig(from: json)
             for model in config.models {
-              await withThrowingTaskGroup(of: Void.self) { group in
+                await withThrowingTaskGroup(of: Void.self) { group in
                     group.addTask(priority: .high) {
-                        switch Download.checkSourceType(source: model.source) {
-                        case .http:
-                            let model = DownloadModel(mode: .http, source: model.source, output: model.output)
-                            try await Download.useHttp(model)
-                        case .git:
-                            let model = DownloadModel(mode: .git, source: model.source, output: model.output)
-                            try Download.useGit(model)
-                        case .auto:
-                            break
-                        }
+                        try await Download.auto(model)
                     }
                 }
             }
@@ -92,43 +84,43 @@ extension Download {
 
 extension Download {
     
-    static func checkSourceType(source: URL) -> DownloadModel.Mode {
-        switch Repository.at(source) {
-        case .failure:
-            return .http
-        case .success:
-            return .git
+    static func auto(_ model: DownloadModel) async throws {
+        switch model.mode {
+        case .auto:
+            do {
+                try await Download.git(model)
+            } catch  {
+                try await Download.http(model)
+            }
+        case .git:
+            try await Download.git(model)
+        case .http:
+            try await Download.http(model)
         }
+        
     }
     
-    static func useHttp(_ model: DownloadModel) async throws {
-        let (data, _) = try await URLSession.shared.data(from: model.source)
-        try FilePath.File(url: .init(fileURLWithPath: model.output)).create(with: data)
-    }
-    
-   static func useGit(_ model: DownloadModel) throws {
+    static func folder(_ model: DownloadModel) async throws -> FilePath.Folder {
         guard let folder = FilePath(url: .init(fileURLWithPath: model.output), type: .folder).asFolder else {
-                  return
-              }
+            throw ParsableCommandError.parsableFail
+        }
         
         if folder.isExist, (try folder.subFilePaths().isEmpty) == false {
             throw FilePathError.folderIsNoEmpty
         }
-       
-       let publicKey = try FilePath.File(path: "~/.ssh/id_github.pub").data()
-       let privateKey = try FilePath.File(path: "~/.ssh/id_github").data()
-       let passphrase = ""
-       
-       try? folder.delete()
-       switch Git.shared.repository.clone(from: model.source, to: folder.url, credentials: .sshMemory(username: "linhey",
-                                                                                                      publicKey: String(data: publicKey, encoding: .utf8)!,
-                                                                                                      privateKey: String(data: privateKey, encoding: .utf8)!,
-                                                                                                      passphrase: passphrase)) {
-        case .failure(let error):
-            throw error
-        case .success:
-            break
-        }
+        
+        return folder
+    }
+    
+    static func http(_ model: DownloadModel) async throws {
+        let (data, _) = try await URLSession.shared.data(from: model.source)
+        try FilePath.File(url: .init(fileURLWithPath: model.output)).create(with: data)
+    }
+    
+    static func git(_ model: DownloadModel) async throws {
+        let folder = try await folder(model)
+        let credentials = model.credentials.flatMap({ Credentials.plaintext(username: $0.username, password: $0.password) })
+        try await Git.shared.repo.clone(from: model.source, to: folder.url, credentials: credentials ?? .default)
     }
     
 }
