@@ -34,7 +34,7 @@ final class DownloadTests: AbrarionTests {
     }
     
     func testGitCommand() throws {
-        try runApp(bash: "download --source https://github.com/AxApp/abrarion --output /Users/linhey/Desktop/ABRARION-TEST-DOWNLOAD-GIT-PRIVATE-COMMAND --username linhay --password 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")
+        try runApp(bash: "download --source https://github.com/AxApp/abrarion --output /Users/linhey/Desktop/ABRARION-TEST-DOWNLOAD-GIT-PRIVATE-COMMAND --username linhay --password cat ")
     }
     
     func testHttpCommand() throws {

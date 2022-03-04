@@ -44,7 +44,7 @@ extension XCColorsetController {
         }
         
         content["colors"] = colors
-        content["info"] = set.info
+        content["info"] = set.info.toJSON
         content["properties"] = set.properties
         
         let data = try JSONSerialization.data(withJSONObject: content, options: [.prettyPrinted, .sortedKeys])

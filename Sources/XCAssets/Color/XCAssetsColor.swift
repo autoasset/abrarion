@@ -14,58 +14,48 @@ public final class XCAssetsColor: AsyncParsableCommand {
     
     public static let configuration = CommandConfiguration(commandName: "color",
                                                            subcommands: [
+                                                            DefaultCommand.self,
                                                             ConfigCommand.self
-                                                           ])
-    
-    @Argument(parsing: .unconditionalRemaining)
-    var names: [String]
-    
-    @Option(name: [.short, .long], help: "输出文件夹路径")
-    var xcassetsPath: String
-    
-    @Option(name: [.short, .long], help: "输出文件夹路径")
-    var codePath: String?
-    
-    @Option(name: [.short, .long], help: "配置文件路径")
-    public var config: String?
-    
-    @Option(name: [.short, .long], help: "模板文件路径")
-    public var template: String?
+                                                           ],
+                                                           defaultSubcommand: DefaultCommand.self)
     
     public init() {}
-    
-    public func run() async throws {
-        guard let colors = try json(from: config) else {
-            return
-        }
-        
-        let sets = XCAssetsColor.parse(colorSets: colors)
-        let folder = try FilePath.Folder(path: xcassetsPath)
-        
-        try await withThrowingTaskGroup(of: Void.self, returning: Void.self) { group in
-            group.addTask {
-                try await XCAssetsColor.createColorsetFiles(sets: sets, folder: folder)
-            }
-            if let output = codePath {
-                let template = XCAssetsColor.parse(template: try? json(from: template))
-                let folder = try FilePath.Folder(path: output)
-                try await XCAssetsColor.createCodeFiles(sets: sets, template: template, folder: folder)
-            }
-        }
-    }
-    
+
 }
 
 extension XCAssetsColor {
-
+    
     final class DefaultCommand: AsyncParsableCommand {
-
+        
         static let configuration = CommandConfiguration(commandName: "default", subcommands: [])
-
+        
+        @Argument(help: "颜色")
+        var list: [String]
+        
+        @Option(name: [.long], help: "模板文件路径", completion: CompletionKind.file())
+        var template: String = ""
+        @Option(name: [.long], help: "输出文件夹路径")
+        var xcassets_path: String
+        @Option(name: [.long], help: "输出文件夹路径")
+        var code_path: String = ""
+        
         init() {}
         
         func run() async throws {
-            
+            let sets = list
+                .compactMap { try? StemColor(hexThrowing: $0) }
+                .map({ (color: $0, name: $0.hexString(.auto, prefix: .none)) })
+                .map({
+                    XCColorSet(names: [$0.name],
+                               ivars: ["_\($0.name)"],
+                               colors: [.init(appearances: [],
+                                              space: .displayP3,
+                                              value: $0.color)])
+                })
+            try await XCAssetsColor.task(sets,
+                                         xcassets_path: xcassets_path,
+                                         template: template,
+                                         code_path: code_path)
         }
         
     }
@@ -77,7 +67,12 @@ extension XCAssetsColor {
         @Option(name: [.long], help: "配置文件路径", completion: CompletionKind.file())
         public var source: String
         @Option(name: [.long], help: "模板文件路径", completion: CompletionKind.file())
-        public var template: String?
+        public var template: String = ""
+        
+        @Option(name: [.short, .long], help: "输出文件夹路径")
+        var xcassets_path: String
+        @Option(name: [.short, .long], help: "输出文件夹路径")
+        var code_path: String = ""
         
         init() {}
         
@@ -85,7 +80,11 @@ extension XCAssetsColor {
             guard let source = try json(from: source) else {
                 return
             }
-            
+            let sets = XCAssetsColor.parse(colorSets: source)
+            try await XCAssetsColor.task(sets,
+                                         xcassets_path: xcassets_path,
+                                         template: template,
+                                         code_path: code_path)
         }
         
     }
@@ -93,6 +92,25 @@ extension XCAssetsColor {
 }
 
 extension XCAssetsColor {
+    
+    static func task(_ sets: [XCColorSet],
+                     xcassets_path: String,
+                     template: String,
+                     code_path: String) async throws {
+        let folder = try FilePath.Folder(path: xcassets_path)
+        
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            group.addTask {
+                try await XCAssetsColor.createColorsetFiles(sets: sets, folder: folder)
+            }
+            
+            if code_path.isEmpty == false {
+                let template = XCAssetsColor.parse(template: try? json(from: template))
+                let folder = try FilePath.Folder(path: code_path)
+                try await XCAssetsColor.createCodeFiles(sets: sets, template: template, folder: folder)
+            }
+        }
+    }
     
     static func parse(template json: JSON?) -> XCColorTemplate {
         if let json = json {

@@ -18,7 +18,6 @@ public enum FilePathError: Error {
     case folderIsNoEmpty
 }
 
-
 public func json(from path: String?) throws -> JSON? {
     guard let path = path else { return nil }
     let file = try FilePath.File(path: path)
