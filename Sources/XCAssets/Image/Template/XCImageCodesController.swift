@@ -12,6 +12,7 @@ struct XCImageCodesController {
     struct Output {
         let name: String
         let code: String
+        let canOverwritten: Bool
     }
     
     let template: XCImageTemplateDataSource
@@ -26,10 +27,10 @@ extension XCImageCodesController {
     
     func output() -> [Output] {
         return [
-            .init(name: template.model.protocolName, code: template.protocol),
-            .init(name: template.model.protocolName + "_extension", code: template.extensionProtocol),
-            .init(name: template.model.instanceName, code: template.instance),
-            .init(name: template.model.instanceName + "_" + template.model.protocolName, code: template.conform)
+            .init(name: template.model.protocolName, code: template.protocol, canOverwritten: true),
+            .init(name: template.model.protocolName + "_extension", code: template.extensionProtocol, canOverwritten: false),
+            .init(name: template.model.instanceName, code: template.instance, canOverwritten: true),
+            .init(name: template.model.instanceName + "_" + template.model.protocolName, code: template.conform, canOverwritten: true)
         ]
     }
     

@@ -38,7 +38,12 @@ extension XCAssetsImage {
                 .compactMap { try json(from: $0) }
                 .compactMap { try XCImageConfig(from: $0) }
             for config in configs {
-                try await XCAssetsImage.createImagesetFiles(config: config)
+               let sets = try await XCAssetsImage.createImagesetFiles(config: config)
+                if let path = config.paths.codes, path.isEmpty == false {
+                    try await XCAssetsImage.createCodeFiles(sets: sets,
+                                                            template: config.template,
+                                                            folder: FilePath.Folder(path: path))
+                }
             }
         }
         
@@ -74,13 +79,14 @@ extension XCAssetsImage {
                                                     codes: code,
                                                     contents: contents,
                                                     sources: sources),
+                                       template: .init(from: nil),
                                        darkModePatterns: [])
 
             let sets = try await XCAssetsImage.createImagesetFiles(config: config)
 
             if code.isEmpty == false {
                 let template = XCImageTemplate(from: try? json(from: template))
-                try await XCAssetsImage.createCodeFiles(sets: sets, template: template, folder: FilePath.Folder.init(path: code))
+                try await XCAssetsImage.createCodeFiles(sets: sets, template: template, folder: FilePath.Folder(path: code))
             }
         }
         
@@ -91,13 +97,30 @@ extension XCAssetsImage {
 extension XCAssetsImage {
     
     static func createCodeFiles(sets: [XCImageSet], template: XCImageTemplate, folder: FilePath.Folder) async throws {
+        
+        func noExistFile(name: String, ext: String, index: Int) -> FilePath.File {
+            let file = folder.file(name: name + "\(index == 0 ? "" : "\(index)")" + "." + ext)
+            if file.isExist {
+               return noExistFile(name: name, ext: ext, index: index + 1)
+            } else {
+                return file
+            }
+        }
+        
         try XCImageCodesController(template: template, sets: sets)
             .output()
             .forEach { output in
                 guard let data = output.code.data(using: .utf8) else {
                     return
                 }
-                try folder.open(name: output.name + ".swift").write(data)
+                if output.canOverwritten {
+                    let file = folder.file(name: output.name + ".swift")
+                    try? file.delete()
+                    try file.write(data)
+                } else {
+                    let file = noExistFile(name: output.name, ext: "swift", index: 0)
+                    try file.write(data)
+                }
             }
     }
     

@@ -32,15 +32,20 @@ struct XCImageConfig {
     }
     
     let paths: XCInputPaths
+    let template: XCImageTemplate
     let darkModePatterns: [DarkModePattern]
     
-    init(paths: XCInputPaths, darkModePatterns: [DarkModePattern]) {
+    init(paths: XCInputPaths,
+         template: XCImageTemplate,
+         darkModePatterns: [DarkModePattern]) {
         self.paths = paths
+        self.template = template
         self.darkModePatterns = darkModePatterns
     }
     
     init?(from json: JSON) throws {
         self.paths = try .init(from: json["paths"])
+        self.template = .init(from: json["template"])
         self.darkModePatterns = try json["dark_mode_patterns"].arrayValue.map(DarkModePattern.init(from:))
     }
     
