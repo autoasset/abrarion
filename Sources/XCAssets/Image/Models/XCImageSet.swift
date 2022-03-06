@@ -86,9 +86,9 @@ struct XCImageSet {
         self.info = info
     }
     
-    init(contentFile json: JSON) async throws {
-        self.name = ""
-        self.ivar = ""
+    init(contentFile json: JSON, name: String, ivar: String) async throws {
+        self.name = name
+        self.ivar = ivar
         self.properties = Properties.init(from: json["properties"])
         self.info = .init(from: json["info"])
         self.images = json["images"].arrayValue.map(XCImage.init(json:))

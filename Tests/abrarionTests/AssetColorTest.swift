@@ -87,7 +87,7 @@ class AssetColorTest: AbrarionTests {
             }
             group.addTask {
                 try await XCAssetsColor.createCodeFiles(sets: sets,
-                                                        template: XCAssetsColor.parse(template: nil),
+                                                        template: XCColorTemplate(from: nil),
                                                         folder: .init(sanbox: .document).create(folder: "Abrarion").create(folder: "codes"))
             }
         }

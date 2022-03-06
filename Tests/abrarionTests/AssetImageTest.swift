@@ -33642,7 +33642,7 @@ let content = """
 
 """
         let json = JSON(parseJSON: content)
-        let set = try await XCImageSet(contentFile: json)
+        let set = try await XCImageSet(contentFile: json, name: "", ivar: "")
         print(set.properties.toJSON)
     }
 

@@ -105,19 +105,11 @@ extension XCAssetsColor {
             }
             
             if code_path.isEmpty == false {
-                let template = XCAssetsColor.parse(template: try? json(from: template))
+                let template = XCColorTemplate(from: try? json(from: template))
                 let folder = try FilePath.Folder(path: code_path)
                 try await XCAssetsColor.createCodeFiles(sets: sets, template: template, folder: folder)
             }
         }
-    }
-    
-    static func parse(template json: JSON?) -> XCColorTemplate {
-        if let json = json {
-            return XCColorTemplate(instanceName: json["instance_name"].string ?? "AbrarionColor",
-                                   protocolName: json["protocol_name"].string ?? "AbrarionColorProtocol")
-        }
-        return XCColorTemplate(instanceName: "AbrarionColor", protocolName: "AbrarionColorProtocol")
     }
     
     static func parse(colorSets json: JSON) -> [XCColorSet] {

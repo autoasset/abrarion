@@ -31,47 +31,10 @@ struct XCImageConfig {
         
     }
     
-    struct Paths {
-
-        let xcassets: String
-        let template: String?
-        let codes: String?
-        let contents: [String]
-        let images: [String]
-        
-        init(xcassets: String,
-             template: String? = nil,
-             codes: String? = nil,
-             contents: [String] = [],
-             images: [String] = []) {
-            self.xcassets = xcassets
-            self.template = template
-            self.codes = codes
-            self.contents = contents
-            self.images = images
-        }
-        
-        init(from json: JSON) throws {
-            guard let xcassets = json["xcassets"].string else {
-                throw ParsableCommandError.parsableFail
-            }
-            self.xcassets = xcassets
-            self.codes = json["codes"].string
-            self.template = json["template"].string
-            self.images = json["images"].arrayValue.compactMap(\.string)
-            self.contents = json["contents"].arrayValue.compactMap(\.string)
-
-            if self.images.isEmpty {
-                throw ParsableCommandError.parsableFail
-            }
-        }
-        
-    }
-    
-    let paths: Paths
+    let paths: XCInputPaths
     let darkModePatterns: [DarkModePattern]
     
-    init(paths: XCImageConfig.Paths, darkModePatterns: [XCImageConfig.DarkModePattern]) {
+    init(paths: XCInputPaths, darkModePatterns: [DarkModePattern]) {
         self.paths = paths
         self.darkModePatterns = darkModePatterns
     }

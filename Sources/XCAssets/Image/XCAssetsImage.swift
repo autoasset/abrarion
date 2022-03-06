@@ -12,34 +12,101 @@ import Stem
 
 public final class XCAssetsImage: AsyncParsableCommand {
     
-    public static let configuration = CommandConfiguration(commandName: "image", subcommands: [])
-    
-    @Option(name: [.short, .long], help: "配置文件路径")
-    public var config: String?
-    
-    @Option(name: [.short, .long], help: "模板文件路径")
-    public var template: String?
+    public static let configuration = CommandConfiguration(commandName: "image",
+                                                           subcommands: [Default.self,
+                                                                         Config.self],
+                                                           defaultSubcommand: Default.self)
     
     public init() {}
     
-    public func run() async throws {
-        guard let json = try json(from: config),
-              let config = try XCImageConfig(from: json) else {
-                  return
-              }
-        try await Self.createColorsetFiles(config: config)
+    public func run() async throws {}
+    
+}
+
+extension XCAssetsImage {
+    
+    final class Config: AsyncParsableCommand {
+        
+        public static let configuration = CommandConfiguration(commandName: "config", subcommands: [])
+        @Argument(help: "配置文件路径")
+        var sources: [String]
+        
+        init() {}
+        
+        func run() async throws {
+            let configs = try sources
+                .compactMap { try json(from: $0) }
+                .compactMap { try XCImageConfig(from: $0) }
+            for config in configs {
+                try await XCAssetsImage.createImagesetFiles(config: config)
+            }
+        }
+        
+    }
+    
+    final class Default: AsyncParsableCommand {
+        
+        public static let configuration = CommandConfiguration(commandName: "default", subcommands: [])
+        
+        @Argument(help: "扫描文件/文件夹路径")
+        var sources: [String]
+        
+        @Option(name: [.long], help: "模板文件路径", completion: CompletionKind.file())
+        var template: String = ""
+        @Option(name: [.long], help: "输出文件夹路径", completion: CompletionKind.file())
+        var xcassets: String = ""
+        @Option(name: [.long], help: "输出文件夹路径", completion: CompletionKind.file())
+        var code: String = ""
+        @Option(name: [.long], help: "contents 匹配文件/文件夹路径", completion: CompletionKind.file())
+        var contents: [String] = []
+        
+        init() {}
+        
+        func validate() throws {
+            if xcassets.isEmpty == false {
+                throw FilePathError.folderIsNoEmpty
+            }
+        }
+        
+        func run() async throws {
+            let config = XCImageConfig(paths: .init(xcassets: xcassets,
+                                                    template: template,
+                                                    codes: code,
+                                                    contents: contents,
+                                                    sources: sources),
+                                       darkModePatterns: [])
+
+            let sets = try await XCAssetsImage.createImagesetFiles(config: config)
+
+            if code.isEmpty == false {
+                let template = XCImageTemplate(from: try? json(from: template))
+                try await XCAssetsImage.createCodeFiles(sets: sets, template: template, folder: FilePath.Folder.init(path: code))
+            }
+        }
+        
     }
     
 }
 
 extension XCAssetsImage {
     
-    static func createColorsetFiles(config: XCImageConfig) async throws {
+    static func createCodeFiles(sets: [XCImageSet], template: XCImageTemplate, folder: FilePath.Folder) async throws {
+        try XCImageCodesController(template: template, sets: sets)
+            .output()
+            .forEach { output in
+                guard let data = output.code.data(using: .utf8) else {
+                    return
+                }
+                try folder.open(name: output.name + ".swift").write(data)
+            }
+    }
+    
+    static func createImagesetFiles(config: XCImageConfig) async throws -> [XCImageSet] {
         let xcassets = try FilePath.Folder(path: config.paths.xcassets)
         
         let output = try await withThrowingTaskGroup(of: XCImagesetController.Output.self,
                                                      returning: XCImagesetController.Output.self) { group in
-            for path in config.paths.images {
+            for path in config.paths.sources {
                 group.addTask(priority: .background) {
                     let folder = try FilePath.Folder(path: path)
                     return try await XCImagesetController.output(from: folder.allSubFilePaths().compactMap(\.asFile),
@@ -72,6 +139,8 @@ extension XCAssetsImage {
             })
         
         
+        var imageSets = [XCImageSet]()
+        
         for (key, value) in output {
             
             let folder = try xcassets.create(folder: key + ".imageset")
@@ -83,7 +152,9 @@ extension XCAssetsImage {
             /// 存在 content 文件
             if let data = try contents[key]?.data(),
                let json = try? JSON(data: data),
-               let content = try? await XCImageSet(contentFile: json) {
+               let content = try? await XCImageSet(contentFile: json, name: key, ivar: key) {
+                imageSets.append(content)
+                
                 /// 使用矢量文件 [pdf, svg]
                 let filenames = content.images.compactMap(\.filename)
                 
@@ -117,7 +188,6 @@ extension XCAssetsImage {
                     try folder.create(file: "Contents.json", data: data)
                 }
             } else {
-                
                 let vectors = value.filter(\.item.isVector)
                 if vectors.isEmpty {
                     try value.map(\.item.file).forEach { file in
@@ -127,6 +197,7 @@ extension XCAssetsImage {
                                               ivar: key,
                                               images: value.map(\.image),
                                               properties: .init())
+                    imageSets.append(imageSet)
                     let data = try await XCImagesetController.contentFile(from: imageSet)
                     try folder.create(file: "Contents.json", data: data)
                 } else {
@@ -139,12 +210,14 @@ extension XCAssetsImage {
                                               properties: .init(renderAs: .template,
                                                                 compressionType: nil,
                                                                 preservesVectorRepresentation: true))
+                    imageSets.append(imageSet)
                     let data = try await XCImagesetController.contentFile(from: imageSet)
                     try folder.create(file: "Contents.json", data: data)
                 }
-                
             }
         }
+        
+        return imageSets
     }
     
 }

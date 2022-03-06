@@ -73,7 +73,6 @@ extension XCImagesetController {
                   let name = file.attributes.name.split(separator: "@").first?.split(separator: ".").first?.description else {
                       continue
                   }
-            
             var isAppend = false
             
             for pattern in darkModePatterns {
