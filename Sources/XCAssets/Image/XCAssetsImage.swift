@@ -68,8 +68,8 @@ extension XCAssetsImage {
         init() {}
         
         func validate() throws {
-            if xcassets.isEmpty == false {
-                throw FilePathError.folderIsNoEmpty
+            if xcassets.isEmpty {
+                throw FilePathError.folderIsNoEmpty(xcassets)
             }
         }
         
@@ -124,11 +124,8 @@ extension XCAssetsImage {
             }
     }
     
-    static func createImagesetFiles(config: XCImageConfig) async throws -> [XCImageSet] {
-        let xcassets = try FilePath.Folder(path: config.paths.xcassets)
-        
-        let output = try await withThrowingTaskGroup(of: XCImagesetController.Output.self,
-                                                     returning: XCImagesetController.Output.self) { group in
+    static func itemGroup(config: XCImageConfig) async throws -> XCImagesetController.Output {
+        try await withThrowingTaskGroup(of: XCImagesetController.Output.self, returning: XCImagesetController.Output.self) { group in
             for path in config.paths.sources {
                 group.addTask(priority: .background) {
                     let folder = try FilePath.Folder(path: path)
@@ -137,110 +134,122 @@ extension XCAssetsImage {
                 }
             }
             
-            var result = XCImagesetController.Output()
+            var symbols = [String : [XCImagesetController.OutputSymbolItem]]()
+            var images = [String : [XCImagesetController.OutputImageItem]]()
+
             for try await item in group {
-                result.merge(item, uniquingKeysWith: { $0 + $1 })
+                for type in item {
+                    switch type {
+                    case .symbol(let model):
+                        symbols = symbols.merging(model, uniquingKeysWith: { $0 + $1 })
+                    case .image(let model):
+                        images = images.merging(model, uniquingKeysWith: { $0 + $1 })
+                    }
+                }
             }
             
-            return result
+            return [.image(images), .symbol(symbols)]
         }
-        
-        let contents = try config.paths.contents
+    }
+    
+    static func itemExistContents(config: XCImageConfig) async throws -> [String: [FilePath.File]] {
+        try config.paths.contents
             .map(FilePath.Folder.init(path:))
             .map({ try $0.allSubFilePaths() })
             .joined()
             .compactMap(\.asFile)
             .filter({ $0.attributes.name.lowercased().hasSuffix(".json") })
-            .reduce([String: FilePath.File](), { result, item in
+            .reduce([String: [FilePath.File]](), { result, item in
                 guard let filename = item.attributes.name.split(separator: ".").first?.description else {
                     return result
                 }
                 
                 var result = result
-                result[filename] = item
+                result[filename] = (result[filename] ?? []) + [item]
                 return result
             })
+    }
+    
+    struct AssetItem<Value> {
+        let folderName: String
+        let files: [FilePath.File]
+        let content: Data
+        let set: Value
+    }
+    
+    static func newItem(filename: String, resource: [XCImagesetController.OutputSymbolItem], contents: [FilePath.File]) async throws -> AssetItem<XCImageSymbolSet> {
+        let folderName = "\(filename).symbolset"
+        let files: [FilePath.File] = resource.map(\.item.file)
+        let content: Data
+        let set: XCImageSymbolSet
         
+        if let data = try? contents.first?.data() {
+            content = data
+            set = try await .init(contentFile: JSON(data: data))
+        } else {
+            set = XCImageSymbolSet(name: filename, ivar: filename, symbols: resource.map(\.symbol))
+            content = try await XCImagesetController.contentFile(from: set)
+        }
         
-        var imageSets = [XCImageSet]()
+        return .init(folderName: folderName, files: files, content: content, set: set)
+    }
+    
+    static func newItem(filename: String, resource: [XCImagesetController.OutputImageItem], contents: [FilePath.File]) async throws -> AssetItem<XCImageSet> {
+        let folderName = "\(filename).imageset"
+        let files: [FilePath.File] = resource.map(\.item.file)
+        let content: Data
+        let set: XCImageSet
+
+        if let data = try? contents.first?.data() {
+            content = data
+            set = try await .init(contentFile: JSON(data: data), name: filename, ivar: filename)
+        } else {
+            set = XCImageSet(name: filename, ivar: filename, images: resource.map(\.image), properties: .init())
+            content = try await XCImagesetController.contentFile(from: set)
+        }
         
-        for (key, value) in output {
-            
-            let folder = try xcassets.create(folder: key + ".imageset")
-            try folder.delete()
-            try folder.create()
-            
-            let items = value.map(\.item)
-            
-            /// 存在 content 文件
-            if let data = try contents[key]?.data(),
-               let json = try? JSON(data: data),
-               let content = try? await XCImageSet(contentFile: json, name: key, ivar: key) {
-                imageSets.append(content)
-                
-                /// 使用矢量文件 [pdf, svg]
-                let filenames = content.images.compactMap(\.filename)
-                
-                if content.properties.preservesVectorRepresentation {
-                    let vectors = items.filter(\.isVector)
-                    let vectorNames = vectors.map(\.file.attributes.name)
-                    
-                    for filename in filenames {
-                        if vectorNames.contains(filename) == false {
-                            throw StemError(code: 1, message: "在 \(key).json 里包含不存在的文件 \(filename)")
-                        }
+        return .init(folderName: folderName, files: files, content: content, set: set)
+    }
+    
+    static func createImagesetFiles(config: XCImageConfig) async throws -> [XCImageSet] {
+        
+        let xcassets = try FilePath.Folder(path: config.paths.xcassets)
+        let output   = try await itemGroup(config: config)
+        let contents = try await itemExistContents(config: config)
+        var list = [XCImageSet]()
+        
+        for type in output {
+            switch type {
+            case .symbol(let dict):
+                for (key, value) in dict {
+                    let item = try await newItem(filename: key, resource: value, contents: contents[key] ?? [])
+                    let folder = try xcassets.create(folder: item.folderName)
+                    try folder.delete()
+                    try folder.create()
+                    try item.files.forEach { file in
+                       try file.copy(into: folder)
                     }
-                    
-                    try vectors.map(\.file).forEach { file in
-                        try file.copy(into: folder)
-                    }
-                    
-                    try folder.create(file: "Contents.json", data: data)
-                } else {
-                    let itemNames = items.map(\.file.attributes.name)
-                    for filename in filenames {
-                        if itemNames.contains(filename) == false {
-                            throw StemError(code: 1, message: "在 \(key).json 里包含不存在的文件 \(filename)")
-                        }
-                    }
-                    
-                    try items.map(\.file).forEach { file in
-                        try file.copy(into: folder)
-                    }
-                    
-                    try folder.create(file: "Contents.json", data: data)
+                    try folder.create(file: "Contents.json", data: item.content)
+                    list.append(.init(name: item.set.name, ivar: item.set.name, images: item.set.symbols.map({ symbol in
+                            .init(filename: symbol.filename, appearances: symbol.appearances)
+                    }), properties: .init()))
                 }
-            } else {
-                let vectors = value.filter(\.item.isVector)
-                if vectors.isEmpty {
-                    try value.map(\.item.file).forEach { file in
-                        try file.copy(into: folder)
+            case .image(let dict):
+                for (key, value) in dict {
+                    let item = try await newItem(filename: key, resource: value, contents: contents[key] ?? [])
+                    let folder = try xcassets.create(folder: item.folderName)
+                    try folder.delete()
+                    try folder.create()
+                    try item.files.forEach { file in
+                       try file.copy(into: folder)
                     }
-                    let imageSet = XCImageSet(name: key,
-                                              ivar: key,
-                                              images: value.map(\.image),
-                                              properties: .init())
-                    imageSets.append(imageSet)
-                    let data = try await XCImagesetController.contentFile(from: imageSet)
-                    try folder.create(file: "Contents.json", data: data)
-                } else {
-                    try vectors.map(\.item.file).forEach { file in
-                        try file.copy(into: folder)
-                    }
-                    let imageSet = XCImageSet(name: key,
-                                              ivar: key,
-                                              images: vectors.map(\.image),
-                                              properties: .init(renderAs: .template,
-                                                                compressionType: nil,
-                                                                preservesVectorRepresentation: true))
-                    imageSets.append(imageSet)
-                    let data = try await XCImagesetController.contentFile(from: imageSet)
-                    try folder.create(file: "Contents.json", data: data)
+                    try folder.create(file: "Contents.json", data: item.content)
+                    list.append(item.set)
                 }
             }
         }
         
-        return imageSets
+        return list
     }
     
 }

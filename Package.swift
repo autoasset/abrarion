@@ -24,7 +24,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-log.git", .upToNextMajor(from: "1.4.2")),
         .package(url: "https://github.com/linhay/Stem.git", .upToNextMajor(from: "1.0.7")),
         .package(url: "https://github.com/jpsim/Yams.git", .upToNextMajor(from: "4.0.6")),
-        .package(url: "https://github.com/apple/swift-argument-parser", .branch("async")),
+        .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMajor(from: "1.1.1")),
         .package(url: "https://github.com/kareman/SwiftShell.git", .upToNextMajor(from: "5.1.0")),
         .package(name: "SwiftGit", path: "/Users/linhey/Desktop/SwiftGit")
     ],

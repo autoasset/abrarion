@@ -107,7 +107,7 @@ extension Download {
         }
         
         if folder.isExist, (try folder.subFilePaths().isEmpty) == false {
-            throw FilePathError.folderIsNoEmpty
+            throw FilePathError.folderIsNoEmpty(folder.url.path)
         }
         
         return folder
@@ -121,7 +121,7 @@ extension Download {
     static func git(_ model: DownloadModel) async throws {
         let folder = try await folder(model)
         let credentials = model.credentials.flatMap({ Credentials.plaintext(username: $0.username, password: $0.password) })
-        try await Git.shared.repo.clone(from: model.source, to: folder.url, credentials: credentials ?? .default)
+        _ = try await Git.shared.repo.clone(from: model.source, to: folder.url, credentials: credentials ?? .default)
     }
     
 }

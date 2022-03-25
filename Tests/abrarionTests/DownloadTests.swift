@@ -16,7 +16,7 @@ final class DownloadTests: AbrarionTests {
     func testSSHKeyFromConfig() throws {
         let config = try FilePath.File(path: "~/.ssh/id_github")
         let data = String(data: try config.data(), encoding: .utf8)
-        print(data)
+        print(data!)
     }
     
     func testConfig() async throws {
@@ -34,11 +34,11 @@ final class DownloadTests: AbrarionTests {
     }
     
     func testGitCommand() throws {
-        try runApp(bash: "download --source https://github.com/AxApp/abrarion --output /Users/linhey/Desktop/ABRARION-TEST-DOWNLOAD-GIT-PRIVATE-COMMAND --username linhay --password cat ")
+       _ = try runApp(bash: "download --source https://github.com/AxApp/abrarion --output /Users/linhey/Desktop/ABRARION-TEST-DOWNLOAD-GIT-PRIVATE-COMMAND --username linhay --password cat ")
     }
     
     func testHttpCommand() throws {
-        try runApp(bash: "download --source http://n.sinaimg.cn/sinakd20220225s/318/w640h478/20220225/dc42-ff86243dc0cfe464a03b240e19b72dcd.jpg --output /Users/linhey/Desktop/ABRARION-TEST-DOWNLOAD-HTTP")
+       _ = try runApp(bash: "download --source http://n.sinaimg.cn/sinakd20220225s/318/w640h478/20220225/dc42-ff86243dc0cfe464a03b240e19b72dcd.jpg --output /Users/linhey/Desktop/ABRARION-TEST-DOWNLOAD-HTTP")
     }
     
     func testGitDownload() async throws {

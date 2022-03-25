@@ -11,15 +11,31 @@ import SwiftUI
 
 struct XCImagesetController {
     
-    typealias Output = [String: [OutputItem]]
+    typealias Output = [OutputType<[String: [OutputImageItem]], [String: [OutputSymbolItem]]>]
     
-    struct OutputItem {
+    enum OutputType<Image, Symbol> {
+        case image(Image)
+        case symbol(Symbol)
+    }
+    
+    enum FileType {
+        case normal
+        case vector
+        case symbol
+    }
+    
+    struct OutputSymbolItem {
+        let symbol: XCSymbol
+        let item: ValidateItem
+    }
+    
+    struct OutputImageItem {
         let image: XCImage
         let item: ValidateItem
     }
     
     struct ValidateItem {
-        let isVector: Bool
+        let type: FileType
         let file: FilePath.File
     }
     
@@ -29,21 +45,33 @@ extension XCImagesetController {
     
     static func validate(file: FilePath.File) throws -> ValidateItem? {
         if file.attributes.name.lowercased().hasSuffix(".svg") {
-            return .init(isVector: true, file: file)
+            let data = try file.data()
+            if let content = String(data: data, encoding: .utf8),
+               content.contains("\"Notes\""),
+               content.contains("\"Guides\""),
+               content.contains("\"Symbols\""),
+               content.contains("\"Black-S\""),
+               content.contains("\"Regular-S\""),
+               content.contains("\"Ultralight-S\"") {
+                return .init(type: .symbol, file: file)
+            } else {
+                return .init(type: .vector, file: file)
+            }
         }
-        
         switch try file.data().st.mimeType {
         case .png, .jpeg:
-            return .init(isVector: false, file: file)
+            return .init(type: .normal, file: file)
         case .pdf:
-            return .init(isVector: true, file: file)
+            return .init(type: .vector, file: file)
         default:
             return nil
         }
     }
     
     static func output(from files: [FilePath.File], darkModePatterns: [XCImageConfig.DarkModePattern]) async throws -> Output {
-        var sets = Output()
+        
+        var imageSets = [String: [OutputImageItem]]()
+        var symbolSets = [String: [OutputSymbolItem]]()
         
         func append(item: ValidateItem, for name: String, isDarkMode: Bool) {
             let filename = item.file.attributes.name
@@ -57,22 +85,35 @@ extension XCImagesetController {
                 scale = .x1
             }
             
-            let item = OutputItem(image: XCImage(filename: filename,
-                                                 appearances: isDarkMode ? [.luminosity(.dark)] : [],
-                                                 scale: scale),
-                                  item: item)
-            if sets[name] != nil {
-                sets[name]?.append(item)
-            } else {
-                sets[name] = [item]
+            switch item.type {
+            case .vector, .normal:
+                let image = XCImage(filename: filename,
+                                    appearances: isDarkMode ? [.luminosity(.dark)] : [],
+                                    scale: scale)
+                let item = OutputImageItem(image: image, item: item)
+                if imageSets[name] != nil {
+                    imageSets[name]?.append(item)
+                } else {
+                    imageSets[name] = [item]
+                }
+            case .symbol:
+                let symbol = XCSymbol(filename: filename,
+                                      appearances: isDarkMode ? [.luminosity(.dark)] : [],
+                                      direction: nil)
+                let item = OutputSymbolItem(symbol: symbol, item: item)
+                if symbolSets[name] != nil {
+                    symbolSets[name]?.append(item)
+                } else {
+                    symbolSets[name] = [item]
+                }
             }
         }
         
         for file in files {
             guard let item = try validate(file: file),
                   let name = file.attributes.name.split(separator: "@").first?.split(separator: ".").first?.description else {
-                      continue
-                  }
+                continue
+            }
             var isAppend = false
             
             for pattern in darkModePatterns {
@@ -120,10 +161,14 @@ extension XCImagesetController {
             
             
         }
-        return sets
+        return [.image(imageSets), .symbol(symbolSets)]
     }
     
-    static func contentFile(from imageSet: XCImageSet) async throws -> Data { 
+    static func contentFile(from imageSet: XCImageSet) async throws -> Data {
+        return try JSONSerialization.data(withJSONObject: imageSet.toJSON, options: [.prettyPrinted, .sortedKeys])
+    }
+    
+    static func contentFile(from imageSet: XCImageSymbolSet) async throws -> Data {
         return try JSONSerialization.data(withJSONObject: imageSet.toJSON, options: [.prettyPrinted, .sortedKeys])
     }
 }

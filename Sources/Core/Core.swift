@@ -15,7 +15,7 @@ public enum ParsableCommandError: Error {
 
 
 public enum FilePathError: Error {
-    case folderIsNoEmpty
+    case folderIsNoEmpty(file: String = #file, line: Int = #line, function: String = #function, String)
 }
 
 public func json(from path: String?) throws -> JSON? {
