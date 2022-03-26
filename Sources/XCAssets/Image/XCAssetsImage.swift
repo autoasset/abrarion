@@ -94,7 +94,7 @@ extension XCAssetsImage {
     
 }
 
-extension XCAssetsImage {
+private extension XCAssetsImage {
     
     static func createCodeFiles(sets: [XCImageSet], template: XCImageTemplate, folder: FilePath.Folder) async throws {
         
@@ -116,7 +116,7 @@ extension XCAssetsImage {
                 if output.canOverwritten {
                     let file = folder.file(name: output.name + ".swift")
                     try? file.delete()
-                    try file.write(data)
+                    try file.create(with: data)
                 } else {
                     let file = noExistFile(name: output.name, ext: "swift", index: 0)
                     try file.write(data)
