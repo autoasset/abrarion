@@ -38,7 +38,7 @@ extension XCAssetsImage {
                 .compactMap { try json(from: $0) }
                 .compactMap { try XCImageConfig(from: $0) }
             for config in configs {
-               let sets = try await XCAssetsImage.createImagesetFiles(config: config)
+                let sets = try await XCAssetsImage.createImagesetFiles(config: config)
                 if let path = config.paths.codes, path.isEmpty == false {
                     try await XCAssetsImage.createCodeFiles(sets: sets,
                                                             template: config.template,
@@ -81,12 +81,14 @@ extension XCAssetsImage {
                                                     sources: sources),
                                        template: .init(from: nil),
                                        darkModePatterns: [])
-
+            
             let sets = try await XCAssetsImage.createImagesetFiles(config: config)
-
+            
             if code.isEmpty == false {
                 let template = XCImageTemplate(from: try? json(from: template))
-                try await XCAssetsImage.createCodeFiles(sets: sets, template: template, folder: FilePath.Folder(path: code))
+                try await XCAssetsImage.createCodeFiles(sets: sets,
+                                                        template: template,
+                                                        folder: FilePath.Folder(path: code))
             }
         }
         
@@ -101,7 +103,7 @@ private extension XCAssetsImage {
         func noExistFile(name: String, ext: String, index: Int) -> FilePath.File {
             let file = folder.file(name: name + "\(index == 0 ? "" : "\(index)")" + "." + ext)
             if file.isExist {
-               return noExistFile(name: name, ext: ext, index: index + 1)
+                return noExistFile(name: name, ext: ext, index: index + 1)
             } else {
                 return file
             }
@@ -126,17 +128,21 @@ private extension XCAssetsImage {
     
     static func itemGroup(config: XCImageConfig) async throws -> XCImagesetController.Output {
         try await withThrowingTaskGroup(of: XCImagesetController.Output.self, returning: XCImagesetController.Output.self) { group in
+            let xcassets = try FilePath.standardizedPath(config.paths.xcassets)
             for path in config.paths.sources {
                 group.addTask(priority: .background) {
                     let folder = try FilePath.Folder(path: path)
-                    return try await XCImagesetController.output(from: folder.allSubFilePaths().compactMap(\.asFile),
-                                                                 darkModePatterns: config.darkModePatterns)
+                    let files = try folder
+                        .allSubFilePaths()
+                        .compactMap(\.asFile)
+                        .filter({ $0.url.path.hasPrefix(xcassets.path) == false })
+                    return try await XCImagesetController.output(from: files, darkModePatterns: config.darkModePatterns)
                 }
             }
             
             var symbols = [String : [XCImagesetController.OutputSymbolItem]]()
             var images = [String : [XCImagesetController.OutputImageItem]]()
-
+            
             for try await item in group {
                 for type in item {
                     switch type {
@@ -199,7 +205,7 @@ private extension XCAssetsImage {
         let files: [FilePath.File] = resource.map(\.item.file)
         let content: Data
         let set: XCImageSet
-
+        
         if let data = try? contents.first?.data() {
             content = data
             set = try await .init(contentFile: JSON(data: data), name: filename, ivar: filename)
@@ -217,17 +223,17 @@ private extension XCAssetsImage {
         let output   = try await itemGroup(config: config)
         let contents = try await itemExistContents(config: config)
         var list = [XCImageSet]()
-        
         for type in output {
             switch type {
             case .symbol(let dict):
                 for (key, value) in dict {
                     let item = try await newItem(filename: key, resource: value, contents: contents[key] ?? [])
                     let folder = try xcassets.create(folder: item.folderName)
+                    print("1111")
                     try folder.delete()
                     try folder.create()
                     try item.files.forEach { file in
-                       try file.copy(into: folder)
+                        try file.copy(into: folder)
                     }
                     try folder.create(file: "Contents.json", data: item.content)
                     list.append(.init(name: item.set.name, ivar: item.set.name, images: item.set.symbols.map({ symbol in
@@ -241,7 +247,7 @@ private extension XCAssetsImage {
                     try folder.delete()
                     try folder.create()
                     try item.files.forEach { file in
-                       try file.copy(into: folder)
+                        try file.copy(into: folder)
                     }
                     try folder.create(file: "Contents.json", data: item.content)
                     list.append(item.set)
