@@ -111,7 +111,11 @@ extension XCImagesetController {
         
         for file in files {
             guard let item = try validate(file: file),
-                  let name = file.attributes.name.split(separator: "@").first?.split(separator: ".").first?.description else {
+                  let name = file
+                .attributes.name
+                .split(separator: "@").first?
+                .split(separator: ".").dropLast()
+                .joined(separator: ".") else {
                 continue
             }
             var isAppend = false

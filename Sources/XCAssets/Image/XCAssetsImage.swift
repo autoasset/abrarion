@@ -229,7 +229,6 @@ private extension XCAssetsImage {
                 for (key, value) in dict {
                     let item = try await newItem(filename: key, resource: value, contents: contents[key] ?? [])
                     let folder = try xcassets.create(folder: item.folderName)
-                    print("1111")
                     try folder.delete()
                     try folder.create()
                     try item.files.forEach { file in
