@@ -36,4 +36,12 @@ struct XCColorSet {
         self.info = .init(from: json["info"])
         self.colors = try json["colors"].arrayValue.map(XCColor.init(from:))
     }
+    
+    init(string: String) throws {
+        let color = try StemColor(hexThrowing: string)
+        let name = color.hexString(.auto, prefix: .none)
+        self.init(names: [name],
+                  ivars: ["_\(name)"],
+                  colors: [.init(appearances: [], space: .displayP3, value: color)])
+    }
 }
