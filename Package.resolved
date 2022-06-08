@@ -1,61 +1,32 @@
 {
-  "object": {
-    "pins": [
-      {
-        "package": "Stem",
-        "repositoryURL": "https://github.com/linhay/Stem.git",
-        "state": {
-          "branch": null,
-          "revision": "cbb4923cff0593562fa6d5b741381dbb8b02d19f",
-          "version": "1.0.7"
-        }
-      },
-      {
-        "package": "swift-argument-parser",
-        "repositoryURL": "https://github.com/apple/swift-argument-parser",
-        "state": {
-          "branch": null,
-          "revision": "82905286cc3f0fa8adc4674bf49437cab65a8373",
-          "version": "1.1.1"
-        }
-      },
-      {
-        "package": "swift-cgit2",
-        "repositoryURL": "https://github.com/linhay/swift-cgit2",
-        "state": {
-          "branch": "main",
-          "revision": "f1c5e899dd8cbd3199ceffc4cae22447890ca284",
-          "version": null
-        }
-      },
-      {
-        "package": "swift-log",
-        "repositoryURL": "https://github.com/apple/swift-log.git",
-        "state": {
-          "branch": null,
-          "revision": "5d66f7ba25daf4f94100e7022febf3c75e37a6c7",
-          "version": "1.4.2"
-        }
-      },
-      {
-        "package": "SwiftShell",
-        "repositoryURL": "https://github.com/kareman/SwiftShell.git",
-        "state": {
-          "branch": null,
-          "revision": "99680b2efc7c7dbcace1da0b3979d266f02e213c",
-          "version": "5.1.0"
-        }
-      },
-      {
-        "package": "Yams",
-        "repositoryURL": "https://github.com/jpsim/Yams.git",
-        "state": {
-          "branch": null,
-          "revision": "9ff1cc9327586db4e0c8f46f064b6a82ec1566fa",
-          "version": "4.0.6"
-        }
+  "pins" : [
+    {
+      "identity" : "stem",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/linhay/Stem.git",
+      "state" : {
+        "branch" : "master",
+        "revision" : "75909cf16613de12764e55419ff985f876b739a0"
       }
-    ]
-  },
-  "version": 1
+    },
+    {
+      "identity" : "swift-argument-parser",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-argument-parser",
+      "state" : {
+        "revision" : "f3c9084a71ef4376f2fabbdf1d3d90a49f1fabdb",
+        "version" : "1.1.2"
+      }
+    },
+    {
+      "identity" : "swiftgit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/linhay/SwiftGit",
+      "state" : {
+        "branch" : "main",
+        "revision" : "1b2e6d846c9fda8f9a8a11e0c242f6c27de40aa7"
+      }
+    }
+  ],
+  "version" : 2
 }

@@ -1,8 +1,0 @@
----
-models:
-  - source: https://github.com/linhay/Stem.git
-    output: ./Stem
-  - source: https://github.com/AxApp/abrarion
-    output: ./ABRARION-TEST-DOWNLOAD-GIT-PRIVATE-COMMAND
-    username: linhay
-    password: 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
