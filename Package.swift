@@ -16,7 +16,8 @@ let package = Package(
                dependencies: [
                 "SwiftGit",
                 .product(name: "Stem", package: "Stem"),
-                .product(name: "StemFilePath", package: "Stem")
+                .product(name: "StemFilePath", package: "Stem"),
+                .product(name: "StemColor", package: "Stem")
                ]),
         .executableTarget(
             name: "abrarion",
@@ -25,6 +26,10 @@ let package = Package(
             ]),
         .testTarget(
             name: "abrarionTests",
-            dependencies: ["abrarion", "Features"]),
+            dependencies: ["abrarion",
+                           "Features",
+                           .product(name: "Stem", package: "Stem"),
+                           .product(name: "StemFilePath", package: "Stem"),
+                           .product(name: "StemColor", package: "Stem")]),
     ]
 )
