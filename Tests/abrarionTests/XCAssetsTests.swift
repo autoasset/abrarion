@@ -15,12 +15,18 @@ class XCAssetsTests: XCTestCase {
     
     func testColorParse() throws {
         let asset = try XCAsset<XCColor>(from: JSON(parseJSON: Resource.color))
+        try allOptionColors(asset)
+        try allOptionColors(XCAsset<XCColor>(from: JSON(asset.toJSON)))
+    }
+    
+    func allOptionColors(_ asset: XCAsset<XCColor>) throws {
         assert(asset.contents.count == 79)
         assert(asset.info == .xcode)
         let colors = asset.contents
         
         devices(.init(colors[0...11]), idiom: .universal)
         devices(.init(colors[12...23]), idiom: .iphone)
+        /// TODO (24...54)
         devices(.init(colors[55...66]), idiom: .tv)
         devices(.init(colors[67...78]), idiom: .mac)
     }
@@ -122,5 +128,5 @@ class XCAssetsTests: XCTestCase {
         assert(colors[index].devices.idiom == idiom)
         assert(colors[index].value.uInt == 0xFFFFFFFF)
     }
-    
+
 }

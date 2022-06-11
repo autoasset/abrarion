@@ -42,6 +42,17 @@ public enum Appearance {
         }
     }
     
+    var toJSON: [String: String] {
+        switch self {
+        case .luminosity(let luminosity):
+            return ["appearance": "luminosity",
+                    "value": luminosity.rawValue]
+        case .contrast(let contrast):
+            return ["appearance": "contrast",
+                    "value": contrast.rawValue]
+        }
+    }
+    
 }
 
 public extension Array where Element == XCColor {
@@ -95,19 +106,6 @@ public extension Array where Element == Appearance {
             case .contrast(let contrast):
                 return contrast
             }
-        }
-    }
-    
-}
-
-public extension Appearance {
-    
-    var toJSON: [String: String] {
-        switch self {
-        case .luminosity(let luminosity):
-            return ["luminosity": luminosity.rawValue]
-        case .contrast(let contrast):
-            return ["contrast": contrast.rawValue]
         }
     }
     

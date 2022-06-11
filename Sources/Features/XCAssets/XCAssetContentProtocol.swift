@@ -11,4 +11,5 @@ import Stem
 public protocol XCAssetContentProtocol {
     static var parseKey: String { get }
     init(from: JSON) throws
+    var toJSON: [String: Any] { get }
 }

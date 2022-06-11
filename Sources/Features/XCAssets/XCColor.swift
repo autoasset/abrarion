@@ -22,20 +22,17 @@ public struct XCColor: XCAssetContentProtocol {
     public let space: ColorSpace
     public let value: StemColor
     public let displayGamut: DisplayGamut?
-    public let locale: Locale?
     public let devices: Devices
     
     public init(appearances: [Appearance],
                 space: ColorSpace,
                 value: StemColor,
                 displayGamut: DisplayGamut? = nil,
-                locale: Locale? = nil,
                 devices: Devices = .init(idiom: .universal, subtype: nil)) {
         self.appearances = appearances
         self.space = space
         self.value = value
         self.displayGamut = displayGamut
-        self.locale = locale
         self.devices = devices
     }
     
@@ -70,7 +67,34 @@ public struct XCColor: XCAssetContentProtocol {
         self.space = ColorSpace(rawValue: json["color"]["color-space"].stringValue) ?? .displayP3
         self.value = color
         self.displayGamut = DisplayGamut(from: json)
-        self.locale = json["locale"].string.flatMap(Locale.init(identifier:))
-        self.devices =  .init(from: json) ?? .init(idiom: .universal, subtype: nil)
+        self.devices = .init(from: json) ?? .init(idiom: .universal, subtype: nil)
     }
+    
+    public var toJSON: [String: Any] {
+        var dict = [String: Any]()
+        dict.merge(self.devices.toJSON, uniquingKeysWith: { $1 })
+        dict.merge(self.displayGamut?.toJSON ?? [:], uniquingKeysWith: { $1 })
+        dict["appearances"] = appearances.map(\.toJSON)
+        
+        var color = [String: Any]()
+        color["color-space"] = self.space.rawValue
+        color["components"] = components(value)
+        
+        dict["color"] = color
+        return dict
+    }
+    
+    func components(_ color: StemColor) -> [String: String] {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.formatWidth = 3
+        formatter.minimumFractionDigits = 3
+        formatter.maximumFractionDigits = 3
+        let hex = color.hexString(.digits6, prefix: .none).map(\.description)
+        return ["alpha": formatter.string(from: .init(value: color.alpha))!,
+                "blue" : "0x\(hex[4...5].joined().uppercased())",
+                "green": "0x\(hex[2...3].joined().uppercased())",
+                "red"  : "0x\(hex[0...1].joined().uppercased())"]
+    }
+    
 }
