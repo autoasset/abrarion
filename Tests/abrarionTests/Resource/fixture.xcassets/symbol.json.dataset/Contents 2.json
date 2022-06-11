@@ -1,0 +1,65 @@
+{
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  },
+  "properties" : {
+    "localizable" : true
+  },
+  "symbols" : [
+    {
+      "filename" : "custom.square.and.arrow.up.circle.fill 1.svg",
+      "idiom" : "universal",
+      "language-direction" : "left-to-right"
+    },
+    {
+      "appearances" : [
+        {
+          "appearance" : "luminosity",
+          "value" : "light"
+        }
+      ],
+      "filename" : "custom.square.and.arrow.up.circle.fill 2.svg",
+      "idiom" : "universal",
+      "language-direction" : "left-to-right"
+    },
+    {
+      "appearances" : [
+        {
+          "appearance" : "luminosity",
+          "value" : "dark"
+        }
+      ],
+      "filename" : "custom.square.and.arrow.up.circle.fill 3.svg",
+      "idiom" : "universal",
+      "language-direction" : "left-to-right"
+    },
+    {
+      "filename" : "custom.square.and.arrow.up.circle.fill.svg",
+      "idiom" : "universal",
+      "language-direction" : "right-to-left"
+    },
+    {
+      "appearances" : [
+        {
+          "appearance" : "luminosity",
+          "value" : "light"
+        }
+      ],
+      "filename" : "custom.square.and.arrow.up.circle.fill 4.svg",
+      "idiom" : "universal",
+      "language-direction" : "right-to-left"
+    },
+    {
+      "appearances" : [
+        {
+          "appearance" : "luminosity",
+          "value" : "dark"
+        }
+      ],
+      "filename" : "custom.square.and.arrow.up.circle.fill 5.svg",
+      "idiom" : "universal",
+      "language-direction" : "right-to-left"
+    }
+  ]
+}

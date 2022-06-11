@@ -15,11 +15,59 @@ class XCAssetsTests: XCTestCase {
     
     func testColorParse() throws {
         let asset = try XCAsset<XCColor>(from: JSON(parseJSON: Resource.color))
-        try allOptionColors(asset)
-        try allOptionColors(XCAsset<XCColor>(from: JSON(asset.toJSON)))
+        try allOption(asset)
+        try allOption(XCAsset<XCColor>(from: JSON(asset.toJSON)))
     }
     
-    func allOptionColors(_ asset: XCAsset<XCColor>) throws {
+    func testSymbolParse() throws {
+        let asset = try XCAsset<XCSymbol>(from: JSON(parseJSON: Resource.symbol))
+        try allOption(asset)
+        try allOption(XCAsset<XCSymbol>(from: JSON(asset.toJSON)))
+    }
+    
+    func allOption(_ asset: XCAsset<XCSymbol>) throws {
+        assert(asset.contents.count == 6)
+        assert(asset.info == .xcode)
+        let items = asset.contents
+        
+        var index = 0
+        assert(items[index].filename?.isEmpty == false)
+        assert(items[index].devices.idiom == .universal)
+        assert(items[index].direction == .leftToRight)
+        assert(items[index].appearances.luminosities == [])
+        
+        index = 1
+        assert(items[index].filename?.isEmpty == false)
+        assert(items[index].devices.idiom == .universal)
+        assert(items[index].direction == .leftToRight)
+        assert(items[index].appearances.luminosities == [.light])
+        
+        index = 2
+        assert(items[index].filename?.isEmpty == false)
+        assert(items[index].devices.idiom == .universal)
+        assert(items[index].direction == .leftToRight)
+        assert(items[index].appearances.luminosities == [.dark])
+        
+        index = 3
+        assert(items[index].filename?.isEmpty == false)
+        assert(items[index].devices.idiom == .universal)
+        assert(items[index].direction == .rightToleft)
+        assert(items[index].appearances.luminosities == [])
+        
+        index = 4
+        assert(items[index].filename?.isEmpty == false)
+        assert(items[index].devices.idiom == .universal)
+        assert(items[index].direction == .rightToleft)
+        assert(items[index].appearances.luminosities == [.light])
+        
+        index = 5
+        assert(items[index].filename?.isEmpty == false)
+        assert(items[index].devices.idiom == .universal)
+        assert(items[index].direction == .rightToleft)
+        assert(items[index].appearances.luminosities == [.dark])
+    }
+    
+    func allOption(_ asset: XCAsset<XCColor>) throws {
         assert(asset.contents.count == 79)
         assert(asset.info == .xcode)
         let colors = asset.contents

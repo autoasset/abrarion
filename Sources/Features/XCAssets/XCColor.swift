@@ -81,7 +81,12 @@ public struct XCColor: XCAssetContentProtocol {
         color["components"] = components(value)
         
         dict["color"] = color
-        return dict
+        return dict.filter { (key, value) in
+            if let value = value as? Array<Any>, value.isEmpty {
+                return false
+            }
+            return true
+        }
     }
     
     func components(_ color: StemColor) -> [String: String] {
