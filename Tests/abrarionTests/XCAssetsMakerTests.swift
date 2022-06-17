@@ -33,7 +33,7 @@ class XCAssetsMakerTests: XCTestCase {
     let workFolder = try! STFolder("~/Downloads/Tests")
 
     
-    func testExample() throws {
+    func testColorMaker() async throws {
         try workFolder.delete()
         
         let list1 = """
@@ -69,7 +69,7 @@ class XCAssetsMakerTests: XCTestCase {
         
         let maker = XCColorMaker()
         let options = try XCColorMaker.JSONModeOptions(from: JSON(data: jsonEncoder.encode(JSONModeOptions_01())))
-        try maker.evaluate(options: options)
+        try await maker.evaluate(options: options)
     }
 
 }

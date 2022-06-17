@@ -24,7 +24,7 @@ public struct XCColorMaker {
         }
     }
     
-    public func evaluate(options: JSONModeOptions) throws {
+    public func evaluate(options: JSONModeOptions) async throws {
        
         var set = Set<String>()
 
