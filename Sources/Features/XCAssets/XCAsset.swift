@@ -13,6 +13,14 @@ public protocol XCAssetProtocol {
     var toJSON: [String: Any] { get }
 }
 
+extension XCAssetProtocol {
+    var data: Data {
+        get throws {
+            try JSONSerialization.data(withJSONObject: toJSON, options: [.prettyPrinted, .sortedKeys])
+        }
+    }
+}
+
 public struct XCAsset<Content: XCAssetContentProtocol>: XCAssetProtocol {
     
     public let contents: [Content]

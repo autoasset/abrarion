@@ -17,7 +17,7 @@ let package = Package(
                 "SwiftGit",
                 .product(name: "Stem", package: "Stem"),
                 .product(name: "StemFilePath", package: "Stem"),
-                .product(name: "StemColor", package: "Stem")
+                .product(name: "StemColor", package: "Stem"),
                ]),
         .executableTarget(
             name: "abrarion",
