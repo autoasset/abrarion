@@ -27,7 +27,7 @@ class DownloadTests: XCTestCase {
     ]
 }
 """
-        try await DownloadService.shared.request(json: json)
+        try await DownloadService().evaluate(from: .init(parseJSON: json))
 
     }
     

@@ -25,6 +25,11 @@ public struct Variables: VariablesProtocol {
         self.key = key
         self.value = value
     }
+    
+    public init(key: String, value: String) {
+        self.key = key
+        self.value = { value }
+    }
 }
 
 public class VariablesManager {

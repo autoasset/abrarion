@@ -22,6 +22,7 @@ let package = Package(
         .executableTarget(
             name: "abrarion",
             dependencies: [
+                "Features",
                 .product(name: "ArgumentParser", package: "swift-argument-parser")
             ]),
         .testTarget(

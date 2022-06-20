@@ -10,7 +10,7 @@ import Stem
 import StemColor
 import StemFilePath
 
-public struct XCColorMaker {
+public struct XCColorMaker: MissionInstance {
     
     public struct JSONModeOptions {
         fileprivate let template: CodeOptions?
@@ -22,6 +22,13 @@ public struct XCColorMaker {
             self.inputs = json["inputs"].arrayValue.compactMap(\.string)
             self.output = json["output"].stringValue
         }
+    }
+    
+    public func evaluate(from json: JSON?) async throws {
+        guard let json = json else {
+            return
+        }
+        try await evaluate(options: try .init(from: json))
     }
     
     public func evaluate(options: JSONModeOptions) async throws {

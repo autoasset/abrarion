@@ -10,10 +10,18 @@ import StemFilePath
 import Foundation
 import SwiftGit
 
-public struct DownloadService {
+public struct DownloadService: MissionInstance {
     
-    public static let shared = DownloadService()
+    public init() {}
     
+    public func evaluate(from json: JSON?) async throws {
+        guard let json = json else {
+            return
+        }
+        let model = Download(from: json)
+        try await request(model)
+    }
+        
 }
 
 public extension DownloadService {
@@ -22,12 +30,6 @@ public extension DownloadService {
         for item in model.items {
             try await request(item)
         }
-    }
-    
-    func request(json: String) async throws {
-        let json = JSON(parseJSON: json)
-        let model = Download(from: json)
-        try await request(model)
     }
     
 }
