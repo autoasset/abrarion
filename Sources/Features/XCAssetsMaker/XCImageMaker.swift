@@ -16,6 +16,7 @@ public struct XCImageMaker: MissionInstance, XCMaker {
         fileprivate let vectorTemplate: XCCodeOptions?
         /// 依赖代码输出文件夹位置
         fileprivate let templateDependentOutput: String
+        fileprivate let inputFileLints: [XCFileLint]
         fileprivate let contents: [String]
         fileprivate let inputs: [String]
         fileprivate let output: String
@@ -31,7 +32,8 @@ public struct XCImageMaker: MissionInstance, XCMaker {
             self.contents = json["contents"].arrayValue.compactMap(\.string)
             self.inputs = json["inputs"].arrayValue.compactMap(\.string)
             self.output = json["output"].stringValue
-            
+            self.inputFileLints = json["input_file_lints"].arrayValue.compactMap(XCFileLint.init(from:))
+
             if self.template == nil, self.vectorTemplate == nil {
                 self.templateDependentOutput = ""
             } else {
@@ -60,7 +62,7 @@ public struct XCImageMaker: MissionInstance, XCMaker {
         let folder = try STFolder(options.output)
         
         let records = try await files(from: options.inputs)
-            .map(XCReport.shared.illegalFileName(_:))
+            .compactMap { XCReport.shared.illegalFileName($0, with: options.inputFileLints) }
             .compactMap({ try? ImageRecord(from: $0) })
             .reduce([String: [ImageRecord]](), { result, record in
                 var result = result
@@ -90,6 +92,7 @@ public struct XCImageMaker: MissionInstance, XCMaker {
                 record.asset()?.properties.renderAs == .template
             }), options: codeOptions).evaluate()
         }
+        
     }
     
     public init() {}
@@ -243,7 +246,6 @@ extension XCImageMaker {
     }
     
     struct Content {
-        
         let filename: String
         let asset: XCAsset<XCImage>
         
@@ -251,7 +253,6 @@ extension XCImageMaker {
             self.filename = file.attributes.nameComponents.name
             self.asset = try .init(from: JSON(file.data()))
         }
-        
     }
     
 }

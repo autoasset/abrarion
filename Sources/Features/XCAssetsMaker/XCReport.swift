@@ -25,11 +25,18 @@ class XCReport {
     }
     
     /// 非法的命名
-    func illegalFileName(_  file: STFile) -> STFile {
+    func illegalFileName(_  file: STFile, with regexs: [XCFileLint]) -> STFile? {
+        guard !regexs.isEmpty else {
+            return file
+        }
         return file
     }
     
     func vaild(_ record: XCImageMaker.AssetsRecord) -> XCImageMaker.AssetsRecord {
+        return record
+    }
+    
+    func vaild(_ record: XCDataMaker.AssetsRecord) -> XCDataMaker.AssetsRecord {
         return record
     }
     

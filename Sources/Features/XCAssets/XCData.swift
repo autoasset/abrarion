@@ -24,6 +24,14 @@ public struct XCData: XCAssetContentProtocol {
         compressionType = .init(from: json)
     }
     
+    internal init(filename: String?,
+                  compressionType: XCDataCompressionType? = nil,
+                  universalTypeIdentifier: String? = nil) {
+        self.filename = filename
+        self.compressionType = compressionType
+        self.universalTypeIdentifier = universalTypeIdentifier
+    }
+    
     public var toJSON: [String: Any] {
         var dict = [String: Any]()
         dict["filename"] = filename
