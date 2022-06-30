@@ -9,6 +9,7 @@ import Foundation
 import Stem
 
 public enum XCImageRenderAs: String {
+    
     case original
     case template
     

@@ -9,7 +9,8 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.1.2"),
         .package(url: "https://github.com/linhay/SwiftGit", branch: "main"),
-        .package(url: "https://github.com/linhay/Stem", branch: "master"),
+//        .package(url: "https://github.com/linhay/Stem", branch: "master"),
+        .package(path: "/Users/linhey/Desktop/Stem")
     ],
     targets: [
         .target(name: "Features",

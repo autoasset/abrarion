@@ -50,11 +50,11 @@ private extension DownloadService {
     
     func gitClone(_ url: URL, in folder: STFolder, model: Download.Item) async throws {
         guard let name = model.target.name else {
-            try Git.clone(repository: url, workDirectoryURL: folder.url)
+            try Git.shared.clone([], repository: url, workDirectoryURL: folder.url)
             return
         }
         let file = folder.file(name: name)
-        try Git.clone(repository: url, directory: file.path)
+        try Git.shared.clone([], repository: url, directory: file.path)
     }
     
     func downloadable(_ url: URL, in folder: STFolder) async throws {

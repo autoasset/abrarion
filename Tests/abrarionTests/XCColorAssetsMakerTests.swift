@@ -9,11 +9,10 @@ import XCTest
 import Features
 import Stem
 import StemFilePath
-import Virtualization
 
-class XCAssetsMakerTests: XCTestCase {
+class XCColorAssetsMakerTests: XCTestCase {
 
-    public struct JSONModeOptions_01: Codable {
+    public struct ColorJSONModeOptions: Codable {
         
         struct Template: Codable {
             var list_protocol_name = "ListProtocolName"
@@ -28,11 +27,9 @@ class XCAssetsMakerTests: XCTestCase {
         var output = "~/Downloads/Tests/output"
     }
     
-
     let jsonEncoder = JSONEncoder()
     let workFolder = try! STFolder("~/Downloads/Tests")
 
-    
     func testColorMaker() async throws {
         try workFolder.delete()
         
@@ -68,7 +65,7 @@ class XCAssetsMakerTests: XCTestCase {
             .file(name: "list1.json").create(with: list1.data(using: .utf8))
         
         let maker = XCColorMaker()
-        let options = try XCColorMaker.JSONModeOptions(from: JSON(data: jsonEncoder.encode(JSONModeOptions_01())))
+        let options = try XCColorMaker.JSONModeOptions(from: JSON(data: jsonEncoder.encode(ColorJSONModeOptions())))
         try await maker.evaluate(options: options)
     }
 

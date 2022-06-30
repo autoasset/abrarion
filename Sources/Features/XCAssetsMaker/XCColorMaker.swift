@@ -10,15 +10,17 @@ import Stem
 import StemColor
 import StemFilePath
 
-public struct XCColorMaker: MissionInstance {
+public struct XCColorMaker: MissionInstance, XCMaker {
     
     public struct JSONModeOptions {
-        fileprivate let template: CodeOptions?
+        fileprivate let template: XCCodeOptions?
         fileprivate let inputs: [String]
         fileprivate let output: String
         
         public init(from json: JSON) throws {
-            self.template = try .init(from: json["template"])
+            self.template = try .init(from: json["template"], default: .init(listProtocolName: "AbrarionColorListProtocol",
+                                                                             instanceName: "AbrarionColor",
+                                                                             instanceProtocolName: "AbrarionColorInstance"))
             self.inputs = json["inputs"].arrayValue.compactMap(\.string)
             self.output = json["output"].stringValue
         }
@@ -35,17 +37,7 @@ public struct XCColorMaker: MissionInstance {
        
         var set = Set<String>()
 
-        let records = try options.inputs
-            .map(STPath.init)
-            .map({ item -> [STFile] in
-                switch item.referenceType {
-                case .file(let file):
-                    return [file]
-                case .folder(let folder):
-                    return try folder.allSubFilePaths().compactMap(\.asFile)
-                }
-            })
-            .flatMap({ $0 })
+        let records = try await files(from: options.inputs)
             .compactMap({ try? JSON($0.data()) })
             .map(parse(from:))
             .filter({ !$0.isEmpty })
@@ -77,32 +69,6 @@ public struct XCColorMaker: MissionInstance {
 }
 
 private extension XCColorMaker {
-    
-    struct CodeOptions {
-        
-        let listProtocolName: String
-        
-        let instanceName: String
-        let instanceProtocolName: String
-        
-        let listOutputPath: String
-        let instanceOutputPath: String
-        
-        init(from json: JSON) throws {
-            guard let instanceOutputPath = json["instance_output_path"].string else {
-                throw StemError(message: "参数缺失: color.instance_output_path, \(#file) - \(#function) - \(#line)")
-            }
-            guard let listOutputPath = json["list_output_path"].string else {
-                throw StemError(message: "参数缺失: color.list_output_path, \(#file) - \(#function) - \(#line)")
-            }
-            self.listProtocolName = json["list_protocol_name"].string ?? "AbrarionColorListProtocol"
-            self.instanceName = json["instance_name"].string ?? "AbrarionColor"
-            self.instanceProtocolName = json["instance_protocol_name"].string ?? "AbrarionColorInstance"
-            self.instanceOutputPath = instanceOutputPath
-            self.listOutputPath = listOutputPath
-        }
-        
-    }
     
     struct Record {
         
@@ -178,7 +144,7 @@ private extension XCColorMaker {
                                 value: color,
                                 displayGamut: .init(rawValue: record.space)))
         }
-        return .init(contents: list, properties: [:], info: .xcode)
+        return .init(contents: list, properties: .default, info: .xcode)
     }
     
     func createAsset(in folder: STFolder, asset: XCAssetProtocol, record: Record) throws {
@@ -194,7 +160,7 @@ private extension XCColorMaker {
     
     struct CodeMaker {
         
-        let options: CodeOptions
+        let options: XCCodeOptions
         let records: [Record]
         
         func evaluate() throws {
@@ -216,7 +182,7 @@ private extension XCColorMaker {
             let lightPack = light.rgbSpace.unpack(as: Int.self)
             let mark  = "/** light => \(light.hexString(.auto, prefix: .none)) r: \(lightPack.red) g: \(lightPack.green) b: \(lightPack.blue) a: \(light.alpha) */"
             name = (try? StemColor(throwing: name)) == nil ? name : "_" + name
-            return "\(mark) \n var \(name): Instance { .init(light: \(light.hexString(.auto, prefix: .bits)), dark: \(dark)) }"
+            return "\(mark) \n var \(name): \(options.instanceName) { .init(light: \(light.hexString(.auto, prefix: .bits)), dark: \(dark)) }"
         }
         
         private var `extension`: String {
@@ -239,9 +205,7 @@ private extension XCColorMaker {
         init(light: Int64, dark: Int64?)
     }
     
-    public protocol \(options.listProtocolName) {
-        associatedtype Instance: \(options.instanceProtocolName)
-    }
+    public protocol \(options.listProtocolName) {}
     
     public struct \(options.instanceName): \(options.instanceProtocolName) {
         

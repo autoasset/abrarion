@@ -10,6 +10,7 @@ import Stem
 
 public struct XCImage: XCAssetContentProtocol {
     
+    public typealias Properties = XCImageProperties
     public static let parseKey: String = "images"
     
     public let filename: String?

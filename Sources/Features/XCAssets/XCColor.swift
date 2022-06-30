@@ -11,6 +11,7 @@ import Stem
 
 public struct XCColor: XCAssetContentProtocol {
     
+    public typealias Properties = DefaultProperties
     public static let parseKey: String = "colors"
     
     public enum ColorSpace: String {

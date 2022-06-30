@@ -9,7 +9,7 @@ import Foundation
 import Stem
 
 /// https://developer.apple.com/library/archive/documentation/Xcode/Reference/xcode_ref-Asset_Catalog_Format/ImageSetType.html
-public struct XCImageProperties {
+public struct XCImageProperties: XCAssetProtocol {
     
     public let renderAs: XCImageRenderAs?
     public let compressionType: XCImageCompressionType?
@@ -19,11 +19,11 @@ public struct XCImageProperties {
     public let localizable: Bool
     
     public init(renderAs: XCImageRenderAs? = nil,
-         compressionType: XCImageCompressionType? = nil,
-         preservesVectorRepresentation: Bool = false,
-         onDemandResourceTags: [String] = [],
-         autoScaling: Bool = false,
-         localizable: Bool = false) {
+                compressionType: XCImageCompressionType? = nil,
+                preservesVectorRepresentation: Bool = false,
+                onDemandResourceTags: [String] = [],
+                autoScaling: Bool = false,
+                localizable: Bool = false) {
         self.renderAs = renderAs
         self.compressionType = compressionType
         self.preservesVectorRepresentation = preservesVectorRepresentation
@@ -31,7 +31,7 @@ public struct XCImageProperties {
         self.autoScaling = autoScaling
         self.localizable = localizable
     }
-
+    
     public init(from json: JSON) {
         renderAs = .init(from: json)
         compressionType = .init(from: json)

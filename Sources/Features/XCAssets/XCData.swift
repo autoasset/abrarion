@@ -9,6 +9,8 @@ import Foundation
 import Stem
 
 public struct XCData: XCAssetContentProtocol {
+    
+    public typealias Properties = DefaultProperties
     public static let parseKey: String = "data"
     
     public let filename: String?

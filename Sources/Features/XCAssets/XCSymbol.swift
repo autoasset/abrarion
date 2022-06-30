@@ -10,6 +10,7 @@ import Stem
 
 public struct XCSymbol: XCAssetContentProtocol {
     
+    public typealias Properties = DefaultProperties
     public static let parseKey: String = "symbols"
 
     public let filename: String?

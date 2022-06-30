@@ -8,27 +8,14 @@
 import Foundation
 import Stem
 
-public protocol XCAssetProtocol {
-    init(from json: JSON) throws
-    var toJSON: [String: Any] { get }
-}
-
-extension XCAssetProtocol {
-    var data: Data {
-        get throws {
-            try JSONSerialization.data(withJSONObject: toJSON, options: [.prettyPrinted, .sortedKeys])
-        }
-    }
-}
-
 public struct XCAsset<Content: XCAssetContentProtocol>: XCAssetProtocol {
     
     public let contents: [Content]
-    public let properties: [String: Any]
+    public let properties: Content.Properties
     public let info: Info
     
     public init(contents: [Content],
-                properties: [String: Any] = ["localizable": true],
+                properties: Content.Properties,
                 info: Info = .xcode) {
         self.contents = contents
         self.properties = properties
@@ -36,14 +23,14 @@ public struct XCAsset<Content: XCAssetContentProtocol>: XCAssetProtocol {
     }
     
     public init(from json: JSON) throws {
-        self.properties = json["properties"].dictionaryObject ?? [:]
+        self.properties = try .init(from: json["properties"])
         self.info = .init(from: json["info"])
         self.contents = try json[Content.parseKey].arrayValue.map(Content.init(from:))
     }
     
     public var toJSON: [String: Any] {
         var dict = [String: Any]()
-        dict["properties"] = properties
+        dict["properties"] = properties.toJSON
         dict["info"] = info.toJSON
         dict[Content.parseKey] = contents.map(\.toJSON)
         return dict
