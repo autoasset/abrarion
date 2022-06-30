@@ -10,29 +10,44 @@ import StemFilePath
 
 public struct XCDataMaker: MissionInstance, XCMaker {
     
+    public init() {}
+
     public struct JSONModeOptions {
+        
         fileprivate let template: XCCodeOptions?
         /// 依赖代码输出文件夹位置
-        fileprivate let templateDependentOutput: String
+        fileprivate let template_dependent_output: String
         fileprivate let contents: [String]
-        fileprivate let inputFileLints: [XCFileLint]
+        fileprivate let input_file_lints: [XCFileLint]
         fileprivate let inputs: [String]
         fileprivate let output: String
         
+        internal init(template: XCCodeOptions?,
+                      template_dependent_output: String,
+                      contents: [String],
+                      input_file_lints: [XCFileLint],
+                      inputs: [String],
+                      output: String) {
+            self.template = template
+            self.template_dependent_output = template_dependent_output
+            self.input_file_lints = input_file_lints
+            self.contents = contents
+            self.inputs = inputs
+            self.output = output
+        }
+        
         public init(from json: JSON) throws {
-            self.template = try .init(from: json["template"], default: .init(listProtocolName: "AbrarionDataListProtocol",
-                                                                             instanceName: "AbrarionData",
-                                                                             instanceProtocolName: "AbrarionDataInstance"))
+            self.template = try .init(from: json["template"], default: .init(type: "Data"))
             self.contents = json["contents"].arrayValue.compactMap(\.string)
-            self.inputFileLints = json["input_file_lints"].arrayValue.compactMap(XCFileLint.init(from:))
+            self.input_file_lints = json["input_file_lints"].arrayValue.compactMap(XCFileLint.init(from:))
             self.inputs = json["inputs"].arrayValue.compactMap(\.string)
             self.output = json["output"].stringValue
             
             if self.template == nil {
-                self.templateDependentOutput = ""
+                self.template_dependent_output = ""
             } else {
                 if let path = json["template_dependent_output"].string {
-                    self.templateDependentOutput = path
+                    self.template_dependent_output = path
                 } else {
                     throw StemError(message: "参数缺失: template_dependent_output")
                 }
@@ -55,7 +70,7 @@ public struct XCDataMaker: MissionInstance, XCMaker {
         let folder = try STFolder(options.output)
         
         let records = try await files(from: options.inputs)
-            .compactMap { XCReport.shared.illegalFileName($0, with: options.inputFileLints) }
+            .compactMap { XCReport.shared.illegalFileName($0, with: options.input_file_lints) }
             .compactMap({ try? DataRecord(from: $0) })
             .reduce([String: [DataRecord]](), { result, record in
                 var result = result
@@ -73,7 +88,7 @@ public struct XCDataMaker: MissionInstance, XCMaker {
             })
         
         if let codeOptions = options.template {
-            try XCDependentCodeMaker.createFindModule(in: .init(options.templateDependentOutput))
+            try XCDependentCodeMaker.createFindModule(in: .init(options.template_dependent_output))
             try CodeMaker(records: records, options: codeOptions).evaluate()
         }
     }
@@ -235,7 +250,6 @@ private extension XCDataMaker {
     """
         }
 
-        
     }
         
 }

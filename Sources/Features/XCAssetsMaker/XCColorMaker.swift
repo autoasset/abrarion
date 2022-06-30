@@ -18,9 +18,7 @@ public struct XCColorMaker: MissionInstance, XCMaker {
         fileprivate let output: String
         
         public init(from json: JSON) throws {
-            self.template = try .init(from: json["template"], default: .init(listProtocolName: "AbrarionColorListProtocol",
-                                                                             instanceName: "AbrarionColor",
-                                                                             instanceProtocolName: "AbrarionColorInstance"))
+            self.template = try .init(from: json["template"], default: .init(type: "Color"))
             self.inputs = json["inputs"].arrayValue.compactMap(\.string)
             self.output = json["output"].stringValue
         }

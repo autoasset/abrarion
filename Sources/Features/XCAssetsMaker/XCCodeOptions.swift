@@ -9,13 +9,11 @@ import Foundation
 import Stem
 
 struct XCCodeOptions {
-    
-    init(listProtocolName: String,
-         instanceName: String,
-         instanceProtocolName: String) {
-        self.listProtocolName = listProtocolName
-        self.instanceName = instanceName
-        self.instanceProtocolName = instanceProtocolName
+
+    init(type: String) {
+        self.listProtocolName = "Abrarion\(type)ListProtocol"
+        self.instanceName = "Abrarion\(type)Instance"
+        self.instanceProtocolName = "Abrarion\(type)"
         self.listOutputPath = ""
         self.instanceOutputPath = ""
         self.bundleName = ""

@@ -13,32 +13,28 @@ public struct XCImageMaker: MissionInstance, XCMaker {
     
     public struct JSONModeOptions {
         fileprivate let template: XCCodeOptions?
-        fileprivate let vectorTemplate: XCCodeOptions?
+        fileprivate let vector_template: XCCodeOptions?
         /// 依赖代码输出文件夹位置
-        fileprivate let templateDependentOutput: String
-        fileprivate let inputFileLints: [XCFileLint]
+        fileprivate let template_dependent_output: String
+        fileprivate let input_file_lints: [XCFileLint]
         fileprivate let contents: [String]
         fileprivate let inputs: [String]
         fileprivate let output: String
         
         public init(from json: JSON) throws {
-            self.template = try .init(from: json["template"], default: .init(listProtocolName: "AbrarionImageListProtocol",
-                                                                             instanceName: "AbrarionImage",
-                                                                             instanceProtocolName: "AbrarionImageInstance"))
-            self.vectorTemplate = try .init(from: json["vector_template"], default: .init(listProtocolName: "AbrarionVectorImageListProtocol",
-                                                                                          instanceName: "AbrarionVectorImage",
-                                                                                          instanceProtocolName: "AbrarionVectorImageInstance"))
+            self.template = try .init(from: json["template"], default: .init(type: "Image"))
+            self.vector_template = try .init(from: json["vector_template"], default: .init(type: "VectorImage"))
             
             self.contents = json["contents"].arrayValue.compactMap(\.string)
             self.inputs = json["inputs"].arrayValue.compactMap(\.string)
             self.output = json["output"].stringValue
-            self.inputFileLints = json["input_file_lints"].arrayValue.compactMap(XCFileLint.init(from:))
-
-            if self.template == nil, self.vectorTemplate == nil {
-                self.templateDependentOutput = ""
+            self.input_file_lints = json["input_file_lints"].arrayValue.compactMap(XCFileLint.init(from:))
+            
+            if self.template == nil, self.vector_template == nil {
+                self.template_dependent_output = ""
             } else {
                 if let path = json["template_dependent_output"].string {
-                    self.templateDependentOutput = path
+                    self.template_dependent_output = path
                 } else {
                     throw StemError(message: "参数缺失: template_dependent_output \(#file) - \(#function) - \(#line)")
                 }
@@ -62,7 +58,7 @@ public struct XCImageMaker: MissionInstance, XCMaker {
         let folder = try STFolder(options.output)
         
         let records = try await files(from: options.inputs)
-            .compactMap { XCReport.shared.illegalFileName($0, with: options.inputFileLints) }
+            .compactMap { XCReport.shared.illegalFileName($0, with: options.input_file_lints) }
             .compactMap({ try? ImageRecord(from: $0) })
             .reduce([String: [ImageRecord]](), { result, record in
                 var result = result
@@ -80,14 +76,14 @@ public struct XCImageMaker: MissionInstance, XCMaker {
             })
         
         if let codeOptions = options.template {
-            try XCDependentCodeMaker.createFindModule(in: .init(options.templateDependentOutput))
+            try XCDependentCodeMaker.createFindModule(in: .init(options.template_dependent_output))
             try CodeMaker(isVector: false, records: records.filter({ record in
                 record.asset()?.properties.renderAs != .template
             }), options: codeOptions).evaluate()
         }
         
-        if let codeOptions = options.vectorTemplate {
-            try XCDependentCodeMaker.createFindModule(in: .init(options.templateDependentOutput))
+        if let codeOptions = options.vector_template {
+            try XCDependentCodeMaker.createFindModule(in: .init(options.template_dependent_output))
             try CodeMaker(isVector: true, records: records.filter({ record in
                 record.asset()?.properties.renderAs == .template
             }), options: codeOptions).evaluate()
@@ -298,7 +294,7 @@ private extension XCImageMaker {
     #elseif canImport(AppKit)
     import AppKit
     #endif
-
+    
     public protocol \(options.instanceProtocolName) {
         
         var named: String { get }
@@ -306,7 +302,7 @@ private extension XCImageMaker {
         
         init(named: String, in bundle: String?)
     }
-
+    
     extension \(options.instanceProtocolName) {
         
     #if canImport(UIKit)
@@ -336,24 +332,24 @@ private extension XCImageMaker {
     #endif
         
     }
-
+    
     public protocol \(options.listProtocolName) {}
-
+    
     public struct \(options.instanceName): \(options.instanceProtocolName) {
         
         public let named: String
         public let bundle: String?
-
+    
         public init(named: String, in bundle: String?) {
             self.named = named
             self.bundle = bundle
         }
-
+    
     }
     """
         }
-
+        
         
     }
-        
+    
 }

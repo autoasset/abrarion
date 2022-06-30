@@ -38,6 +38,7 @@ final class XCImageAssetsMakerTests: XCTestCase {
         var contents: [String] = []
         var inputs: [String] = ["~/Downloads/Tests"]
         var output: String = "~/Downloads/Tests/resources"
+        
     }
     
     var jsonEncoder = JSONEncoder()
@@ -46,13 +47,28 @@ final class XCImageAssetsMakerTests: XCTestCase {
     func testImageMaker() async throws {
         try? workFolder.delete()
         let file = try workFolder.create(file: "test_image.zip", data: Resource.testImageZip)
-        await try StemShell.zsh("unzip \(file.attributes.name)", context: .init(at: workFolder.url, standardOutput: { str in
+        try await StemShell.zsh("unzip \(file.attributes.name)", context: .init(at: workFolder.url, standardOutput: { str in
             print("==> ", str)
         }))
         try file.delete()
         let maker = XCImageMaker()
-        let options = try XCImageMaker.JSONModeOptions(from: JSON(data: jsonEncoder.encode(ImageJSONModeOptions())))
+        let input = ImageJSONModeOptions()
+        let options = try XCImageMaker.JSONModeOptions(from: JSON(data: jsonEncoder.encode(input)))
         try await maker.evaluate(options: options)
+        
+        try await assert {
+            try STFolder(input.template_dependent_output).subFilePaths().isEmpty == false
+        }
+        
+        try await assert {
+            try STFolder(input.output).subFilePaths().isEmpty == false
+        }
     }
     
+}
+
+
+func assert(throwing: () async throws -> Bool) async throws {
+   let flag = try await throwing()
+    assert(flag)
 }

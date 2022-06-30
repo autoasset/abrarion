@@ -22,5 +22,6 @@ struct Resource {
     static var symbol: String { String(data: data(for: "symbol.json"), encoding: .utf8)! }
 
     static var testImageZip: Data { data(for: "test_image.zip") }
+    static var iconfontZip: Data { data(for: "iconfont.zip") }
 
 }
