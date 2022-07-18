@@ -20,6 +20,7 @@ class XCColorAssetsMakerTests: XCTestCase {
             var instance_protocol_name = "InstanceProtocolName"
             var list_output_path = "~/Downloads/Tests/list.swift"
             var instance_output_path = "~/Downloads/Tests/color-core.swift"
+            var bundle_name = "bundle_name"
         }
         
         var template = Template()

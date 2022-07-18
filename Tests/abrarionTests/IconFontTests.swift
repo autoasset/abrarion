@@ -42,7 +42,7 @@ class IconFontTests: XCTestCase {
         let file = try workFolder.create(file: "iconfont.zip", data: Resource.iconfontZip)
         let context = StemShell.Context.init(at: workFolder.url, standardOutput: .init())
         context.standardOutput?.sink(receiveValue: { data in
-            print(String(data: data, encoding: .utf8))
+            print(String(data: data, encoding: .utf8) ?? "")
         }).store(in: &cancellables)
         try await StemShell.zsh("unzip -d iconfont \(file.attributes.name)", context: context)
         try file.delete()
@@ -79,10 +79,31 @@ class IconFontTests: XCTestCase {
         }
     }
     
+    public struct FlutterModeOptions: Codable {
+        
+        struct CodeOptions: Codable {
+            var font_package = "font_package"
+            var class_name = "class_name"
+            var list_output_path: String = "~/Downloads/Tests/codes/DataInstanceList.dart"
+        }
+        
+        var template: CodeOptions = .init()
+        var input_json_file: String = "~/Downloads/Tests/iconfont/iconfont.json"
+        var input_font_file: String = "~/Downloads/Tests/iconfont/iconfont.ttf"
+        var output: String = "~/Downloads/resources"
+    }
+    
     func testFlutterMaker() async throws {
         try await clear()
-
+        let maker = FlutterIconFontMarker()
+        let input = FlutterModeOptions()
+        let options = try FlutterIconFontMarker.JSONModeOptions(from: JSON(data: jsonEncoder.encode(input)))
+        try? STFolder(input.output).delete()
         
+        try await maker.evaluate(options: options)
+        try await assert {
+            try STFolder(input.output).subFilePaths().isEmpty == false
+        }
     }
     
 }

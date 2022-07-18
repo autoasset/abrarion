@@ -9,11 +9,11 @@ import Foundation
 import Stem
 import StemFilePath
 
-struct FlutterIconFontMarker: MissionInstance, XCMaker {
-   
+public struct FlutterIconFontMarker: MissionInstance, XCMaker {
+    
     public init() {}
     
-    struct CodeOptions {
+    public struct CodeOptions {
         let font_package: String
         let class_name: String
         let list_output_path: String
@@ -28,8 +28,6 @@ struct FlutterIconFontMarker: MissionInstance, XCMaker {
     
     public struct JSONModeOptions {
         fileprivate let template: CodeOptions?
-        /// 依赖代码输出文件夹位置
-        fileprivate let template_dependent_output: String
         fileprivate let input_json_file: String
         fileprivate let input_font_file: String
         fileprivate let output: String
@@ -40,16 +38,6 @@ struct FlutterIconFontMarker: MissionInstance, XCMaker {
             self.input_json_file = json["input_json_file"].stringValue
             self.input_font_file = json["input_font_file"].stringValue
             self.output = json["output"].stringValue
-            
-            if self.template == nil {
-                self.template_dependent_output = ""
-            } else {
-                if let path = json["template_dependent_output"].string {
-                    self.template_dependent_output = path
-                } else {
-                    throw StemError(message: "参数缺失: template_dependent_output")
-                }
-            }
         }
     }
     
@@ -66,9 +54,11 @@ struct FlutterIconFontMarker: MissionInstance, XCMaker {
         let model = try decoder.decode(KhalaIconFont.self, from: iconFontJsonFile.data())
         
         let iconFontFile = try STFile(options.input_font_file)
-        let tagetFile = STPath(.init(fileURLWithPath: options.output), as: .file)
-        try iconFontFile.replace(tagetFile)
+        let folder = try STFolder(options.output)
+        try? folder.create()
         
+        try iconFontFile.copy(into: folder)
+                
         if let options = options.template {
             try CodeMaker(file: iconFontFile, records: model, options: options).evaluate()
         }
@@ -97,7 +87,7 @@ extension FlutterIconFontMarker {
             let name = formatter.camelCased(named)
             return "static const IconData \(name) = const IconData(0x\(record.unicode), fontFamily: '\(records.font_family)',fontPackage: '\(options.font_package)');"
         }
-
+        
         private var `extension`: String {
         """
         import 'package:flutter/widgets.dart';

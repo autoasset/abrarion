@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/linhay/Stem",
       "state" : {
-        "revision" : "4d9e4d8221f4ba16d0e6af31cd8ac9af7f78205f",
-        "version" : "1.1.1"
+        "branch" : "master",
+        "revision" : "93b7cb86a0589acfa5eff945694f16b89f1a0740"
       }
     },
     {
@@ -19,12 +19,12 @@
       }
     },
     {
-      "identity" : "swiftgit",
+      "identity" : "swift-git",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/linhay/SwiftGit",
+      "location" : "https://github.com/linhay/swift-git",
       "state" : {
         "branch" : "main",
-        "revision" : "c35a2fe1460dc5fe6eb2fa328ff48d5a4b53076a"
+        "revision" : "041f618fbaa995756c75e16b5328ec3be31eaac4"
       }
     }
   ],

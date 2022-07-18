@@ -8,14 +8,15 @@ let package = Package(
     platforms: [.macOS(.v12)],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMajor(from: "1.1.3")),
-        .package(url: "https://github.com/linhay/SwiftGit", branch: "main"),
-        .package(url: "https://github.com/linhay/Stem", .upToNextMajor(from: "1.1.1")),
-//        .package(path: "/Users/linhey/Desktop/Stem")
+        .package(url: "https://github.com/linhay/swift-git", branch: "main"),
+        // .package(url: "https://github.com/linhay/Stem", .upToNextMajor(from: "1.1.1")),
+        .package(url: "https://github.com/linhay/Stem", branch: "master"),
+//         .package(path: "/Users/linhey/Desktop/Stem")
     ],
     targets: [
         .target(name: "Features",
                dependencies: [
-                "SwiftGit",
+                .product(name: "SwiftGit", package: "swift-git"),
                 .product(name: "Stem", package: "Stem"),
                 .product(name: "StemFilePath", package: "Stem"),
                 .product(name: "StemColor", package: "Stem"),

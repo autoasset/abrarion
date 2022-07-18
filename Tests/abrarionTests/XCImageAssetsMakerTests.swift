@@ -50,7 +50,7 @@ final class XCImageAssetsMakerTests: XCTestCase {
         
         let context = StemShell.Context.init(at: workFolder.url, standardOutput: .init())
         context.standardOutput?.sink(receiveValue: { data in
-            print(String(data: data, encoding: .utf8))
+            print(String(data: data, encoding: .utf8) ?? "")
         }).store(in: &Units.cancellables)
         try await StemShell.zsh("unzip \(file.attributes.name)", context: context)
         try file.delete()

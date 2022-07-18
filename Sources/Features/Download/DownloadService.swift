@@ -56,17 +56,19 @@ private extension DownloadService {
     
     func gitClone(_ url: URL, in folder: STFolder, model: Download.Item) async throws {
         guard let name = model.target.name else {
-            try Git.shared.clone([], repository: url, workDirectoryURL: folder.url)
+            try await Git.shared.clone([], repository: url, workDirectoryURL: folder.url)
             return
         }
         let file = folder.file(name: name)
-        try Git.shared.clone([], repository: url, directory: file.path)
+        try await Git.shared.clone([], repository: url, directory: file.path)
     }
     
     func downloadable(_ url: URL, in folder: STFolder) async throws {
         let fileURL = try await URLSession.shared.download(from: url, delegate: nil).0
         let file = STFile(fileURL)
-        try file.replace(folder.file(name: url.lastPathComponent))
+        let target = folder.file(name: url.lastPathComponent)
+        try? target.delete()
+        try file.copy(to: target)
     }
     
 }
