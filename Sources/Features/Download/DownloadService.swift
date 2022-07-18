@@ -18,7 +18,13 @@ public struct DownloadService: MissionInstance {
         guard let json = json else {
             return
         }
-        let model = Download(from: json)
+        try await request(Download(from: json))
+    }
+    
+    public func evaluate(from model: Download?) async throws {
+        guard let model = model else {
+            return
+        }
         try await request(model)
     }
         

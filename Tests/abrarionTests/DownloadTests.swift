@@ -8,27 +8,39 @@
 import Foundation
 import XCTest
 import Features
+import Stem
+import StemFilePath
 
 class DownloadTests: XCTestCase {
     
-    func testDownload() async throws {
-        let json = """
-{
-    "target":{
-        "folder":"~/Downloads"
-    },
-    "items":[
-        {
-            "uri":"git@github.com:linhay/SwiftGit.git"
-        },
-        {
-            "uri":"https://github.com/linhay/SwiftGit/archive/refs/heads/main.zip"
+    public struct JSONModeOptions: Codable {
+        
+        struct Target: Codable {
+            var folder = "~/Downloads"
         }
-    ]
-}
-"""
-        try await DownloadService().evaluate(from: .init(parseJSON: json))
-
+        
+        struct Item: Codable {
+            var uri: String
+        }
+        
+        var target = Target()
+        var items = [
+            Item(uri: "git@github.com:linhay/swift-git.git"),
+            .init(uri: "https://github.com/linhay/swift-git/archive/refs/heads/main.zip")
+        ]
+        
+    }
+    
+    func testDownload() async throws {
+        try? STFile("~/Downloads/main.zip").delete()
+        try? STFolder("~/Downloads/swift-git.git").delete()
+        
+        let input = JSONModeOptions()
+        let options = try Download(from: JSON(data: Units.encode(input)))
+        try await DownloadService().evaluate(from: options)
+        
+        try await assert(throwing: { try STFile("~/Downloads/main.zip").isExist })
+        try await assert(throwing: { try STFolder("~/Downloads/swift-git.git").isExist })
     }
     
 }
