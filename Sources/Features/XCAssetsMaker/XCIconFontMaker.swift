@@ -76,11 +76,11 @@ extension XCIconFontMaker {
         let options: XCCodeOptions
         
         func evaluate() throws {
-            let file = try STFile(options.instanceOutputPath)
+            let file = try STFile(options.instance_output_path)
             try file.delete()
             try file.create(with: instance.data(using: .utf8))
             
-            let list = try STFile(options.listOutputPath)
+            let list = try STFile(options.list_output_path)
             try list.delete()
             try list.create(with: `extension`.data(using: .utf8))
         }
@@ -89,12 +89,12 @@ extension XCIconFontMaker {
             let named = record.name
             let formatter = NameFormatter(language: .swift, splitSet: .letters.union(.decimalDigits).inverted)
             let name = formatter.camelCased(named)
-            return "/*\(named) bundle: \(options.bundleName) */"
-            + "\n var \(name): \(options.instanceName) {"
+            return "/*\(named) bundle: \(options.bundle_name) */"
+            + "\n var \(name): \(options.instance_name) {"
             + #".init(string: "\u{"#
             + record.unicode
             + #"}", in: ""#
-            + options.bundleName
+            + options.bundle_name
             + #"", familyName: ""#
             + records.font_family
             + #"", dataName: ""#
@@ -104,7 +104,7 @@ extension XCIconFontMaker {
         
         private var `extension`: String {
             """
-            public extension \(options.listProtocolName) {
+            public extension \(options.list_protocol_name) {
             \(records.glyphs.sorted(by: { $0.name < $1.name }).map(code(with:)).joined(separator: "\n"))
             }
             """
@@ -118,7 +118,7 @@ extension XCIconFontMaker {
     import AppKit
     #endif
     
-    public protocol \(options.instanceProtocolName) {
+    public protocol \(options.instance_protocol_name) {
         var dataName: String { get }
         var bundle: String { get }
         var string: String { get }
@@ -126,7 +126,7 @@ extension XCIconFontMaker {
         init(string: String, in bundle: String, familyName: String, dataName: String)
     }
     
-    public extension \(options.instanceProtocolName) {
+    public extension \(options.instance_protocol_name) {
         
         #if canImport(AppKit)
         func font(ofSize: CGFloat) -> NSFont {
@@ -146,7 +146,7 @@ extension XCIconFontMaker {
     
     }
     
-    extension \(options.instanceProtocolName) {
+    extension \(options.instance_protocol_name) {
     
         @available(iOS 9.0, macOS 10.11, tvOS 6.0, watchOS 2.0, *)
         func data() -> Foundation.Data {
@@ -182,9 +182,9 @@ extension XCIconFontMaker {
     
     }
     
-    public protocol \(options.listProtocolName) {}
+    public protocol \(options.list_protocol_name) {}
     
-    public struct \(options.instanceName): \(options.instanceProtocolName) {
+    public struct \(options.instance_name): \(options.instance_protocol_name) {
         
         public let string: String
         public let bundle: String

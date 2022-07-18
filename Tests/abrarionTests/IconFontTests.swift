@@ -10,6 +10,7 @@ import XCTest
 import Features
 import Stem
 import StemFilePath
+import Combine
 
 class IconFontTests: XCTestCase {
     
@@ -34,15 +35,22 @@ class IconFontTests: XCTestCase {
     
     var jsonEncoder = JSONEncoder()
     var workFolder = try! STFolder("~/Downloads/Tests")
+    private var cancellables = Set<AnyCancellable>()
+    
+    func clear() async throws {
+        try? workFolder.delete()
+        let file = try workFolder.create(file: "iconfont.zip", data: Resource.iconfontZip)
+        let context = StemShell.Context.init(at: workFolder.url, standardOutput: .init())
+        context.standardOutput?.sink(receiveValue: { data in
+            print(String(data: data, encoding: .utf8))
+        }).store(in: &cancellables)
+        try await StemShell.zsh("unzip -d iconfont \(file.attributes.name)", context: context)
+        try file.delete()
+    }
     
     func testMaker() async throws {
         do {
-            try? workFolder.delete()
-            let file = try workFolder.create(file: "iconfont.zip", data: Resource.iconfontZip)
-            try await StemShell.zsh("unzip -d iconfont \(file.attributes.name)", context: .init(at: workFolder.url, standardOutput: { str in
-                print("==> ", str)
-            }))
-            try file.delete()
+            try await clear()
             let maker = XCIconFontMaker()
             let input = JSONModeOptions()
             let options = try XCIconFontMaker.JSONModeOptions(from: JSON(data: jsonEncoder.encode(input)))
@@ -69,6 +77,12 @@ class IconFontTests: XCTestCase {
         } catch {
             throw error
         }
+    }
+    
+    func testFlutterMaker() async throws {
+        try await clear()
+
+        
     }
     
 }

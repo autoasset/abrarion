@@ -162,11 +162,11 @@ private extension XCColorMaker {
         let records: [Record]
         
         func evaluate() throws {
-            let file = try STFile(options.instanceOutputPath)
+            let file = try STFile(options.instance_output_path)
             try file.delete()
             try file.create(with: instance.data(using: .utf8))
             
-            let list = try STFile(options.listOutputPath)
+            let list = try STFile(options.list_output_path)
             try list.delete()
             try list.create(with: `extension`.data(using: .utf8))
         }
@@ -180,12 +180,12 @@ private extension XCColorMaker {
             let lightPack = light.rgbSpace.unpack(as: Int.self)
             let mark  = "/** light => \(light.hexString(.auto, prefix: .none)) r: \(lightPack.red) g: \(lightPack.green) b: \(lightPack.blue) a: \(light.alpha) */"
             name = (try? StemColor(throwing: name)) == nil ? name : "_" + name
-            return "\(mark) \n var \(name): \(options.instanceName) { .init(light: \(light.hexString(.auto, prefix: .bits)), dark: \(dark)) }"
+            return "\(mark) \n var \(name): \(options.instance_name) { .init(light: \(light.hexString(.auto, prefix: .bits)), dark: \(dark)) }"
         }
         
         private var `extension`: String {
             """
-            public extension \(options.listProtocolName) {
+            public extension \(options.list_protocol_name) {
             \(records.map(code(with:)).joined(separator: "\n"))
             }
             """
@@ -199,13 +199,13 @@ private extension XCColorMaker {
     import AppKit
     #endif
     
-    public protocol \(options.instanceProtocolName) {
+    public protocol \(options.instance_protocol_name) {
         init(light: Int64, dark: Int64?)
     }
     
-    public protocol \(options.listProtocolName) {}
+    public protocol \(options.list_protocol_name) {}
     
-    public struct \(options.instanceName): \(options.instanceProtocolName) {
+    public struct \(options.instance_name): \(options.instance_protocol_name) {
         
         #if canImport(UIKit)
         public typealias Color = UIColor

@@ -181,11 +181,11 @@ private extension XCDataMaker {
         let options: XCCodeOptions
         
         func evaluate() throws {
-            let file = try STFile(options.instanceOutputPath)
+            let file = try STFile(options.instance_output_path)
             try file.delete()
             try file.create(with: instance.data(using: .utf8))
             
-            let list = try STFile(options.listOutputPath)
+            let list = try STFile(options.list_output_path)
             try list.delete()
             try list.create(with: `extension`.data(using: .utf8))
         }
@@ -193,13 +193,13 @@ private extension XCDataMaker {
         private func code(with record: AssetsRecord) -> String {
             let named = record.name
             let name = NameFormatter(language: .swift, splitSet: .letters.union(.decimalDigits).inverted).camelCased(named)
-            let mark = "/*\(named) bundle: \(options.bundleName) */"
-            return "\(mark) \n var \(name): \(options.instanceName) { .init(named: \"\(named)\", in: \"\(options.bundleName.isEmpty ? "nil" : options.bundleName)\") }"
+            let mark = "/*\(named) bundle: \(options.bundle_name) */"
+            return "\(mark) \n var \(name): \(options.instance_name) { .init(named: \"\(named)\", in: \"\(options.bundle_name.isEmpty ? "nil" : options.bundle_name)\") }"
         }
         
         private var `extension`: String {
             """
-            public extension \(options.listProtocolName) {
+            public extension \(options.list_protocol_name) {
             \(records.sorted(by: { $0.name < $1.name }).map(code(with:)).joined(separator: "\n"))
             }
             """
@@ -213,7 +213,7 @@ private extension XCDataMaker {
     import AppKit
     #endif
 
-    public protocol \(options.instanceProtocolName) {
+    public protocol \(options.instance_protocol_name) {
         
         var named: String { get }
         var bundle: String? { get }
@@ -221,7 +221,7 @@ private extension XCDataMaker {
         init(named: String, in bundle: String?)
     }
 
-    extension \(options.instanceProtocolName) {
+    extension \(options.instance_protocol_name) {
         
         @available(iOS 9.0, macOS 10.11, tvOS 6.0, watchOS 2.0, *)
         public func value() -> Foundation.Data {
@@ -234,9 +234,9 @@ private extension XCDataMaker {
         }
     }
 
-    public protocol \(options.listProtocolName) {}
+    public protocol \(options.list_protocol_name) {}
 
-    public struct \(options.instanceName): \(options.instanceProtocolName) {
+    public struct \(options.instance_name): \(options.instance_protocol_name) {
         
         public let named: String
         public let bundle: String?

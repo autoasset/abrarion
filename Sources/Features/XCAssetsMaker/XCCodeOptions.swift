@@ -11,40 +11,40 @@ import Stem
 struct XCCodeOptions {
 
     init(type: String) {
-        self.listProtocolName = "Abrarion\(type)ListProtocol"
-        self.instanceName = "Abrarion\(type)Instance"
-        self.instanceProtocolName = "Abrarion\(type)"
-        self.listOutputPath = ""
-        self.instanceOutputPath = ""
-        self.bundleName = ""
+        self.list_protocol_name = "Abrarion\(type)ListProtocol"
+        self.instance_name = "Abrarion\(type)Instance"
+        self.instance_protocol_name = "Abrarion\(type)"
+        self.list_output_path = ""
+        self.instance_output_path = ""
+        self.bundle_name = ""
     }
     
-    let listProtocolName: String
+    let list_protocol_name: String
     
-    let instanceName: String
-    let instanceProtocolName: String
+    let instance_name: String
+    let instance_protocol_name: String
     
-    let listOutputPath: String
-    let instanceOutputPath: String
-    let bundleName: String
+    let list_output_path: String
+    let instance_output_path: String
+    let bundle_name: String
     
     init(from json: JSON, default model: XCCodeOptions) throws {
-        self.listProtocolName = json["list_protocol_name"].string ?? model.listProtocolName
-        self.instanceName = json["instance_name"].string ?? model.instanceName
-        self.instanceProtocolName = json["instance_protocol_name"].string ?? model.instanceProtocolName
-        self.instanceOutputPath = json["instance_output_path"].stringValue
-        self.listOutputPath = json["list_output_path"].stringValue
-        self.bundleName = json["bundle_name"].stringValue
+        self.list_protocol_name = json["list_protocol_name"].string ?? model.list_protocol_name
+        self.instance_name = json["instance_name"].string ?? model.instance_name
+        self.instance_protocol_name = json["instance_protocol_name"].string ?? model.instance_protocol_name
+        self.instance_output_path = json["instance_output_path"].stringValue
+        self.list_output_path = json["list_output_path"].stringValue
+        self.bundle_name = json["bundle_name"].stringValue
         
-        if bundleName.isEmpty {
+        if bundle_name.isEmpty {
             throw StemError(message: "参数缺失: bundle_name")
         }
         
-        if listOutputPath.isEmpty {
+        if list_output_path.isEmpty {
             throw StemError(message: "参数缺失: list_output_path")
         }
         
-        if instanceOutputPath.isEmpty {
+        if instance_output_path.isEmpty {
             throw StemError(message: "参数缺失: instance_output_path")
         }
     }
