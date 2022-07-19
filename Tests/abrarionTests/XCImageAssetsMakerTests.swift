@@ -76,3 +76,8 @@ func assert(throwing: () async throws -> Bool) async rethrows {
    let flag = try await throwing()
     assert(flag)
 }
+
+func assert(throwing: () throws -> Bool) rethrows {
+   let flag = try throwing()
+    assert(flag)
+}

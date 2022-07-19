@@ -31,27 +31,62 @@ public class MissionManager {
     
     public func run(from json: JSON) async throws {
         for mission in json["missions"].arrayValue {
+            
+            /** 无配置参数任务
+             {
+             "missions": ["task_name"]
+             }
+             */
             if let name = mission.string {
                 try await run(name: name, with: nil)
-            } else if let dictionary = mission.dictionary,
-                      dictionary.keys.count == 1,
-                      dictionary.values.count == 1,
-                      let name = dictionary.keys.first,
-                      let value = dictionary.values.first {
-                if let `typealias` = value.string {
-                    if json[`typealias`].exists() {
-                        try await run(name: name, with: json[`typealias`])
-                    } else {
-                        throw StemError(message: "mission: 未定义相应任务配置 \(`typealias`)")
-                    }
-                } else {
-                    try await run(name: name, with: value)
-                }
+                continue
             }
-            else {
+            
+            /** 参数任务与外置参数调用
+             {
+                 "missions":{
+                     "task_name":{
+                         "arg1":"value1",
+                         "arg2":"value2",
+                         "merge":[
+                             "merge_1"
+                         ]
+                     }
+                 },
+                 "merge_1":{
+                     "arg3":"value3",
+                     "arg4":"value4"
+                 }
+             }
+             */
+            guard let dictionary = mission.dictionary,
+                  dictionary.keys.count == 1, dictionary.values.count == 1,
+                  let name = dictionary.keys.first, var args = dictionary.values.first else {
                 throw StemError(message: "mission: 格式错误")
             }
+            
+            let mergeKey = "merge"
+            let merges = args[mergeKey]
+                .arrayValue
+                .compactMap(\.string)
+                .dictionary(key: \.self, value: { json[$0] })
+                .filter(\.value.isExists)
+            
+            
+            if merges.isEmpty == false {
+                args.dictionaryObject?.removeValue(forKey: mergeKey)
+                for (name, merge) in merges {
+                    if merge.dictionary == nil {
+                        throw StemError(message: "mission: 外置参数格式错误 \(name)")
+                    }
+                }
+                let merged = try merges.map(\.value).reduce(JSON()) { result, item in
+                   try result.merged(with: item)
+                }
+                args = try merged.merged(with: args)
+            }
+            
+            try await run(name: name, with: args)
         }
     }
-    
 }

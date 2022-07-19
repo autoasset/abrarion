@@ -11,12 +11,12 @@ import Features
 
 final class MissionTests: XCTestCase {
     
-    struct Mission: MissionInstance {
+    class Mission: MissionInstance {
+        
+        var jsons = [JSON?]()
         
         func evaluate(from json: JSON?) async throws {
-            guard let json = json else {
-                return
-            }
+            self.jsons.append(json)
             print(json)
         }
         
@@ -25,24 +25,47 @@ final class MissionTests: XCTestCase {
     func testExample() async throws {
         let manager = MissionManager()
         let mission = Mission()
-        manager.register(mission, for: "task")
+        let task_name = "task_name"
+        manager.register(mission, for: task_name)
         let json = """
         {
-          "missions": [
-            "task",
-            {
-              "task": "task-forward"
-            },
-            {
-              "task": {
-                  "inputs": "./"
+            "missions":[
+                "task_name",
+                {
+                    "task_name":"task-forward"
+                },
+                {
+                    "task_name":{
+                        "id":0,
+                        "inputs":"./"
+                    }
+                },
+                {
+                    "task_name":{
+                        "inputs":"./"
+                    }
+                },
+                {
+                    "task_name":{
+                        "inputs":"./",
+                        "merge":[
+                            "task-forward"
+                        ]
+                    }
                 }
+            ],
+            "task-forward":{
+                "forward-arg1":"forward-value1",
+                "inputs":"inputs"
             }
-          ],
-        "task-forward": "forward"
         }
         """
         try await manager.run(from: JSON(parseJSON: json))
+        assert(mission.jsons[0] == nil)
+        assert(mission.jsons[1]!.stringValue == "task-forward")
+        assert(JSON(rawValue: mission.jsons[2]!.dictionaryValue.mapValues(\.object))! == ["id": 0, "inputs": "./"])
+        assert(JSON(rawValue: mission.jsons[3]!.dictionaryValue.mapValues(\.object))! == ["inputs": "./"])
+        assert(JSON(rawValue: mission.jsons[4]!.dictionaryValue.mapValues(\.object))! == ["inputs": "./", "forward-arg1": "forward-value1"])
     }
     
 }
