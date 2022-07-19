@@ -12,14 +12,11 @@ import Features
 final class MissionTests: XCTestCase {
     
     class Mission: MissionInstance {
-        
         var jsons = [JSON?]()
-        
-        func evaluate(from json: JSON?) async throws {
+        func evaluate(from json: JSON?, context: MissionContext) async throws {
             self.jsons.append(json)
             print(json ?? "nil")
         }
-        
     }
     
     func testExample() async throws {
@@ -60,7 +57,7 @@ final class MissionTests: XCTestCase {
             }
         }
         """
-        try await manager.run(from: JSON(parseJSON: json))
+        try await manager.run(from: JSON(parseJSON: json), context: .init())
         assert(mission.jsons[0] == nil)
         assert(mission.jsons[1]!.stringValue == "task-forward")
         assert(JSON(rawValue: mission.jsons[2]!.dictionaryValue.mapValues(\.object))! == ["id": 0, "inputs": "./"])

@@ -40,7 +40,7 @@ public struct XCIconFontMaker: MissionInstance, XCMaker {
         }
     }
     
-    public func evaluate(from json: JSON?) async throws {
+    public func evaluate(from json: JSON?, context: MissionContext) async throws {
         guard let json = json else {
             return
         }

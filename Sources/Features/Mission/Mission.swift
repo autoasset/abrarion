@@ -7,8 +7,18 @@
 
 import Stem
 
+public struct MissionContext {
+    
+    public var variablesManager: VariablesManager?
+    
+    public init() {
+        
+    }
+    
+}
+
 public protocol MissionInstance {
-    func evaluate(from json: JSON?) async throws
+    func evaluate(from json: JSON?, context: MissionContext) async throws
 }
 
 public class MissionManager {
@@ -21,15 +31,15 @@ public class MissionManager {
         cache[key] = mission
     }
     
-    func run(name: String, with options: JSON?) async throws {
+    func run(name: String, with options: JSON?, context: MissionContext) async throws {
         if let instance = cache[name] {
-            try await instance.evaluate(from: options)
+            try await instance.evaluate(from: options, context: context)
         } else {
             throw StemError(message: "mission: 未实现相应任务实例 \(name)")
         }
     }
     
-    public func run(from json: JSON) async throws {
+    public func run(from json: JSON, context: MissionContext) async throws {
         for mission in json["missions"].arrayValue {
             
             /** 无配置参数任务
@@ -38,21 +48,23 @@ public class MissionManager {
              }
              */
             if let name = mission.string {
-                try await run(name: name, with: nil)
+                try await run(name: name, with: nil, context: context)
                 continue
             }
             
             /** 参数任务与外置参数调用
              {
-                 "missions":{
-                     "task_name":{
-                         "arg1":"value1",
-                         "arg2":"value2",
-                         "merge":[
-                             "merge_1"
-                         ]
+                 "missions":[
+                     {
+                         "task_name":{
+                             "arg1":"value1",
+                             "arg2":"value2",
+                             "merge":[
+                                 "merge_1"
+                             ]
+                         }
                      }
-                 },
+                 ],
                  "merge_1":{
                      "arg3":"value3",
                      "arg4":"value4"
@@ -62,7 +74,7 @@ public class MissionManager {
             guard let dictionary = mission.dictionary,
                   dictionary.keys.count == 1, dictionary.values.count == 1,
                   let name = dictionary.keys.first, var args = dictionary.values.first else {
-                throw StemError(message: "mission: 格式错误")
+                throw StemError(message: "mission(格式错误): \(mission.description)")
             }
             
             let mergeKey = "merge"
@@ -86,7 +98,7 @@ public class MissionManager {
                 args = try merged.merged(with: args)
             }
             
-            try await run(name: name, with: args)
+            try await run(name: name, with: args, context: context)
         }
     }
 }
