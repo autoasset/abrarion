@@ -21,6 +21,8 @@ extension XCMaker {
                     return [file]
                 case .folder(let folder):
                     return try folder.allSubFilePaths().compactMap(\.asFile)
+                case .none:
+                    return []
                 }
             })
             .flatMap({ $0 })

@@ -47,7 +47,7 @@ public struct XCColorMaker: MissionInstance, XCMaker {
         set.removeAll()
         
         if options.output.isEmpty == false {
-            let folder = try STFolder(options.output)
+            let folder = STFolder(options.output)
             if !folder.isExist {
                 try folder.create()
             }
@@ -162,11 +162,11 @@ private extension XCColorMaker {
         let records: [Record]
         
         func evaluate() throws {
-            let file = try STFile(options.instance_output_path)
+            let file = STFile(options.instance_output_path)
             try file.delete()
             try file.create(with: instance.data(using: .utf8))
             
-            let list = try STFile(options.list_output_path)
+            let list = STFile(options.list_output_path)
             try list.delete()
             try list.create(with: `extension`.data(using: .utf8))
         }

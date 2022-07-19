@@ -33,7 +33,7 @@ final class XCDataAssetsMakerTests: XCTestCase {
     }
     
     var jsonEncoder = JSONEncoder()
-    var workFolder = try! STFolder("~/Downloads/Tests")
+    var workFolder  = STFolder("~/Downloads/Tests")
 
     func testMaker() async throws {
         try? workFolder.delete()
@@ -47,11 +47,11 @@ final class XCDataAssetsMakerTests: XCTestCase {
         let options = try XCDataMaker.JSONModeOptions(from: JSON(data: jsonEncoder.encode(input)))
         try await maker.evaluate(options: options)
         
-        try await assert {
+        try assert {
             try STFolder(input.template_dependent_output).subFilePaths().isEmpty == false
         }
         
-        try await assert {
+        try assert {
             try STFolder(input.output).subFilePaths().isEmpty == false
         }
     }

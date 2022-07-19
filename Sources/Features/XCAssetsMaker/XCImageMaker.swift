@@ -55,7 +55,7 @@ public struct XCImageMaker: MissionInstance, XCMaker {
             .compactMap({ try? Content(from: $0) })
             .dictionary(key: \.filename)
         
-        let folder = try STFolder(options.output)
+        let folder = STFolder(options.output)
         
         let records = try await files(from: options.inputs)
             .compactMap { XCReport.shared.illegalFileName($0, with: options.input_file_lints) }
@@ -263,11 +263,11 @@ private extension XCImageMaker {
         let options: XCCodeOptions
         
         func evaluate() throws {
-            let file = try STFile(options.instance_output_path)
+            let file = STFile(options.instance_output_path)
             try file.delete()
             try file.create(with: instance.data(using: .utf8))
             
-            let list = try STFile(options.list_output_path)
+            let list = STFile(options.list_output_path)
             try list.delete()
             try list.create(with: `extension`.data(using: .utf8))
         }

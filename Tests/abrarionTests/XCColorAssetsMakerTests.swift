@@ -29,7 +29,7 @@ class XCColorAssetsMakerTests: XCTestCase {
     }
     
     let jsonEncoder = JSONEncoder()
-    let workFolder = try! STFolder("~/Downloads/Tests")
+    let workFolder = STFolder("~/Downloads/Tests")
 
     func testColorMaker() async throws {
         try workFolder.delete()

@@ -42,7 +42,7 @@ final class XCImageAssetsMakerTests: XCTestCase {
         
     }
     
-    var workFolder = try! STFolder("~/Downloads/Tests")
+    var workFolder = STFolder("~/Downloads/Tests")
     
     func testImageMaker() async throws {
         try? workFolder.delete()
@@ -60,11 +60,11 @@ final class XCImageAssetsMakerTests: XCTestCase {
         let options = try XCImageMaker.JSONModeOptions(from: JSON(data: Units.encode(input)))
         try await maker.evaluate(options: options)
         
-        try await assert {
+        try assert {
             try STFolder(input.template_dependent_output).subFilePaths().isEmpty == false
         }
         
-        try await assert {
+        try assert {
             try STFolder(input.output).subFilePaths().isEmpty == false
         }
     }

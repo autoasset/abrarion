@@ -17,7 +17,7 @@ final class MissionTests: XCTestCase {
         
         func evaluate(from json: JSON?) async throws {
             self.jsons.append(json)
-            print(json)
+            print(json ?? "nil")
         }
         
     }

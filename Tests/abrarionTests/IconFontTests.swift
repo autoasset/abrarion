@@ -34,7 +34,7 @@ class IconFontTests: XCTestCase {
     }
     
     var jsonEncoder = JSONEncoder()
-    var workFolder = try! STFolder("~/Downloads/Tests")
+    var workFolder = STFolder("~/Downloads/Tests")
     private var cancellables = Set<AnyCancellable>()
     
     func clear() async throws {
@@ -56,11 +56,11 @@ class IconFontTests: XCTestCase {
             let options = try XCIconFontMaker.JSONModeOptions(from: JSON(data: jsonEncoder.encode(input)))
             try await maker.evaluate(options: options)
             
-            try await assert {
+            try assert {
                 try STFolder(input.template_dependent_output).subFilePaths().isEmpty == false
             }
             
-            try await assert {
+            try assert {
                 try STFolder(input.output).subFilePaths().isEmpty == false
             }
         } catch let DecodingError.dataCorrupted(context) {
@@ -101,7 +101,7 @@ class IconFontTests: XCTestCase {
         try? STFolder(input.output).delete()
         
         try await maker.evaluate(options: options)
-        try await assert {
+        try assert {
             try STFolder(input.output).subFilePaths().isEmpty == false
         }
     }

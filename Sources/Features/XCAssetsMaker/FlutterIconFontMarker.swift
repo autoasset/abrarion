@@ -50,12 +50,12 @@ public struct FlutterIconFontMarker: MissionInstance, XCMaker {
     
     public func evaluate(options: JSONModeOptions) async throws {
         let decoder = JSONDecoder()
-        let iconFontJsonFile = try STFile(options.input_json_file)
+        let iconFontJsonFile = STFile(options.input_json_file)
         let model = try decoder.decode(KhalaIconFont.self, from: iconFontJsonFile.data())
         
-        let iconFontFile = try STFile(options.input_font_file)
-        let folder = try STFolder(options.output)
-        try? folder.create()
+        let iconFontFile = STFile(options.input_font_file)
+        let folder = STFolder(options.output)
+        _ = try? folder.create()
         
         try iconFontFile.copy(into: folder)
                 
@@ -76,7 +76,7 @@ extension FlutterIconFontMarker {
         let options: CodeOptions
         
         func evaluate() throws {
-            let list = try STFile(options.list_output_path)
+            let list = STFile(options.list_output_path)
             try list.delete()
             try list.create(with: `extension`.data(using: .utf8))
         }

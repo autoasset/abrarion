@@ -39,8 +39,8 @@ class DownloadTests: XCTestCase {
         let options = try Download(from: JSON(data: Units.encode(input)))
         try await DownloadService().evaluate(from: options)
         
-        try await assert(throwing: { try STFile("~/Downloads/main.zip").isExist })
-        try await assert(throwing: { try STFolder("~/Downloads/swift-git.git").isExist })
+        assert(throwing: { STFile("~/Downloads/main.zip").isExist })
+        assert(throwing: { STFolder("~/Downloads/swift-git.git").isExist })
     }
     
 }

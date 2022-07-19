@@ -49,7 +49,7 @@ public struct XCIconFontMaker: MissionInstance, XCMaker {
     
     public func evaluate(options: JSONModeOptions) async throws {
         let decoder = JSONDecoder()
-        let iconFontFile = try STFile(options.input_json_file)
+        let iconFontFile = STFile(options.input_json_file)
         let model = try decoder.decode(KhalaIconFont.self, from: iconFontFile.data())
         
         try await XCDataMaker().evaluate(options: .init(template: options.template,
@@ -76,11 +76,11 @@ extension XCIconFontMaker {
         let options: XCCodeOptions
         
         func evaluate() throws {
-            let file = try STFile(options.instance_output_path)
+            let file = STFile(options.instance_output_path)
             try file.delete()
             try file.create(with: instance.data(using: .utf8))
             
-            let list = try STFile(options.list_output_path)
+            let list = STFile(options.list_output_path)
             try list.delete()
             try list.create(with: `extension`.data(using: .utf8))
         }

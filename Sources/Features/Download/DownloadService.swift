@@ -43,7 +43,8 @@ public extension DownloadService {
 private extension DownloadService {
     
     func request(_ model: Download.Item) async throws {
-        guard let folder = try? STFolder(model.target.folder), let url = URL(string: model.uri) else {
+        let folder =  STFolder(model.target.folder)
+        guard let url = URL(string: model.uri) else {
             return
         }
         
