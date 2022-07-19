@@ -24,10 +24,15 @@ public struct Shell: MissionInstance {
     ]
     
     struct Options {
+        
         var commands: [String]
         
         public init(from json: JSON) throws {
-            self.commands = json.arrayValue.compactMap(\.string)
+            if let str = json.string {
+                self.commands = [str]
+            } else {
+                self.commands = json.arrayValue.compactMap(\.string)
+            }
         }
     }
     
@@ -38,16 +43,7 @@ public struct Shell: MissionInstance {
             return
         }
         
-        var commands = try Options(from: json).commands
-        if let manager = context.variablesManager {
-            var new = [String]()
-            for command in commands {
-                let item = try await manager.parse(command)
-                new.append(item)
-            }
-            commands = new
-        }
-        
+        let commands = try await context.variables.parse(try Options(from: json).commands)
         for command in commands {
             let result = try await StemShell.zsh(string: command, context: .init(environment: environment))
             print(result)

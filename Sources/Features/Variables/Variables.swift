@@ -51,4 +51,12 @@ public class VariablesManager {
         return text
     }
     
+    public func parse(_ text: [String]) async throws -> [String] {
+        var new = [String]()
+        for item in text {
+            new.append(try await parse(item))
+        }
+        return new
+    }
+    
 }

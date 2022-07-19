@@ -9,17 +9,37 @@ import Stem
 import Foundation
 import StemFilePath
 
-struct Tidy {
+public class TidyDelete: Tidy, MissionInstance {
     
-    struct CopyDeleteOptions {
+    public func evaluate(from json: JSON?, context: MissionContext) async throws {
+        guard let json = json else {
+            return
+        }
+        let option = try await CopyDeleteOptions(from: json, variables: context.variables)
+        try await delete(options: option)
+    }
+    
+    public override init() {
+        super.init()
+    }
+    
+}
+
+public class Tidy {
+    
+    public struct CopyDeleteOptions {
         var inputs: [STPath]
         var output: STFolder
         let patterns: [NSRegularExpression]
         
-        public init(from json: JSON) throws {
-            self.output = STFolder(json["output"].stringValue)
-            self.inputs = json["inputs"].arrayValue.map(\.stringValue).map(STPath.init)
-            self.patterns = try json["patterns"].arrayValue.map(\.stringValue).map({ try NSRegularExpression(pattern: $0) })
+        public init(from json: JSON, variables: VariablesManager) async throws {
+            if let array = json.array?.compactMap(\.string) {
+                self.inputs = try await variables.parse(array).map(STPath.init)
+            } else {
+                self.inputs = try await variables.parse(json["inputs"].arrayValue.map(\.stringValue)).map(STPath.init)
+            }
+            self.patterns = try await variables.parse(json["patterns"].arrayValue.map(\.stringValue)).map({ try NSRegularExpression(pattern: $0) })
+            self.output = try await STFolder(variables.parse(json["output"].stringValue))
         }
     }
     

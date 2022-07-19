@@ -9,7 +9,7 @@ import Stem
 
 public struct MissionContext {
     
-    public var variablesManager: VariablesManager?
+    public var variables = VariablesManager()
     
     public init() {
         
@@ -40,6 +40,13 @@ public class MissionManager {
     }
     
     public func run(from json: JSON, context: MissionContext) async throws {
+        
+        json["environment"].dictionaryValue
+            .compactMapValues(\.string)
+            .forEach { item in
+                context.variables.register(Variables(key: item.key, value: item.value))
+            }
+        
         for mission in json["missions"].arrayValue {
             
             /** 无配置参数任务
@@ -54,21 +61,24 @@ public class MissionManager {
             
             /** 参数任务与外置参数调用
              {
-                 "missions":[
-                     {
-                         "task_name":{
-                             "arg1":"value1",
-                             "arg2":"value2",
-                             "merge":[
-                                 "merge_1"
-                             ]
-                         }
-                     }
-                 ],
-                 "merge_1":{
-                     "arg3":"value3",
-                     "arg4":"value4"
-                 }
+             "missions":[
+             {
+             "task_name":{
+             "arg1":"value1",
+             "arg2":"value2",
+             "merge":[
+             "merge_1"
+             ]
+             }
+             }
+             ],
+             "environment": {
+             
+             }
+             "merge_1":{
+             "arg3":"value3",
+             "arg4":"value4"
+             }
              }
              */
             guard let dictionary = mission.dictionary,
@@ -93,10 +103,11 @@ public class MissionManager {
                     }
                 }
                 let merged = try merges.map(\.value).reduce(JSON()) { result, item in
-                   try result.merged(with: item)
+                    try result.merged(with: item)
                 }
                 args = try merged.merged(with: args)
             }
+            
             
             try await run(name: name, with: args, context: context)
         }

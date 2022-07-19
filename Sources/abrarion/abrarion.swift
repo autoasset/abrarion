@@ -29,7 +29,7 @@ struct Abrarion: AsyncParsableCommand {
             let json = JSON(yaml)
             print(json)
             
-            var context = MissionContext()
+            let context = MissionContext()
         
             if let path = environment,
                let text = String(data: try STFile(path).data(), encoding: .utf8),
@@ -41,16 +41,15 @@ struct Abrarion: AsyncParsableCommand {
                 .filter({ $0.count == 1 })
                 .map({ (key: $0.keys.first!, value: $0.values.first!) }),
                array.isEmpty == false {
-                let manager = VariablesManager()
                 print(array)
                 array.forEach { item in
-                    manager.register(Variables(key: item.key, value: item.value))
+                    context.variables.register(Variables(key: item.key, value: item.value))
                 }
-                context.variablesManager = manager
             }
             
             let missionManager = MissionManager()
             missionManager.register(Shell(), for: "shell")
+            missionManager.register(TidyDelete(), for: "tidy_delete")
             try await missionManager.run(from: json, context: context)
         } catch {
             print(error.localizedDescription)
