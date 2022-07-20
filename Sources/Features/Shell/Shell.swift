@@ -50,8 +50,10 @@ public struct Shell: MissionInstance {
         let commands = try await context.variables.parse(options.commands)
         for command in commands {
             do {
-                let result = try await StemShell.zsh(string: command, context: .init(environment: environment))
-                print(result)
+                guard let result = try await StemShell.zsh(string: command, context: .init(environment: environment)) else {
+                    return
+                }
+                logger?.info(.init(stringLiteral: result))
             } catch {
                 if options.allow_errors {
                     print(error)

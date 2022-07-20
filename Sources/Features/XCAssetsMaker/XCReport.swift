@@ -95,11 +95,11 @@ public class XCReport: MissionInstance {
     }
     
     func add(_ payload: RedundantFiles) {
-        self.payload.errors.append(.redundantFiles(payload))
+        self.payload.errors.append(.redundantFiles(payload: payload))
     }
     
     func add(_ payload: ContentsNoIncludedRequiredFiles) {
-        self.payload.errors.append(.contentsNoIncludedRequiredFiles(payload))
+        self.payload.errors.append(.contentsNoIncludedRequiredFiles(payload: payload))
     }
     
 }
@@ -108,9 +108,14 @@ public class XCReport: MissionInstance {
 extension XCReport {
     
     enum ErrorType: Codable {
-        case redundantFiles(RedundantFiles)
-        case contentsNoIncludedRequiredFiles(ContentsNoIncludedRequiredFiles)
+        case error(payload: ReportError)
+        case redundantFiles(payload: RedundantFiles)
+        case contentsNoIncludedRequiredFiles(payload: ContentsNoIncludedRequiredFiles)
         
+    }
+    
+    struct ReportError: Codable {
+        let message: String
     }
     
     struct ContentsNoIncludedRequiredFiles: Codable, XCErrorReportPayload {

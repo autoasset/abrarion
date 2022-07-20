@@ -137,7 +137,7 @@ extension XCImageMaker {
             if let contents = contents {
                 let set = Set(contents.asset.contents.compactMap(\.filename)).subtracting(Set(images.map(\.file.attributes.name)))
                 guard set.isEmpty else {
-                    XCReport.shared.add(.contentsNoIncludedRequiredFiles(.init(contents: contents.filename, missingFiles: .init(set))))
+                    XCReport.shared.add(.contentsNoIncludedRequiredFiles(payload: .init(contents: contents.filename, missingFiles: .init(set))))
                     return nil
                 }
                 return contents.asset
@@ -152,7 +152,7 @@ extension XCImageMaker {
             }
             
             if renderDict.count > 1 {
-                XCReport.shared.add(.redundantFiles(.init(files: images.map(\.file.attributes.name))))
+                XCReport.shared.add(.redundantFiles(payload: .init(files: images.map(\.file.attributes.name))))
                 return nil
             }
             
@@ -175,8 +175,12 @@ extension XCImageMaker {
             try folder.delete()
             try folder.create()
             try folder.create(file: "Contents.json", data: contents.data)
-            try images.forEach { record in
-                try record.file.copy(into: folder)
+            images.forEach { record in
+                do {
+                    try record.file.copy(into: folder)
+                } catch {
+                    XCReport.shared.add(.error(payload: .init(message: error.localizedDescription)))
+                }
             }
             return self
         }

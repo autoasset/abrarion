@@ -127,7 +127,7 @@ extension XCDataMaker {
             if let contents = contents {
                 let set = Set(contents.asset.contents.compactMap(\.filename)).subtracting(Set(datas.map(\.file.attributes.name)))
                 guard set.isEmpty else {
-                    XCReport.shared.add(.contentsNoIncludedRequiredFiles(.init(contents: contents.filename,
+                    XCReport.shared.add(.contentsNoIncludedRequiredFiles(payload: .init(contents: contents.filename,
                                                                                missingFiles: .init(set))))
                     return nil
                 }

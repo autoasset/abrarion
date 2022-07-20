@@ -4,6 +4,7 @@ import ArgumentParser
 import Yams
 import Stem
 import StemFilePath
+import Logging
 
 @main
 struct Abrarion: AsyncParsableCommand {
@@ -20,6 +21,7 @@ struct Abrarion: AsyncParsableCommand {
     
     
     func run() async throws {
+        let logger = Logger(label: "[abrarion]")
         do {
             guard let text = String(data: try STFile(config).data(), encoding: .utf8),
                   let yaml = try Yams.load(yaml: text) else {
@@ -56,7 +58,8 @@ struct Abrarion: AsyncParsableCommand {
             try await missionManager.run(from: json, context: context)
             try XCReport.shared.finish()
         } catch {
-            print(error.localizedDescription)
+            logger.error(.init(stringLiteral: error.localizedDescription))
+            Abrarion.exit(withError: error)
         }
     }
     
