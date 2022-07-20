@@ -20,14 +20,19 @@ public struct Variables: VariablesProtocol {
     
     public let key: String
     public let value: () async throws -> String
+    public let desc: String?
     
-    public init(key: String, value: @escaping () async throws -> String) {
+    public init(key: String,
+                desc: String? = nil,
+                value: @escaping () async throws -> String) {
         self.key = key
+        self.desc = desc
         self.value = value
     }
     
-    public init(key: String, value: String) {
+    public init(key: String, desc: String? = nil, value: String) {
         self.key = key
+        self.desc = desc
         self.value = { value }
     }
 }
@@ -40,6 +45,10 @@ public class VariablesManager {
     
     public func register(_ variables: VariablesProtocol) {
         cache[variables.matchKey] = variables
+    }
+    
+    public func register(_ variables: [Variables]) {
+        cache.merge(variables.dictionary(key: \.matchKey), uniquingKeysWith: { $1 })
     }
     
     /// 解析带变量的文本

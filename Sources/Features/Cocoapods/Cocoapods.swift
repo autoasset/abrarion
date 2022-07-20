@@ -16,19 +16,29 @@ public class Cocoapods: MissionInstance {
     public var logger: Logger?
     
     public func evaluate(from json: JSON, context: MissionContext) async throws {
-        
+        var options = try await Options(from: json, variables: context.variables)
+        options = try await localLint(options)
+        let repository = try SwiftGit.Repository(path: "./", environment: .shared)
+        try await repository.add([], paths: ["."])
+        try await repository.commit([.message("[ci skip] abrarion")], pathspecs: .all)
+        do {
+            try await repository.push([.repo("origin")], refspecs: [.tag(.init(options.version))])
+            try trunkPush(options)
+        } catch {
+            try await repository.push([.delete], refspecs: [.tag(.init(options.version))])
+            throw error
+        }
     }
 
-    public struct JSONModeOptions {
-        
+    public struct Options  {
         var version: String
         var podspec_url: String
         let push_repository_url: String
         
-        public init(from json: JSON) throws {
-            self.version = json["version"].stringValue
-            self.podspec_url = json["podspec_url"].stringValue
-            self.push_repository_url = json["push_repository_url"].stringValue
+        public init(from json: JSON, variables: VariablesManager) async throws {
+            self.version = try await variables.parse(json["version"].stringValue)
+            self.podspec_url = try await variables.parse(json["podspec_url"].stringValue)
+            self.push_repository_url = try await variables.parse(json["push_repository_url"].stringValue)
         }
     }
     
@@ -47,37 +57,38 @@ public class Cocoapods: MissionInstance {
         "CP_HOME_DIR": "\(NSHomeDirectory())/.cocoapods"
     ]
     
-    func localLint(_ options: JSONModeOptions) async throws -> JSONModeOptions? {
+    func localLint(_ options: Options) async throws -> Options {
         /// 标准化 podspec 文件
         var options = options
         let jsonPodspec = try validate(json: podspec(options), model: options)
         var podspec = STFile(options.podspec_url)
         guard let folder = podspec.parentFolder() else {
-            return nil
+            return options
         }
         try podspec.delete()
         podspec = folder.file(name: String(podspec.attributes.name.split(separator: ".")[0]) + ".podspec.json")
-        try podspec.overlay(with: jsonPodspec.rawData())
+        try podspec.overlay(with: jsonPodspec.rawData(options: [.sortedKeys, .withoutEscapingSlashes, .prettyPrinted]))
         options.podspec_url = podspec.path
         
         guard try libLint(options) else {
-            return nil
+            return options
         }
         return options
     }
     
+    public init() {}
 }
 
 public extension Cocoapods {
     
-    private func podspec(_ model: JSONModeOptions) throws -> JSON {
+    private func podspec(_ model: Options) throws -> JSON {
         guard let str = try StemShell.zsh(string: "pod ipc spec \(model.podspec_url)", context: .init(environment: Cocoapods.environment)) else {
             throw StemError(message: "cocoapod 解析失败")
         }
         return JSON(parseJSON: str)
     }
     
-    private func validate(json: JSON, model: JSONModeOptions) throws -> JSON {
+    private func validate(json: JSON, model: Options) throws -> JSON {
         var json = json
         
         guard let folder = STFile(model.podspec_url).parentFolder() else {
@@ -85,8 +96,20 @@ public extension Cocoapods {
         }
         
         var resource_bundles = json["resource_bundles"].dictionaryValue
-        for (name, path) in resource_bundles.compactMapValues(\.string) {
-            if path.hasSuffix(".xcassets"), !folder.subpath(name: path).isExist {
+        for (name, list) in resource_bundles.compactMapValues(\.array) {
+            if list.isEmpty {
+                resource_bundles.removeValue(forKey: name)
+                continue
+            }
+            var flag = true
+            for path in list.compactMap(\.string) {
+                if path.hasSuffix(".xcassets"), !folder.subpath(name: path).isExist {
+                    continue
+                } else {
+                    flag = false
+                }
+            }
+            if flag {
                 resource_bundles.removeValue(forKey: name)
             }
         }
@@ -148,12 +171,12 @@ public extension Cocoapods {
         try StemShell.zsh(string: "pod repo add \(name) \(url)", context: .init(environment: environment))
     }
     
-    func libLint(_ model: JSONModeOptions) throws -> Bool {
+    func libLint(_ model: Options) throws -> Bool {
         _ = try StemShell.zsh(string: "pod lib lint \(model.podspec_url) --allow-warnings", context: .init(environment: Cocoapods.environment))
         return true
     }
     
-    func trunkPush(_ model: JSONModeOptions) throws {
+    func trunkPush(_ model: Options) throws {
         guard let name = try Cocoapods.repositories().first(where: { $0.url == model.push_repository_url })?.name else {
             try Cocoapods.repositoryAdd(url: model.push_repository_url)
             try trunkPush(model)

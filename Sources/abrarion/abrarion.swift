@@ -19,7 +19,6 @@ struct Abrarion: AsyncParsableCommand {
               transform: URL.init(fileURLWithPath:))
     var environment: URL?
     
-    
     func run() async throws {
         let logger = Logger(label: "[abrarion]")
         do {
@@ -30,6 +29,7 @@ struct Abrarion: AsyncParsableCommand {
             
             let json = JSON(yaml)            
             let context = MissionContext()
+            try await context.variables.register(SystemVariables.variables())
         
             if let path = environment,
                let text = String(data: try STFile(path).data(), encoding: .utf8),
@@ -39,15 +39,14 @@ struct Abrarion: AsyncParsableCommand {
                 .compactMap(\.dictionary)
                 .map({ $0.compactMapValues(\.string) })
                 .filter({ $0.count == 1 })
-                .map({ (key: $0.keys.first!, value: $0.values.first!) }),
+                .map({ Variables(key: $0.keys.first!, value: $0.values.first!) }),
                array.isEmpty == false {
-                array.forEach { item in
-                    context.variables.register(Variables(key: item.key, value: item.value))
-                }
+                context.variables.register(array)
             }
             
             let missionManager = MissionManager()
             missionManager.register(XCReport.shared, for: "report")
+            missionManager.register(Cocoapods(), for: "cocoapods_push")
             missionManager.register(Shell(), for: "shell")
             missionManager.register(TidyDelete(), for: "tidy_delete")
             missionManager.register(TidyCreate(), for: "tidy_create")
