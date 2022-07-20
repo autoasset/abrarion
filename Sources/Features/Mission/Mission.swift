@@ -7,6 +7,7 @@
 
 import Stem
 import Logging
+import Foundation
 
 public struct MissionContext {
     
@@ -24,8 +25,14 @@ public protocol MissionInstance {
 public class MissionManager {
     
     var cache: [String: MissionInstance] = [:]
+    let durationFormatter = NumberFormatter()
     
-    public init() {}
+    public init() {
+        durationFormatter.numberStyle = .decimal
+        durationFormatter.formatWidth = 3
+        durationFormatter.minimumFractionDigits = 3
+        durationFormatter.maximumFractionDigits = 3
+    }
     
     public func register<T: MissionInstance>(_ mission: T, for key: String) {
         var mission = mission
@@ -35,10 +42,12 @@ public class MissionManager {
     
     func run(name: String, with options: JSON?, context: MissionContext) async throws {
         if let instance = cache[name] {
-            instance.logger?.info(.init(stringLiteral: "======= begining ======="))
-//            instance.logger?.info(.init(stringLiteral: options?.rawString()))
+            let date = Date.now
+            instance.logger?.info(.init(stringLiteral: "⏳⏳⏳ begining"))
             try await instance.evaluate(from: options, context: context)
-            instance.logger?.info(.init(stringLiteral: "======= success ======="))
+            let sed = NSNumber(value: (Date.now.timeIntervalSince1970 - date.timeIntervalSince1970) * 1000)
+            let duration = durationFormatter.string(from: sed) ?? ""
+            instance.logger?.info(.init(stringLiteral: "✅✅✅ success: duration(\(duration)ms)"))
         } else {
             throw StemError(message: "mission: 未实现相应任务实例 \(name)")
         }
