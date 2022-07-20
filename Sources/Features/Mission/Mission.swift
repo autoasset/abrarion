@@ -19,7 +19,7 @@ public struct MissionContext {
 
 public protocol MissionInstance {
     var logger: Logger? { get set }
-    func evaluate(from json: JSON?, context: MissionContext) async throws
+    func evaluate(from json: JSON, context: MissionContext) async throws
 }
 
 public class MissionManager {
@@ -40,7 +40,7 @@ public class MissionManager {
         cache[key] = mission
     }
     
-    func run(name: String, with options: JSON?, context: MissionContext) async throws {
+    func run(name: String, with options: JSON, context: MissionContext) async throws {
         if let instance = cache[name] {
             let date = Date.now
             instance.logger?.info(.init(stringLiteral: "⏳⏳⏳ begining"))
@@ -69,7 +69,7 @@ public class MissionManager {
              }
              */
             if let name = mission.string {
-                try await run(name: name, with: nil, context: context)
+                try await run(name: name, with: JSON(), context: context)
                 continue
             }
             

@@ -61,10 +61,7 @@ public struct XCImageMaker: MissionInstance, XCMaker {
         }
     }
     
-    public func evaluate(from json: JSON?, context: MissionContext) async throws {
-        guard let json = json else {
-            return
-        }
+    public func evaluate(from json: JSON, context: MissionContext) async throws {
         try await evaluate(options: try .init(from: json, variables: context.variables))
     }
     

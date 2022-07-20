@@ -16,10 +16,10 @@ final class MissionTests: XCTestCase {
         
         var logger: Logger?
         
-        var jsons = [JSON?]()
-        func evaluate(from json: JSON?, context: MissionContext) async throws {
+        var jsons = [JSON]()
+        func evaluate(from json: JSON, context: MissionContext) async throws {
             self.jsons.append(json)
-            print(json ?? "nil")
+            print(json)
         }
     }
     
@@ -62,11 +62,11 @@ final class MissionTests: XCTestCase {
         }
         """
         try await manager.run(from: JSON(parseJSON: json), context: .init())
-        assert(mission.jsons[0] == nil)
-        assert(mission.jsons[1]!.stringValue == "task-forward")
-        assert(JSON(rawValue: mission.jsons[2]!.dictionaryValue.mapValues(\.object))! == ["id": 0, "inputs": "./"])
-        assert(JSON(rawValue: mission.jsons[3]!.dictionaryValue.mapValues(\.object))! == ["inputs": "./"])
-        assert(JSON(rawValue: mission.jsons[4]!.dictionaryValue.mapValues(\.object))! == ["inputs": "./", "forward-arg1": "forward-value1"])
+        assert(mission.jsons[0] == JSON())
+        assert(mission.jsons[1].stringValue == "task-forward")
+        assert(JSON(rawValue: mission.jsons[2].dictionaryValue.mapValues(\.object))! == ["id": 0, "inputs": "./"])
+        assert(JSON(rawValue: mission.jsons[3].dictionaryValue.mapValues(\.object))! == ["inputs": "./"])
+        assert(JSON(rawValue: mission.jsons[4].dictionaryValue.mapValues(\.object))! == ["inputs": "./", "forward-arg1": "forward-value1"])
     }
     
 }

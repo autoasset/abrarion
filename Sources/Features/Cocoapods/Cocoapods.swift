@@ -9,8 +9,15 @@ import Foundation
 import Stem
 import StemFilePath
 import SwiftGit
+import Logging
 
-public class Cocoapods {
+public class Cocoapods: MissionInstance {
+    
+    public var logger: Logger?
+    
+    public func evaluate(from json: JSON, context: MissionContext) async throws {
+        
+    }
 
     public struct JSONModeOptions {
         

@@ -34,10 +34,7 @@ public class XCReport: MissionInstance {
         
     }
     
-    public func evaluate(from json: JSON?, context: MissionContext) async throws {
-        guard let json = json else {
-            return
-        }
+    public func evaluate(from json: JSON, context: MissionContext) async throws {
         let options = try await Options(json: json, variables: context.variables)
         XCReport.shared.options = options
     }

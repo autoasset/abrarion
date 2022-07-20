@@ -16,10 +16,7 @@ public struct DownloadService: MissionInstance {
     
     public init() {}
     
-    public func evaluate(from json: JSON?, context: MissionContext) async throws {
-        guard let json = json else {
-            return
-        }
+    public func evaluate(from json: JSON, context: MissionContext) async throws {
         try await request(Download(from: json))
     }
     

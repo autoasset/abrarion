@@ -42,10 +42,7 @@ public struct Shell: MissionInstance {
     
     public init() {}
     
-    public func evaluate(from json: JSON?, context: MissionContext) async throws {
-        guard let json = json else {
-            return
-        }
+    public func evaluate(from json: JSON, context: MissionContext) async throws {
         let options  = try Options(from: json)
         let commands = try await context.variables.parse(options.commands)
         for command in commands {

@@ -13,7 +13,7 @@ public struct XCDataMaker: MissionInstance, XCMaker {
     public var logger: Logger?
     
     public init() {}
-
+    
     public struct JSONModeOptions {
         
         fileprivate let template: XCCodeOptions?
@@ -75,10 +75,7 @@ public struct XCDataMaker: MissionInstance, XCMaker {
         }
     }
     
-    public func evaluate(from json: JSON?, context: MissionContext) async throws {
-        guard let json = json else {
-            return
-        }
+    public func evaluate(from json: JSON, context: MissionContext) async throws {
         try await evaluate(options: try .init(from: json, variables: context.variables))
     }
     
@@ -128,7 +125,7 @@ extension XCDataMaker {
                 let set = Set(contents.asset.contents.compactMap(\.filename)).subtracting(Set(datas.map(\.file.attributes.name)))
                 guard set.isEmpty else {
                     XCReport.shared.add(.contentsNoIncludedRequiredFiles(payload: .init(contents: contents.filename,
-                                                                               missingFiles: .init(set))))
+                                                                                        missingFiles: .init(set))))
                     return nil
                 }
                 return contents.asset
@@ -216,7 +213,7 @@ private extension XCDataMaker {
     #elseif canImport(AppKit)
     import AppKit
     #endif
-
+    
     public protocol \(options.instance_protocol_name) {
         
         var named: String { get }
@@ -224,7 +221,7 @@ private extension XCDataMaker {
         
         init(named: String, in bundle: String?)
     }
-
+    
     extension \(options.instance_protocol_name) {
         
         @available(iOS 9.0, macOS 10.11, tvOS 6.0, watchOS 2.0, *)
@@ -237,23 +234,23 @@ private extension XCDataMaker {
             return data
         }
     }
-
+    
     public protocol \(options.list_protocol_name) {}
-
+    
     public struct \(options.instance_name): \(options.instance_protocol_name) {
         
         public let named: String
         public let bundle: String?
-
+    
         public init(named: String, in bundle: String?) {
             self.named = named
             self.bundle = bundle
         }
-
+    
     }
     """
         }
-
-    }
         
+    }
+    
 }

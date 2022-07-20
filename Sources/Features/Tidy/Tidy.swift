@@ -27,10 +27,7 @@ public struct TidyDelete: MissionInstance {
         }
     }
     
-    public func evaluate(from json: JSON?, context: MissionContext) async throws {
-        guard let json = json else {
-            return
-        }
+    public func evaluate(from json: JSON, context: MissionContext) async throws {
         let options = try await Options(from: json, variables: context.variables)
         for input in options.inputs {
             switch input.referenceType {
@@ -88,10 +85,7 @@ public struct TidyCreate: MissionInstance {
         }
     }
     
-    public func evaluate(from json: JSON?, context: MissionContext) async throws {
-        guard let json = json else {
-            return
-        }
+    public func evaluate(from json: JSON, context: MissionContext) async throws {
         let options = try await Options(from: json, variables: context.variables)
         let data: Data?
         switch options.input {
