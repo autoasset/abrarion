@@ -6,8 +6,10 @@
 //
 
 import Stem
+import Logging
 
 public struct Shell: MissionInstance {
+    public var logger: Logger?
     
     private let environment: [String : String] = [
         "PATH": ["/bin",
@@ -26,8 +28,10 @@ public struct Shell: MissionInstance {
     struct Options {
         
         var commands: [String]
+        var allow_errors: Bool
         
         public init(from json: JSON) throws {
+            self.allow_errors = json["allow_errors"].boolValue
             if let str = json.string {
                 self.commands = [str]
             } else {
@@ -42,12 +46,21 @@ public struct Shell: MissionInstance {
         guard let json = json else {
             return
         }
-        
-        let commands = try await context.variables.parse(try Options(from: json).commands)
+        let options  = try Options(from: json)
+        let commands = try await context.variables.parse(options.commands)
         for command in commands {
-            let result = try await StemShell.zsh(string: command, context: .init(environment: environment))
-            print(result)
+            do {
+                let result = try await StemShell.zsh(string: command, context: .init(environment: environment))
+                print(result)
+            } catch {
+                if options.allow_errors {
+                    print(error)
+                } else {
+                    throw error
+                }
+            }
         }
+        
     }
     
 }

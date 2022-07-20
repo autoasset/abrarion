@@ -13,11 +13,12 @@ struct XCFileLint {
     let name: String
     let pattern: NSRegularExpression
     
-    init?(from json: JSON) {
-        guard let pattern = json["pattern"].string, let regex = try? NSRegularExpression(pattern: pattern) else {
+    init?(from json: JSON, variables: VariablesManager) async throws {
+        guard let pattern = json["pattern"].string,
+              let regex = try? NSRegularExpression(pattern: try await variables.parse(pattern)) else {
             return nil
         }
-        self.name = json["name"].stringValue
+        self.name = try await variables.parse(json["name"].stringValue)
         self.pattern = regex
     }
     

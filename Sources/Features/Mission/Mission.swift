@@ -6,18 +6,18 @@
 //
 
 import Stem
+import Logging
 
 public struct MissionContext {
     
     public var variables = VariablesManager()
     
-    public init() {
-        
-    }
+    public init() {}
     
 }
 
 public protocol MissionInstance {
+    var logger: Logger? { get set }
     func evaluate(from json: JSON?, context: MissionContext) async throws
 }
 
@@ -28,12 +28,17 @@ public class MissionManager {
     public init() {}
     
     public func register<T: MissionInstance>(_ mission: T, for key: String) {
+        var mission = mission
+        mission.logger = Logger(label: "[\(key)]")
         cache[key] = mission
     }
     
     func run(name: String, with options: JSON?, context: MissionContext) async throws {
         if let instance = cache[name] {
+            instance.logger?.info(.init(stringLiteral: "======= begining ======="))
+//            instance.logger?.info(.init(stringLiteral: options?.rawString()))
             try await instance.evaluate(from: options, context: context)
+            instance.logger?.info(.init(stringLiteral: "======= success ======="))
         } else {
             throw StemError(message: "mission: 未实现相应任务实例 \(name)")
         }

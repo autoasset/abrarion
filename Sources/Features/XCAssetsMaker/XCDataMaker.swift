@@ -7,8 +7,10 @@
 
 import Stem
 import StemFilePath
+import Logging
 
 public struct XCDataMaker: MissionInstance, XCMaker {
+    public var logger: Logger?
     
     public init() {}
 
@@ -36,18 +38,36 @@ public struct XCDataMaker: MissionInstance, XCMaker {
             self.output = output
         }
         
-        public init(from json: JSON) throws {
-            self.template = try .init(from: json["template"], default: .init(type: "Data"))
-            self.contents = json["contents"].arrayValue.compactMap(\.string)
-            self.input_file_lints = json["input_file_lints"].arrayValue.compactMap(XCFileLint.init(from:))
-            self.inputs = json["inputs"].arrayValue.compactMap(\.string)
-            self.output = json["output"].stringValue
+        public init(from json: JSON, variables: VariablesManager) async throws {
+            self.template = try await .init(from: json["template"], default: .init(type: "Data"), variables: variables)
+            
+            var lints = [XCFileLint]()
+            for json in json["input_file_lints"].arrayValue {
+                if let item = try await XCFileLint(from: json, variables: variables) {
+                    lints.append(item)
+                }
+            }
+            self.input_file_lints = lints
+            
+            if let item = json["inputs"].string {
+                self.inputs = [try await variables.parse(item)]
+            } else {
+                self.inputs = try await variables.parse(json["inputs"].arrayValue.compactMap(\.string))
+            }
+            
+            if let item = json["contents"].string {
+                self.contents = [try await variables.parse(item)]
+            } else {
+                self.contents = try await variables.parse(json["contents"].arrayValue.compactMap(\.string))
+            }
+            
+            self.output = try await variables.parse(json["output"].stringValue)
             
             if self.template == nil {
                 self.template_dependent_output = ""
             } else {
                 if let path = json["template_dependent_output"].string {
-                    self.template_dependent_output = path
+                    self.template_dependent_output = try await variables.parse(path)
                 } else {
                     throw StemError(message: "参数缺失: template_dependent_output")
                 }
@@ -59,7 +79,7 @@ public struct XCDataMaker: MissionInstance, XCMaker {
         guard let json = json else {
             return
         }
-        try await evaluate(options: try .init(from: json))
+        try await evaluate(options: try .init(from: json, variables: context.variables))
     }
     
     public func evaluate(options: JSONModeOptions) async throws {
@@ -95,23 +115,6 @@ public struct XCDataMaker: MissionInstance, XCMaker {
     
 }
 
-private extension XCDataMaker {
-    
-    struct ContentsNoIncludedRequiredFiles: XCReportPayload {
-        static var Key: String = "data_contents_no_included_requiredFiles"
-        static var Message: String = "数据描述文件验证错误 (描述文件中包含的文件名未在磁盘上找到)"
-        let contents: String
-        let missingFiles: [String]
-    }
-    
-    struct RedundantFiles: XCReportPayload {
-        static var Key: String = "data_redundant_files"
-        static var Message: String = "数据文件验证错误 (冗余图片)"
-        let files: [String]
-    }
-    
-}
-
 extension XCDataMaker {
     
     struct AssetsRecord {
@@ -124,7 +127,8 @@ extension XCDataMaker {
             if let contents = contents {
                 let set = Set(contents.asset.contents.compactMap(\.filename)).subtracting(Set(datas.map(\.file.attributes.name)))
                 guard set.isEmpty else {
-                    XCReport.shared.add(ContentsNoIncludedRequiredFiles(contents: contents.filename, missingFiles: .init(set)))
+                    XCReport.shared.add(.contentsNoIncludedRequiredFiles(.init(contents: contents.filename,
+                                                                               missingFiles: .init(set))))
                     return nil
                 }
                 return contents.asset

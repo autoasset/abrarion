@@ -7,21 +7,71 @@
 
 import Foundation
 import StemFilePath
+import Stem
+import Logging
 
-protocol XCReportPayload: Codable {
+protocol XCErrorReportPayload: Codable {
     static var Key: String { get }
     static var Message: String { get }
 }
 
-class XCReport {
+public class XCReport: MissionInstance {
     
-    static let shared = XCReport()
+    public struct Options {
+        
+        var output: STFolder?
+        var pwd = STPath("./").path + "/"
+        
+        init(json: JSON, variables: VariablesManager) async throws {
+            if let item = json.string {
+                output = STFolder(try await variables.parse(item))
+            } else if let item = json["output"].string {
+                output = STFolder(try await variables.parse(item))
+            } else {
+                throw StemError(message: "参数缺失: output")
+            }
+        }
+        
+    }
     
-    private var store = [String: [Any]]()
+    public func evaluate(from json: JSON?, context: MissionContext) async throws {
+        guard let json = json else {
+            return
+        }
+        let options = try await Options(json: json, variables: context.variables)
+        XCReport.shared.options = options
+    }
+    
+    public var logger: Logger?
+    public static let shared = XCReport()
+    
+    private var options: Options?
+    
+    var payload = Payload()
+    
+    public func finish() throws {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .withoutEscapingSlashes, .sortedKeys]
+        try options?.output?
+            .file(name: "abrarion_report.json")
+            .overlay(with: encoder.encode(payload))
+    }
     
     /// 重复文件报告
     func duplicates(_ with: [STFile]) {
         
+    }
+    
+    /// 未使用的 content 文件
+    func unused_contents(_ with: Set<STFile>) {
+        payload.unused_contents_files.formUnion(with.map(filePath))
+    }
+    
+    func filePath(_ file: STFile) -> String {
+        guard let options = options, file.path.hasPrefix(options.pwd) else {
+            return file.path
+        }
+        return String(file.path.dropFirst(options.pwd.count))
     }
     
     /// 非法的命名
@@ -40,12 +90,47 @@ class XCReport {
         return record
     }
     
-    func add(_ payload: XCReportPayload) {
-        let key = type(of: payload).Key
-        if self.store[key] == nil {
-            self.store[key] = []
-        }
-        self.store[key]?.append(payload)
+    func add(_ payload: ErrorType) {
+        self.payload.errors.append(payload)
     }
+    
+    func add(_ payload: RedundantFiles) {
+        self.payload.errors.append(.redundantFiles(payload))
+    }
+    
+    func add(_ payload: ContentsNoIncludedRequiredFiles) {
+        self.payload.errors.append(.contentsNoIncludedRequiredFiles(payload))
+    }
+    
+}
+
+
+extension XCReport {
+    
+    enum ErrorType: Codable {
+        case redundantFiles(RedundantFiles)
+        case contentsNoIncludedRequiredFiles(ContentsNoIncludedRequiredFiles)
+        
+    }
+    
+    struct ContentsNoIncludedRequiredFiles: Codable, XCErrorReportPayload {
+        static var Key: String = "image_contents_no_included_requiredFiles"
+        static var Message: String = "图片描述文件验证错误 (描述文件中包含的文件名未在磁盘上找到)"
+        let contents: String
+        let missingFiles: [String]
+    }
+    
+    struct RedundantFiles: Codable, XCErrorReportPayload {
+        static var Key: String = "image_redundant_files"
+        static var Message: String = "图片文件验证错误 (冗余图片)"
+        let files: [String]
+    }
+    
+    struct Payload: Codable {
+        var unused_contents_files: Set<String> = .init()
+        var errors: [ErrorType] = []
+    }
+    
+    
     
 }

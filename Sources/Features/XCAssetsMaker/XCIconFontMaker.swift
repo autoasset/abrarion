@@ -8,8 +8,10 @@
 import Stem
 import StemFilePath
 import Foundation
+import Logging
 
 public struct XCIconFontMaker: MissionInstance, XCMaker {
+    public var logger: Logger?
     
     public init() {}
     
@@ -21,8 +23,8 @@ public struct XCIconFontMaker: MissionInstance, XCMaker {
         fileprivate let input_font_file: String
         fileprivate let output: String
         
-        public init(from json: JSON) throws {
-            self.template = try .init(from: json["template"], default: .init(type: "IconFont"))
+        public init(from json: JSON, variables: VariablesManager) async throws {
+            self.template = try await .init(from: json["template"], default: .init(type: "IconFont"), variables: variables)
             
             self.input_json_file = json["input_json_file"].stringValue
             self.input_font_file = json["input_font_file"].stringValue
@@ -44,7 +46,7 @@ public struct XCIconFontMaker: MissionInstance, XCMaker {
         guard let json = json else {
             return
         }
-        try await evaluate(options: try .init(from: json))
+        try await evaluate(options: try .init(from: json, variables: context.variables))
     }
     
     public func evaluate(options: JSONModeOptions) async throws {

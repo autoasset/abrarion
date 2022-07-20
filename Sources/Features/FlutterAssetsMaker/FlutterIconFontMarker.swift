@@ -8,8 +8,10 @@
 import Foundation
 import Stem
 import StemFilePath
+import Logging
 
 public struct FlutterIconFontMarker: MissionInstance, XCMaker {
+    public var logger: Logger?
     
     public init() {}
     

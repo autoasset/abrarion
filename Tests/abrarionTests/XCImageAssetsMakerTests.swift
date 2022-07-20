@@ -57,7 +57,7 @@ final class XCImageAssetsMakerTests: XCTestCase {
         
         let maker = XCImageMaker()
         let input = ImageJSONModeOptions()
-        let options = try XCImageMaker.JSONModeOptions(from: JSON(data: Units.encode(input)))
+        let options = try await XCImageMaker.JSONModeOptions(from: JSON(data: Units.encode(input)), variables: .init())
         try await maker.evaluate(options: options)
         
         try assert {

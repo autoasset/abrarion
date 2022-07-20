@@ -7,6 +7,7 @@ let package = Package(
     name: "abrarion",
     platforms: [.macOS(.v12)],
     dependencies: [
+        .package(url: "https://github.com/apple/swift-log", .upToNextMajor(from: "1.4.2")),
         .package(url: "https://github.com/jpsim/Yams.git", .upToNextMajor(from: "5.0.1")),
         .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMajor(from: "1.1.3")),
         .package(url: "https://github.com/linhay/swift-git", branch: "main"),
@@ -17,6 +18,7 @@ let package = Package(
     targets: [
         .target(name: "Features",
                dependencies: [
+                .product(name: "Logging", package: "swift-log"),
                 .product(name: "SwiftGit", package: "swift-git"),
                 .product(name: "Stem", package: "Stem"),
                 .product(name: "StemFilePath", package: "Stem"),

@@ -53,7 +53,7 @@ class IconFontTests: XCTestCase {
             try await clear()
             let maker = XCIconFontMaker()
             let input = JSONModeOptions()
-            let options = try XCIconFontMaker.JSONModeOptions(from: JSON(data: jsonEncoder.encode(input)))
+            let options = try await XCIconFontMaker.JSONModeOptions(from: JSON(data: jsonEncoder.encode(input)), variables: .init())
             try await maker.evaluate(options: options)
             
             try assert {

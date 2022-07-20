@@ -9,8 +9,10 @@ import Stem
 import StemFilePath
 import Foundation
 import SwiftGit
+import Logging
 
 public struct DownloadService: MissionInstance {
+    public var logger: Logger?
     
     public init() {}
     

@@ -26,9 +26,7 @@ struct Abrarion: AsyncParsableCommand {
                 return
             }
             
-            let json = JSON(yaml)
-            print(json)
-            
+            let json = JSON(yaml)            
             let context = MissionContext()
         
             if let path = environment,
@@ -41,16 +39,22 @@ struct Abrarion: AsyncParsableCommand {
                 .filter({ $0.count == 1 })
                 .map({ (key: $0.keys.first!, value: $0.values.first!) }),
                array.isEmpty == false {
-                print(array)
                 array.forEach { item in
                     context.variables.register(Variables(key: item.key, value: item.value))
                 }
             }
             
             let missionManager = MissionManager()
+            missionManager.register(XCReport.shared, for: "report")
             missionManager.register(Shell(), for: "shell")
             missionManager.register(TidyDelete(), for: "tidy_delete")
+            missionManager.register(TidyCreate(), for: "tidy_create")
+            missionManager.register(XCColorMaker(), for: "xcassets_colors")
+            missionManager.register(XCImageMaker(), for: "xcassets_images")
+            missionManager.register(XCIconFontMaker(), for: "xcassets_iconfonts")
+            missionManager.register(XCDataMaker(), for: "xcassets_datas")
             try await missionManager.run(from: json, context: context)
+            try XCReport.shared.finish()
         } catch {
             print(error.localizedDescription)
         }

@@ -44,7 +44,7 @@ final class XCDataAssetsMakerTests: XCTestCase {
         
         let maker = XCDataMaker()
         let input = JSONModeOptions()
-        let options = try XCDataMaker.JSONModeOptions(from: JSON(data: jsonEncoder.encode(input)))
+        let options = try await XCDataMaker.JSONModeOptions(from: JSON(data: jsonEncoder.encode(input)), variables: .init())
         try await maker.evaluate(options: options)
         
         try assert {

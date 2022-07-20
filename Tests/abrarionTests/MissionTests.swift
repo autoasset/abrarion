@@ -8,10 +8,14 @@
 import XCTest
 import Stem
 import Features
+import Logging
 
 final class MissionTests: XCTestCase {
     
     class Mission: MissionInstance {
+        
+        var logger: Logger?
+        
         var jsons = [JSON?]()
         func evaluate(from json: JSON?, context: MissionContext) async throws {
             self.jsons.append(json)

@@ -8,28 +8,13 @@
 import Stem
 import Foundation
 import StemFilePath
+import Logging
 
-public class TidyDelete: Tidy, MissionInstance {
+public struct TidyDelete: MissionInstance {
+    public var logger: Logger?
     
-    public func evaluate(from json: JSON?, context: MissionContext) async throws {
-        guard let json = json else {
-            return
-        }
-        let option = try await CopyDeleteOptions(from: json, variables: context.variables)
-        try await delete(options: option)
-    }
-    
-    public override init() {
-        super.init()
-    }
-    
-}
-
-public class Tidy {
-    
-    public struct CopyDeleteOptions {
+    public struct Options {
         var inputs: [STPath]
-        var output: STFolder
         let patterns: [NSRegularExpression]
         
         public init(from json: JSON, variables: VariablesManager) async throws {
@@ -39,52 +24,14 @@ public class Tidy {
                 self.inputs = try await variables.parse(json["inputs"].arrayValue.map(\.stringValue)).map(STPath.init)
             }
             self.patterns = try await variables.parse(json["patterns"].arrayValue.map(\.stringValue)).map({ try NSRegularExpression(pattern: $0) })
-            self.output = try await STFolder(variables.parse(json["output"].stringValue))
         }
     }
     
-    public enum CreateInput {
-        case text(String)
-        case input(STFile)
-    }
-    
-    public struct CreateOptions {
-        public let input: CreateInput
-        var output: STFile
-        
-        init?(from json: JSON) {
-            output = STFile(json["output"].stringValue)
-            
-            if let item = json["text"].string, item.isEmpty == false {
-                input = .text(item)
-            } else if let item = json["input"].string, item.isEmpty == false {
-                input = .input(STFile(item))
-            } else {
-                return nil
-            }
+    public func evaluate(from json: JSON?, context: MissionContext) async throws {
+        guard let json = json else {
+            return
         }
-    }
-    
-}
-
-extension Tidy {
-    
-    public func create(options: CreateOptions, manager: VariablesManager) async throws {
-        let data: Data?
-        switch options.input {
-        case .input(let file):
-            if let text = String(data: try file.data(), encoding: .utf8) {
-                data = try await manager.parse(text).data(using: .utf8)
-            } else {
-                data = .init()
-            }
-        case .text(let text):
-            data = try await manager.parse(text).data(using: .utf8)
-        }
-        try options.output.overlay(with: data)
-    }
-    
-    public func delete(options: CopyDeleteOptions) async throws {
+        let options = try await Options(from: json, variables: context.variables)
         for input in options.inputs {
             switch input.referenceType {
             case .file(let file):
@@ -112,6 +59,80 @@ extension Tidy {
             }
         }
     }
+    
+    public init() {}
+    
+}
+
+public struct TidyCreate: MissionInstance {
+    public var logger: Logger?
+    
+    public enum CreateInput {
+        case text(String)
+        case input(STFile)
+    }
+    
+    public struct Options {
+        public let input: CreateInput
+        var output: STFile
+        
+        init(from json: JSON, variables: VariablesManager) async throws {
+            output = try await STFile(variables.parse(json["output"].stringValue))
+            if let item = json["input"].string {
+                input = .input(STFile(try await variables.parse(item)))
+            } else if let item = json["text"].string {
+                input = .text(try await variables.parse(item))
+            } else {
+                throw StemError(message: "TidyCreate: 参数解析错误")
+            }
+        }
+    }
+    
+    public func evaluate(from json: JSON?, context: MissionContext) async throws {
+        guard let json = json else {
+            return
+        }
+        let options = try await Options(from: json, variables: context.variables)
+        let data: Data?
+        switch options.input {
+        case .input(let file):
+            if let text = String(data: try file.data(), encoding: .utf8) {
+                data = try await context.variables.parse(text).data(using: .utf8)
+            } else {
+                data = .init()
+            }
+        case .text(let text):
+            data = try await context.variables.parse(text).data(using: .utf8)
+        }
+        try options.output.overlay(with: data)
+    }
+    
+    public init() {}
+}
+
+public class Tidy {
+    
+    public struct CopyDeleteOptions {
+        var inputs: [STPath]
+        var output: STFolder
+        let patterns: [NSRegularExpression]
+        
+        public init(from json: JSON, variables: VariablesManager) async throws {
+            if let array = json.array?.compactMap(\.string) {
+                self.inputs = try await variables.parse(array).map(STPath.init)
+            } else {
+                self.inputs = try await variables.parse(json["inputs"].arrayValue.map(\.stringValue)).map(STPath.init)
+            }
+            self.patterns = try await variables.parse(json["patterns"].arrayValue.map(\.stringValue)).map({ try NSRegularExpression(pattern: $0) })
+            self.output = try await STFolder(variables.parse(json["output"].stringValue))
+        }
+    }
+    
+
+    
+}
+
+extension Tidy {
     
     public func copy(options: CopyDeleteOptions) async throws {
         for input in options.inputs {

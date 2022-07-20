@@ -8,8 +8,10 @@
 import Foundation
 import Stem
 import StemFilePath
+import Logging
 
 public struct XCImageMaker: MissionInstance, XCMaker {
+    public var logger: Logger?
     
     public struct JSONModeOptions {
         fileprivate let template: XCCodeOptions?
@@ -21,20 +23,37 @@ public struct XCImageMaker: MissionInstance, XCMaker {
         fileprivate let inputs: [String]
         fileprivate let output: String
         
-        public init(from json: JSON) throws {
-            self.template = try .init(from: json["template"], default: .init(type: "Image"))
-            self.vector_template = try .init(from: json["vector_template"], default: .init(type: "VectorImage"))
+        public init(from json: JSON, variables: VariablesManager) async throws {
+            self.template = try await .init(from: json["template"], default: .init(type: "Image"), variables: variables)
+            self.vector_template = try await .init(from: json["vector_template"], default: .init(type: "VectorImage"), variables: variables)
             
-            self.contents = json["contents"].arrayValue.compactMap(\.string)
-            self.inputs = json["inputs"].arrayValue.compactMap(\.string)
-            self.output = json["output"].stringValue
-            self.input_file_lints = json["input_file_lints"].arrayValue.compactMap(XCFileLint.init(from:))
+            var lints = [XCFileLint]()
+            for json in json["input_file_lints"].arrayValue {
+                if let item = try await XCFileLint(from: json, variables: variables) {
+                    lints.append(item)
+                }
+            }
+            self.input_file_lints = lints
+            
+            if let item = json["inputs"].string {
+                self.inputs = [try await variables.parse(item)]
+            } else {
+                self.inputs = try await variables.parse(json["inputs"].arrayValue.compactMap(\.string))
+            }
+            
+            if let item = json["contents"].string {
+                self.contents = [try await variables.parse(item)]
+            } else {
+                self.contents = try await variables.parse(json["contents"].arrayValue.compactMap(\.string))
+            }
+            
+            self.output = try await variables.parse(json["output"].stringValue)
             
             if self.template == nil, self.vector_template == nil {
                 self.template_dependent_output = ""
             } else {
                 if let path = json["template_dependent_output"].string {
-                    self.template_dependent_output = path
+                    self.template_dependent_output = try await variables.parse(path)
                 } else {
                     throw StemError(message: "参数缺失: template_dependent_output \(#file) - \(#function) - \(#line)")
                 }
@@ -46,7 +65,7 @@ public struct XCImageMaker: MissionInstance, XCMaker {
         guard let json = json else {
             return
         }
-        try await evaluate(options: try .init(from: json))
+        try await evaluate(options: try .init(from: json, variables: context.variables))
     }
     
     public func evaluate(options: JSONModeOptions) async throws {
@@ -54,6 +73,8 @@ public struct XCImageMaker: MissionInstance, XCMaker {
         let contents = try await files(from: options.contents)
             .compactMap({ try? Content(from: $0) })
             .dictionary(key: \.filename)
+        
+        var usedContents = Set<STFile>()
         
         let folder = STFolder(options.output)
         
@@ -69,11 +90,20 @@ public struct XCImageMaker: MissionInstance, XCMaker {
                 }
                 return result
             })
-            .map({ AssetsRecord(name: $0.key, images: $0.value, contents: contents[$0.key]) })
+            .map({ item -> AssetsRecord in
+                if let content = contents[item.key] {
+                    usedContents.update(with: content.file)
+                    return AssetsRecord(name: item.key, images: item.value, contents: content)
+                } else {
+                    return AssetsRecord(name: item.key, images: item.value, contents: nil)
+                }
+            })
             .map(XCReport.shared.vaild(_:))
             .compactMap({ record in
                 try record.create(in: folder)
             })
+        
+        XCReport.shared.unused_contents(Set(contents.values.map(\.file)).subtracting(usedContents))
         
         if let codeOptions = options.template {
             try XCDependentCodeMaker.createFindModule(in: .init(options.template_dependent_output))
@@ -95,23 +125,6 @@ public struct XCImageMaker: MissionInstance, XCMaker {
     
 }
 
-private extension XCImageMaker {
-    
-    struct ImageContentsNoIncludedRequiredFiles: XCReportPayload {
-        static var Key: String = "image_contents_no_included_requiredFiles"
-        static var Message: String = "图片描述文件验证错误 (描述文件中包含的文件名未在磁盘上找到)"
-        let contents: String
-        let missingFiles: [String]
-    }
-    
-    struct ImageRedundantFiles: XCReportPayload {
-        static var Key: String = "image_redundant_files"
-        static var Message: String = "图片文件验证错误 (冗余图片)"
-        let files: [String]
-    }
-    
-}
-
 extension XCImageMaker {
     
     struct AssetsRecord {
@@ -124,7 +137,7 @@ extension XCImageMaker {
             if let contents = contents {
                 let set = Set(contents.asset.contents.compactMap(\.filename)).subtracting(Set(images.map(\.file.attributes.name)))
                 guard set.isEmpty else {
-                    XCReport.shared.add(ImageContentsNoIncludedRequiredFiles(contents: contents.filename, missingFiles: .init(set)))
+                    XCReport.shared.add(.contentsNoIncludedRequiredFiles(.init(contents: contents.filename, missingFiles: .init(set))))
                     return nil
                 }
                 return contents.asset
@@ -139,7 +152,7 @@ extension XCImageMaker {
             }
             
             if renderDict.count > 1 {
-                XCReport.shared.add(ImageRedundantFiles(files: images.map(\.file.attributes.name)))
+                XCReport.shared.add(.redundantFiles(.init(files: images.map(\.file.attributes.name))))
                 return nil
             }
             
@@ -243,9 +256,11 @@ extension XCImageMaker {
     
     struct Content {
         let filename: String
+        let file: STFile
         let asset: XCAsset<XCImage>
         
         init(from file: STFile) throws {
+            self.file = file
             self.filename = file.attributes.nameComponents.name
             self.asset = try .init(from: JSON(file.data()))
         }

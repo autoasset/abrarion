@@ -9,18 +9,25 @@ import Foundation
 import Stem
 import StemColor
 import StemFilePath
+import Logging
 
 public struct XCColorMaker: MissionInstance, XCMaker {
+    public var logger: Logger?
     
     public struct JSONModeOptions {
         fileprivate let template: XCCodeOptions?
         fileprivate let inputs: [String]
         fileprivate let output: String
         
-        public init(from json: JSON) throws {
-            self.template = try .init(from: json["template"], default: .init(type: "Color"))
-            self.inputs = json["inputs"].arrayValue.compactMap(\.string)
-            self.output = json["output"].stringValue
+        public init(from json: JSON, variables: VariablesManager) async throws {
+            self.template = try await .init(from: json["template"], default: .init(type: "Color"), variables: variables)
+            self.output = try await variables.parse(json["output"].stringValue)
+            
+            if let item = json["inputs"].string {
+                self.inputs = [try await variables.parse(item)]
+            } else {
+                self.inputs = try await variables.parse(json["inputs"].arrayValue.compactMap(\.string))
+            }
         }
     }
     
@@ -28,7 +35,7 @@ public struct XCColorMaker: MissionInstance, XCMaker {
         guard let json = json else {
             return
         }
-        try await evaluate(options: try .init(from: json))
+        try await evaluate(options: try .init(from: json, variables: context.variables))
     }
     
     public func evaluate(options: JSONModeOptions) async throws {
@@ -87,8 +94,15 @@ private extension XCColorMaker {
                 names = [any.hexString(.auto, prefix: .none)]
             }
             
-            let light = try? StemColor(throwing: json["light"].stringValue)
-            let dark  = try? StemColor(throwing: json["dark"].stringValue)
+            var light: StemColor?
+            if let item = json["light"].string {
+                light = try? StemColor(throwing: item)
+            }
+            
+            var dark: StemColor?
+            if let item = json["dark"].string {
+                 dark = try? StemColor(throwing: item)
+            }
             
             self.names = names
             self.any   = any
@@ -236,7 +250,7 @@ private extension XCColorMaker {
             if #available(iOS 13.0, *) {
                 self.system = .init(dynamicProvider: { $0.userInterfaceStyle == .dark ? dark : light })
             } else {
-                self.system = color1
+                self.system = light
             }
             #elseif canImport(AppKit)
             self.system = .init(name: nil, dynamicProvider: { appearance in
