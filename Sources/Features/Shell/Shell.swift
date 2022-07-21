@@ -30,12 +30,14 @@ public struct Shell: MissionInstance {
         var commands: [String]
         var allow_errors: Bool
         
-        public init(from json: JSON) throws {
+        public init(from json: JSON, variables: VariablesManager) async throws {
             self.allow_errors = json["allow_errors"].boolValue
-            if let str = json.string {
-                self.commands = [str]
+            if let item = json.string {
+                self.commands = [try await variables.parse(item)]
+            } else if let item = json.array?.compactMap(\.string) {
+                self.commands = try await variables.parse(item)
             } else {
-                self.commands = json.arrayValue.compactMap(\.string)
+                self.commands = try await variables.parse(json["commands"].arrayValue.map(\.stringValue))
             }
         }
     }
@@ -43,11 +45,12 @@ public struct Shell: MissionInstance {
     public init() {}
     
     public func evaluate(from json: JSON, context: MissionContext) async throws {
-        let options  = try Options(from: json)
+        let options  = try await Options(from: json, variables: context.variables)
         let commands = try await context.variables.parse(options.commands)
         for command in commands {
             do {
-                guard let result = try await StemShell.zsh(string: command, context: .init(environment: environment)) else {
+                logger?.info(.init(stringLiteral: command))
+                guard let result = try await StemShell.zsh(string: command, context: .init(environment: environment)), !result.isEmpty else {
                     return
                 }
                 logger?.info(.init(stringLiteral: result))

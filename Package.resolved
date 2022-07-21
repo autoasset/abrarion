@@ -1,12 +1,21 @@
 {
   "pins" : [
     {
+      "identity" : "collectionconcurrencykit",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/JohnSundell/CollectionConcurrencyKit",
+      "state" : {
+        "revision" : "b4f23e24b5a1bff301efc5e70871083ca029ff95",
+        "version" : "0.2.0"
+      }
+    },
+    {
       "identity" : "stem",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/linhay/Stem",
       "state" : {
         "branch" : "master",
-        "revision" : "44fa6916c807afaec91cdd997fe9e8abb9f0b407"
+        "revision" : "c805890142fb0a936cf4a88d268274b0ab770ef3"
       }
     },
     {
@@ -24,7 +33,7 @@
       "location" : "https://github.com/linhay/swift-git",
       "state" : {
         "branch" : "main",
-        "revision" : "dde6b9274eda3493ec4ea030cdea86fa1d4dc59c"
+        "revision" : "5b34b8a9832dc195b020a4dc29421fb87faac581"
       }
     },
     {

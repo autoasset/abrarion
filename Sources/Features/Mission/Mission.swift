@@ -8,10 +8,21 @@
 import Stem
 import Logging
 import Foundation
+import StemFilePath
 
 public struct MissionContext {
     
     public var variables = VariablesManager()
+    public let pwd = STFolder("./")
+    
+    func relativePath<T: FilePathProtocol>(_ path: T) -> String {
+        let prefix = pwd.path + "/"
+        if path.path.hasPrefix(prefix) {
+            return String(path.path.dropFirst(prefix.count))
+        } else {
+            return path.path
+        }
+    }
     
     public init() {}
     

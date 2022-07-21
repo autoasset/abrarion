@@ -181,7 +181,6 @@ extension XCImageMaker {
             }
             return self
         }
-        
     }
     
     struct ImageRecord {

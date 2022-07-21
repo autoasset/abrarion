@@ -12,31 +12,31 @@ import Stem
 
 public struct SystemVariables {
     
-    
     public static func variables() async throws -> [Variables] {
         try await gitVariables()
     }
     
-    
-//    public static func packageVariables() async throws -> [Variables] {
-//        let repository = try Repository(path: "./", environment: .shared)
-//
-//        return [
-//            .init(key: "package.recommend.name",
-//                  desc: ,
-//                  value: )
-//        ]
-//    }
+    //    public static func packageVariables() async throws -> [Variables] {
+    //        let repository = try Repository(path: "./", environment: .shared)
+    //
+    //        return [
+    //            .init(key: "package.recommend.name",
+    //                  desc: ,
+    //                  value: )
+    //        ]
+    //    }
     
     public static func gitVariables() async throws -> [Variables] {
         let repository = try Repository(path: "./", environment: .shared)
         let folder = STFolder("./")
         let nameFormatter = NameFormatter(language: .swift, splitSet: .letters.union(.decimalDigits).inverted)
-
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        
         func package_name() async throws -> String {
             URL(string: try await repository.lsRemote([.getURL], refs: []))?.lastPathComponent ?? folder.url.lastPathComponent
         }
-
+        
         func lastTagVersion() async throws -> STVersion {
             for tag in try await repository.lsRemote.tags() {
                 if let version = STVersion(tag.shortName) {
@@ -57,13 +57,13 @@ public struct SystemVariables {
                   desc: "git 项目名称(下划线形式)",
                   value: { try await nameFormatter.snakeCased(package_name()) }),
             
-            .init(key: "package.url",
-                  desc: "git 项目 远程链接",
-                  value: { try await repository.lsRemote.url()?.absoluteString ?? "" }),
+                .init(key: "package.url",
+                      desc: "git 项目 远程链接",
+                      value: { try await repository.lsRemote.url()?.absoluteString ?? "" }),
             
-            .init(key: "git.last.tag.version",
-                  desc: "最近一次 git tag 版本号",
-                  value: { try await lastTagVersion().description }),
+                .init(key: "git.last.tag.version",
+                      desc: "最近一次 git tag 版本号",
+                      value: { try await lastTagVersion().description }),
             .init(key: "git.next.tag.major_version",
                   desc: "最近一次 git tag 版本号",
                   value: {
@@ -81,15 +81,45 @@ public struct SystemVariables {
                   value: {
                       let version = try await lastTagVersion()
                       return STVersion(version.major, version.minor, version.patch + 1).description
+                  }),
+            .init(key: "git.current.commit.description",
+                  desc: "上一次提交记录详细",
+                  value: {
+                      if let logs = try await repository.log().first {
+                          let show = try await repository.show(commit: logs.id)
+                          var result = ["\(show.message)",
+                                        "user: \(show.author.user.name)",
+                                        "date: \(dateFormatter.string(from: show.author.date))",
+                                        "hash: \(show.ID)"]
+                          
+                         let deleted = show.items
+                              .filter({ !Set([.renameFrom, .deleted, .copyFrom]).isDisjoint(with: $0.actions.map(\.type)) })
+                              .map(\.diff.a)
+                              .compactMap { $0.split(separator: "/").last }
+                              .map({ "     \($0)" })
+                              .sorted()
+
+                          let new = show.items
+                              .filter({ !Set([.renameTo, .new, .copyTo]).isDisjoint(with: $0.actions.map(\.type)) })
+                               .map(\.diff.b)
+                               .compactMap { $0.split(separator: "/").last }
+                               .map({ "     \($0)" })
+                               .sorted()
+
+                          if deleted.isEmpty == false {
+                              result += ["deleted:"]
+                              result += deleted
+                          }
+
+                          if new.isEmpty == false {
+                              result += ["new:"]
+                              result += new
+                          }
+                          return result.joined(separator: "\n")
+                      } else {
+                          return ""
+                      }
                   })
-            //            .init(key: "git.last.commits.no_ci_skip",
-            //                  desc: "上一次含有 [ci skip] 的提交到当前提交的提交记录",
-            //                  value: {
-            //                      let logs = try await repository.log()
-            //                      let index = logs.firstIndex { result in
-            //                          result.message.contains(<#T##other: StringProtocol##StringProtocol#>)
-            //                      }
-            //                  })
         ]
         
     }

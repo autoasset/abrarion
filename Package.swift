@@ -13,6 +13,7 @@ let package = Package(
         .package(url: "https://github.com/linhay/swift-git", branch: "main"),
         // .package(url: "https://github.com/linhay/Stem", .upToNextMajor(from: "1.1.1")),
         .package(url: "https://github.com/linhay/Stem", branch: "master"),
+        .package(url: "https://github.com/JohnSundell/CollectionConcurrencyKit", .upToNextMajor(from: "0.2.0")),
 //         .package(path: "/Users/linhey/Desktop/Stem")
     ],
     targets: [
@@ -23,6 +24,7 @@ let package = Package(
                 .product(name: "Stem", package: "Stem"),
                 .product(name: "StemFilePath", package: "Stem"),
                 .product(name: "StemColor", package: "Stem"),
+                .product(name: "CollectionConcurrencyKit", package: "CollectionConcurrencyKit"),
                ]),
         .executableTarget(
             name: "abrarion",
