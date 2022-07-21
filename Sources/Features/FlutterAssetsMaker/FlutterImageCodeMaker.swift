@@ -13,9 +13,11 @@ public struct FlutterImageCodeMaker: MissionInstance, XCMaker {
     
     public struct Options {
         let channels: [String]
-        
+        /// 检查每个 channel 文件夹下是否一致
+        let check_consistency: Bool
         public init(from json: JSON, variables: VariablesManager) async throws {
             self.channels = try await variables.parse(json["channels"].arrayValue.compactMap(\.string))
+            self.check_consistency = json["check_consistency"].boolValue
         }
         
     }

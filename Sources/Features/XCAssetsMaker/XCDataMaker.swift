@@ -14,15 +14,15 @@ public struct XCDataMaker: MissionInstance, XCMaker {
     
     public init() {}
     
-    public struct JSONModeOptions {
+    public struct Options {
         
-        fileprivate let template: XCCodeOptions?
+        var template: XCCodeOptions?
         /// 依赖代码输出文件夹位置
-        fileprivate let template_dependent_output: String
-        fileprivate let contents: [String]
-        fileprivate let input_file_lints: [XCFileLint]
-        fileprivate let inputs: [String]
-        fileprivate let output: String
+        var template_dependent_output: String
+        var contents: [String]
+        var input_file_lints: [XCFileLint]
+        var inputs: [String]
+        var output: String
         
         internal init(template: XCCodeOptions?,
                       template_dependent_output: String,
@@ -79,7 +79,7 @@ public struct XCDataMaker: MissionInstance, XCMaker {
         try await evaluate(options: try .init(from: json, variables: context.variables))
     }
     
-    public func evaluate(options: JSONModeOptions) async throws {
+    public func evaluate(options: Options) async throws {
         let contents = try await files(from: options.contents)
             .compactMap({ try? Content(from: $0) })
             .dictionary(key: \.filename)

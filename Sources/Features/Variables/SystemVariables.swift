@@ -16,16 +16,6 @@ public struct SystemVariables {
         try await gitVariables()
     }
     
-    //    public static func packageVariables() async throws -> [Variables] {
-    //        let repository = try Repository(path: "./", environment: .shared)
-    //
-    //        return [
-    //            .init(key: "package.recommend.name",
-    //                  desc: ,
-    //                  value: )
-    //        ]
-    //    }
-    
     public static func gitVariables() async throws -> [Variables] {
         let repository = try Repository(path: "./", environment: .shared)
         let folder = STFolder("./")
@@ -34,7 +24,14 @@ public struct SystemVariables {
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
         
         func package_name() async throws -> String {
-            URL(string: try await repository.lsRemote([.getURL], refs: []))?.lastPathComponent ?? folder.url.lastPathComponent
+            var name: String?
+            do {
+                let url = try await repository.lsRemote([.getURL], refs: [])
+                name = URL(string: url)?.lastPathComponent.split(separator: ".").first?.description
+            } catch {
+                
+            }
+            return name ?? folder.url.lastPathComponent
         }
         
         func lastTagVersion() async throws -> STVersion {
@@ -92,25 +89,25 @@ public struct SystemVariables {
                                         "date: \(dateFormatter.string(from: show.author.date))",
                                         "hash: \(show.ID)"]
                           
-                         let deleted = show.items
+                          let deleted = show.items
                               .filter({ !Set([.renameFrom, .deleted, .copyFrom]).isDisjoint(with: $0.actions.map(\.type)) })
                               .map(\.diff.a)
                               .compactMap { $0.split(separator: "/").last }
                               .map({ "     \($0)" })
                               .sorted()
-
+                          
                           let new = show.items
                               .filter({ !Set([.renameTo, .new, .copyTo]).isDisjoint(with: $0.actions.map(\.type)) })
-                               .map(\.diff.b)
-                               .compactMap { $0.split(separator: "/").last }
-                               .map({ "     \($0)" })
-                               .sorted()
-
+                              .map(\.diff.b)
+                              .compactMap { $0.split(separator: "/").last }
+                              .map({ "     \($0)" })
+                              .sorted()
+                          
                           if deleted.isEmpty == false {
                               result += ["deleted:"]
                               result += deleted
                           }
-
+                          
                           if new.isEmpty == false {
                               result += ["new:"]
                               result += new

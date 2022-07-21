@@ -11,74 +11,63 @@ import Foundation
 import Logging
 
 public struct XCIconFontMaker: MissionInstance, XCMaker {
-    public var logger: Logger?
     
+    public var logger: Logger?
     public init() {}
     
-    public struct JSONModeOptions {
-        fileprivate let template: XCCodeOptions?
-        /// 依赖代码输出文件夹位置
-        fileprivate let template_dependent_output: String
-        fileprivate let input_json_file: String
-        fileprivate let input_font_file: String
-        fileprivate let output: String
+    public struct Options {
+        
+        var dataOptions: XCDataMaker.Options
+        let input_json: STFile
+        let input_font: STFile
         
         public init(from json: JSON, variables: VariablesManager) async throws {
-            self.template = try await .init(from: json["template"], default: .init(type: "IconFont"), variables: variables)
-            
-            self.input_json_file = json["input_json_file"].stringValue
-            self.input_font_file = json["input_font_file"].stringValue
-            self.output = json["output"].stringValue
-            
-            if self.template == nil {
-                self.template_dependent_output = ""
-            } else {
-                if let path = json["template_dependent_output"].string {
-                    self.template_dependent_output = path
-                } else {
-                    throw StemError(message: "参数缺失: template_dependent_output")
-                }
-            }
+            self.input_json  = STFile(try await variables.parse(json["input_json"].stringValue))
+            self.input_font  = STFile(try await variables.parse(json["input_font"].stringValue))
+            self.dataOptions = try await .init(from: json, variables: variables)
+            self.dataOptions.inputs = [self.input_font.path]
+            self.dataOptions.contents = []
         }
+        
     }
     
     public func evaluate(from json: JSON, context: MissionContext) async throws {
-        try await evaluate(options: try .init(from: json, variables: context.variables))
+        try await evaluate(options: try .init(from: json, variables: context.variables), context: context)
     }
     
-    public func evaluate(options: JSONModeOptions) async throws {
+    public func evaluate(options: Options, context: MissionContext) async throws {
         let decoder = JSONDecoder()
-        let iconFontFile = STFile(options.input_json_file)
-        let model = try decoder.decode(KhalaIconFont.self, from: iconFontFile.data())
+        let model = try decoder.decode(KhalaIconFont.self, from: options.input_json.data())
         
-        try await XCDataMaker().evaluate(options: .init(template: options.template,
-                                                        template_dependent_output: options.template_dependent_output,
-                                                        contents: [],
-                                                        input_file_lints: [],
-                                                        inputs: [options.input_font_file],
-                                                        output: options.output))
+        var dataOptions = options.dataOptions
+        dataOptions.template = nil
+        try await XCDataMaker().evaluate(options: dataOptions)
         
-        if let options = options.template {
-            try CodeMaker(file: iconFontFile, records: model, options: options).evaluate()
+        if let template = options.dataOptions.template {
+            try await CodeMaker(font: options.input_font,
+                                records: model,
+                                options: template,
+                                variables: context.variables).evaluate()
         }
         
     }
     
 }
 
+
 extension XCIconFontMaker {
     
     struct CodeMaker {
         
-        let file: STFile
+        let font: STFile
         let records: KhalaIconFont
         let options: XCCodeOptions
+        let variables: VariablesManager
         
-        func evaluate() throws {
+        func evaluate() async throws {
             let file = STFile(options.instance_output_path)
             try file.delete()
             try file.create(with: instance.data(using: .utf8))
-            
             let list = STFile(options.list_output_path)
             try list.delete()
             try list.create(with: `extension`.data(using: .utf8))
@@ -89,7 +78,7 @@ extension XCIconFontMaker {
             let formatter = NameFormatter(language: .swift, splitSet: .letters.union(.decimalDigits).inverted)
             let name = formatter.camelCased(named)
             return "/*\(named) bundle: \(options.bundle_name) */"
-            + "\n var \(name): \(options.instance_name) {"
+            + "\n var \(name): \(options.instance_name) { "
             + #".init(string: "\u{"#
             + record.unicode
             + #"}", in: ""#
@@ -97,7 +86,7 @@ extension XCIconFontMaker {
             + #"", familyName: ""#
             + records.font_family
             + #"", dataName: ""#
-            + formatter.camelCased(file.attributes.nameComponents.name)
+            + formatter.camelCased(font.attributes.nameComponents.name)
             + #"") }"#
         }
         
