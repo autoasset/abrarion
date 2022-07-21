@@ -46,6 +46,7 @@ struct Abrarion: AsyncParsableCommand {
             
             let missionManager = MissionManager()
             missionManager.register(XCReport.shared, for: "report")
+            missionManager.register(CustomVariables(), for: "variables")
             missionManager.register(Cocoapods(), for: "cocoapods_push")
             missionManager.register(Shell(), for: "shell")
             missionManager.register(TidyDelete(), for: "tidy_delete")

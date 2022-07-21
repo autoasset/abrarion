@@ -42,20 +42,7 @@ public class Cocoapods: MissionInstance {
         }
     }
     
-    private static let environment: [String : String] = [
-        "PATH": ["/bin",
-                 "/sbin",
-                 "/usr/bin",
-                 "/usr/sbin",
-                 "/opt/homebrew/bin",
-                 "/opt/homebrew/sbin",
-                 "/usr/local/bin",
-                 "/usr/local/sbin",
-                 "/usr/local/opt/ruby/bin",
-                 "/Library/Apple/usr/bin"].joined(separator: ":"),
-        "LANG": "en_US.UTF-8",
-        "CP_HOME_DIR": "\(NSHomeDirectory())/.cocoapods"
-    ]
+    private static let environment = Shell.environment.merging(["CP_HOME_DIR": "\(NSHomeDirectory())/.cocoapods"], uniquingKeysWith: { $1 })
     
     func localLint(_ options: Options) async throws -> Options {
         /// 标准化 podspec 文件

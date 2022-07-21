@@ -9,9 +9,10 @@ import Stem
 import Logging
 
 public struct Shell: MissionInstance {
+    
     public var logger: Logger?
     
-    private let environment: [String : String] = [
+    public static let environment: [String : String] = [
         "PATH": ["/bin",
                  "/sbin",
                  "/usr/bin",
@@ -50,7 +51,7 @@ public struct Shell: MissionInstance {
         for command in commands {
             do {
                 logger?.info(.init(stringLiteral: command))
-                guard let result = try await StemShell.zsh(string: command, context: .init(environment: environment)), !result.isEmpty else {
+                guard let result = try await StemShell.zsh(string: command, context: .init(environment: Shell.environment)), !result.isEmpty else {
                     return
                 }
                 logger?.info(.init(stringLiteral: result))
