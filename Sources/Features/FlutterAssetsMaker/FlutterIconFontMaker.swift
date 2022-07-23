@@ -15,23 +15,13 @@ public struct FlutterIconFontMaker: MissionInstance, XCMaker {
     
     public init() {}
     
-    public struct CodeOptions {
-        let font_package: String
-        let class_name: String
-        
-        public init(from json: JSON) throws {
-            self.font_package = json["font_package"].stringValue
-            self.class_name = json["class_name"].stringValue
-        }
-    }
-    
     public struct Options {
-        let template: CodeOptions?
+        let template: FlutterCodeOptions?
         let input: STFile
         let output: STFile
         
         public init(from json: JSON, variables: VariablesManager) async throws {
-            self.template = try .init(from: json["template"])
+            self.template = try await .init(from: json["template"], variables: variables)
             self.input  = STFile(try await variables.parse(json["input"].stringValue))
             self.output = STFile(try await variables.parse(json["output"].stringValue))
         }
@@ -54,7 +44,7 @@ extension FlutterIconFontMaker {
         
         let file: STFile
         let records: KhalaIconFont
-        let options: CodeOptions
+        let options: FlutterCodeOptions
         let variables: VariablesManager
         
         func evaluate() async throws {
@@ -66,7 +56,7 @@ extension FlutterIconFontMaker {
             let named = record.name
             let formatter = NameFormatter(language: .swift, splitSet: .letters.union(.decimalDigits).inverted)
             let name = formatter.camelCased(named)
-            let code = "static const IconData \(name) = const IconData(0x\(record.unicode), fontFamily: '\(records.font_family)',fontPackage: '\(options.font_package)');"
+            let code = "static const IconData \(name) = const IconData(0x\(record.unicode), fontFamily: '\(records.font_family)',fontPackage: '\(options.package_name)');"
             return code
         }
         

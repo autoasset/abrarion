@@ -16,7 +16,7 @@ public struct TidyCopy: MissionInstance {
     
     public struct Options {
         var inputs: [STPath]
-        var output: STFolder
+        var output: STPath
         let filter_patterns: [NSRegularExpression]
         
         public init(from json: JSON, variables: VariablesManager) async throws {
@@ -28,7 +28,7 @@ public struct TidyCopy: MissionInstance {
             }
             self.filter_patterns = try await variables.parse(json["filter_patterns"].arrayValue.map(\.stringValue))
                 .map({ try NSRegularExpression(pattern: $0) })
-            self.output = try await STFolder(variables.parse(json["output"].stringValue))
+            self.output = try await STPath(variables.parse(json["output"].stringValue))
         }
     }
     
@@ -38,10 +38,15 @@ public struct TidyCopy: MissionInstance {
         for input in options.inputs {
             switch input.referenceType {
             case .file(let file):
-                try file.copy(into: options.output, isOverlay: true)
+                if options.output.attributes.name.contains(".") {
+                    let to = STFile(options.output.url)
+                       try to.overlay(with: file.data())
+                } else {
+                    try file.copy(into: STFolder(options.output.url), isOverlay: true)
+                }
             case .folder(let folder):
                 try folder.subFilePaths().forEach({ path in
-                    try path.copy(into: options.output, isOverlay: true)
+                    try path.copy(into: STFolder(options.output.url), isOverlay: true)
                 })
             case .none:
                 break

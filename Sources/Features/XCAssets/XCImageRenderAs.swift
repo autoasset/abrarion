@@ -10,6 +10,7 @@ import Stem
 
 public enum XCImageRenderAs: String {
     
+    case `default`
     case original
     case template
     
@@ -22,6 +23,8 @@ public enum XCImageRenderAs: String {
     
     var toJSON: [String: String] {
         switch self {
+        case .default:
+            return [:]
         case .original:
             return ["template-rendering-intent": rawValue]
         case .template:

@@ -43,7 +43,7 @@ public struct XCImageProperties: XCAssetProtocol {
     
     public var toJSON: [String: Any] {
         var dict = [String: Any]()
-        if let item = renderAs {
+        if let item = renderAs, item != .default {
             dict.merge(item.toJSON, uniquingKeysWith: { $1 })
         }
         if let item = compressionType {

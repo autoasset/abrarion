@@ -27,11 +27,20 @@ public struct SystemVariables {
             var name: String?
             do {
                 let url = try await repository.lsRemote([.getURL], refs: [])
-                name = URL(string: url)?.lastPathComponent.split(separator: ".").first?.description
+                if url.hasPrefix("https://") || url.hasPrefix("http://"),
+                    var components = URLComponents(string: url) {
+                    /// 移除敏感信息
+                    components.user = nil
+                    components.password = nil
+                    components.path = components.path.split(separator: ".").first?.description ?? components.path
+                    name = components.url?.absoluteString
+                } else {
+                    name = url
+                }
             } catch {
                 
             }
-            return name ?? folder.url.lastPathComponent
+            return name ?? folder.attributes.name
         }
         
         func lastTagVersion() async throws -> STVersion {
@@ -57,7 +66,6 @@ public struct SystemVariables {
                 .init(key: "package.url",
                       desc: "git 项目 远程链接",
                       value: { try await repository.lsRemote.url()?.absoluteString ?? "" }),
-            
                 .init(key: "git.last.tag.version",
                       desc: "最近一次 git tag 版本号",
                       value: { try await lastTagVersion().description }),
@@ -113,6 +121,15 @@ public struct SystemVariables {
                               result += new
                           }
                           return result.joined(separator: "\n")
+                      } else {
+                          return ""
+                      }
+                  }),
+            .init(key: "git.current.commit.id",
+                  desc: "上一次提交记录 ID",
+                  value: {
+                      if let logs = try await repository.log().first {
+                          return logs.id
                       } else {
                           return ""
                       }

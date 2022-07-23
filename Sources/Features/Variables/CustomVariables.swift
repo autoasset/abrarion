@@ -8,6 +8,7 @@
 import Stem
 import StemFilePath
 import Logging
+import CollectionConcurrencyKit
 
 public struct CustomVariables: MissionInstance {
     
@@ -16,8 +17,7 @@ public struct CustomVariables: MissionInstance {
         case value(String)
     }
     
-    struct Options {
-        
+    struct Record {
         let key: String
         let state: State
         
@@ -26,26 +26,38 @@ public struct CustomVariables: MissionInstance {
             if let item = json["shell"].string {
                 state = .shell(try await variables.parse(item))
             } else if let item = json["value"].string {
-                state = .shell(try await variables.parse(item))
+                state = .value(try await variables.parse(item))
             } else {
                 throw StemError(message: "参数解析错误")
             }
         }
-        
+    }
+    
+    struct Options {
+        let records: [Record]
+        public init(from json: JSON, variables: VariablesManager) async throws {
+            if let item = try await json.array?.asyncCompactMap({ try await Record(from: $0, variables: variables) }) {
+                self.records = item
+            } else {
+                self.records = [try await Record(from: json, variables: variables)]
+            }
+        }
     }
     
     public var logger: Logger?
     
     public func evaluate(from json: JSON, context: MissionContext) async throws {
         let options = try await Options(from: json, variables: context.variables)
-        switch options.state {
-        case .shell(let command):
-            guard let result = try await StemShell.zsh(string: command, context: .init(environment: Shell.environment)) else {
-                return
+        for record in options.records {
+            switch record.state {
+            case .shell(let command):
+                guard let result = try await StemShell.zsh(string: command, context: .init(environment: Shell.environment)) else {
+                    return
+                }
+                context.variables.register([.init(key: record.key, value: result)])
+            case .value(let item):
+                context.variables.register([.init(key: record.key, value: item)])
             }
-            context.variables.register([.init(key: options.key, value: result)])
-        case .value(let item):
-            context.variables.register([.init(key: options.key, value: item)])
         }
     }
     

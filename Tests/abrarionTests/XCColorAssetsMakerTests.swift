@@ -66,7 +66,7 @@ class XCColorAssetsMakerTests: XCTestCase {
             .file(name: "list1.json").create(with: list1.data(using: .utf8))
         
         let maker = XCColorMaker()
-        let options = try await XCColorMaker.JSONModeOptions(from: JSON(data: jsonEncoder.encode(ColorJSONModeOptions())), variables: .init())
+        let options = try await XCColorMaker.Options(from: JSON(data: jsonEncoder.encode(ColorJSONModeOptions())), variables: .init())
         try await maker.evaluate(options: options)
     }
 

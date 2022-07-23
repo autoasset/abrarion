@@ -30,7 +30,9 @@ public struct XCAsset<Content: XCAssetContentProtocol>: XCAssetProtocol {
     
     public var toJSON: [String: Any] {
         var dict = [String: Any]()
-        dict["properties"] = properties.toJSON
+        if !properties.toJSON.isEmpty {
+            dict["properties"] = properties.toJSON
+        }
         dict["info"] = info.toJSON
         dict[Content.parseKey] = contents.map(\.toJSON)
         return dict

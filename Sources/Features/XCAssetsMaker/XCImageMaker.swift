@@ -161,6 +161,10 @@ extension XCImageMaker {
                 return .init(contents: images.map(\.image), properties: .init(renderAs: .original, preservesVectorRepresentation: false))
             }
             
+            if let images = renderDict[.default] {
+                return .init(contents: images.map(\.image), properties: .init(renderAs: .default, preservesVectorRepresentation: false))
+            }
+            
             return nil
         }
         
@@ -171,6 +175,10 @@ extension XCImageMaker {
             let folder = folder.folder(name: name + ".imageset")
             try folder.delete()
             try folder.create()
+            if images.map(\.image.appearances.luminosities).joined().contains(.dark) {
+               try STFolder("/Users/linhey/Desktop/gaia-assets/.developer/contents/images").file(name: name + ".json")
+                    .overlay(with: contents.data)
+            }
             try folder.create(file: "Contents.json", data: contents.data)
             images.forEach { record in
                 do {
@@ -209,7 +217,7 @@ extension XCImageMaker {
                     renderAs = .template
                     scale = nil
                 case .png, .jpeg:
-                    renderAs = .original
+                    renderAs = .default
                     if name.contains("@3x.") {
                         scale = .x3
                     } else if name.contains("@2x.") {

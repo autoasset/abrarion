@@ -14,7 +14,7 @@ import Logging
 public struct XCColorMaker: MissionInstance, XCMaker {
     public var logger: Logger?
     
-    public struct JSONModeOptions {
+    public struct Options {
         fileprivate let template: XCCodeOptions?
         fileprivate let inputs: [String]
         fileprivate let output: String
@@ -35,20 +35,11 @@ public struct XCColorMaker: MissionInstance, XCMaker {
         try await evaluate(options: try .init(from: json, variables: context.variables))
     }
     
-    public func evaluate(options: JSONModeOptions) async throws {
-       
-        var set = Set<String>()
-
-        let records = try await files(from: options.inputs)
-            .compactMap({ try? JSON($0.data()) })
-            .map(parse(from:))
-            .filter({ !$0.isEmpty })
-            .flatMap({ $0 })
-            .reversed()
-            .filter({ set.insert($0.names[0]).inserted })
-            .sorted(by: { $0.names[0] > $1.names[0] })
+    
+    
+    public func evaluate(options: Options) async throws {
         
-        set.removeAll()
+        let records = try await records(options.inputs)
         
         if options.output.isEmpty == false {
             let folder = STFolder(options.output)
@@ -63,14 +54,27 @@ public struct XCColorMaker: MissionInstance, XCMaker {
         }
         
         if let template = options.template {
-             try CodeMaker(options: template, records: records).evaluate()
+            try CodeMaker(options: template, records: records).evaluate()
         }
     }
     
     public init() {}
+    
+    func records(_ inputs: [String]) async throws -> [XCColorMaker.Record] {
+        var set = Set<String>()
+        return try await files(from: inputs)
+            .compactMap({ try? JSON($0.data()) })
+            .map(parse(from:))
+            .filter({ !$0.isEmpty })
+            .flatMap({ $0 })
+            .reversed()
+            .filter({ set.insert($0.names[0]).inserted })
+            .sorted(by: { $0.names[0] > $1.names[0] })
+    }
+    
 }
 
-private extension XCColorMaker {
+extension XCColorMaker {
     
     struct Record {
         
@@ -98,7 +102,7 @@ private extension XCColorMaker {
             
             var dark: StemColor?
             if let item = json["dark"].string {
-                 dark = try? StemColor(throwing: item)
+                dark = try? StemColor(throwing: item)
             }
             
             self.names = names
