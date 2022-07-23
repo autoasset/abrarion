@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Logging
 
 public protocol VariablesProtocol {
     var key: String { get }
@@ -41,21 +42,28 @@ public class VariablesManager {
     
     public init() {}
     
-    var cache = [String: VariablesProtocol]()
-    
-    public func register(_ variables: VariablesProtocol) {
+    var cache = [String: Variables]()
+    let logger = Logger(label: "variables")
+
+    public func register(_ variables: Variables) {
         cache[variables.matchKey] = variables
     }
     
     public func register(_ variables: [Variables]) {
-        cache.merge(variables.dictionary(key: \.matchKey), uniquingKeysWith: { $1 })
+        variables.forEach({ register($0) })
+    }
+    
+    public func register(_ variables: Dictionary<String, Variables>.Values) {
+        variables.forEach({ register($0) })
     }
     
     /// 解析带变量的文本
     public func parse(_ text: String) async throws -> String {
         var text = text
         while let variables = cache.first(where: { text.contains($0.key) })?.value {
-            text = text.replacingOccurrences(of: variables.matchKey, with: try await variables.value())
+            let value = try await variables.value()
+            let key = variables.matchKey
+            text = text.replacingOccurrences(of: key, with: value)
         }
         return text
     }

@@ -49,14 +49,19 @@ public struct CustomVariables: MissionInstance {
     public func evaluate(from json: JSON, context: MissionContext) async throws {
         let options = try await Options(from: json, variables: context.variables)
         for record in options.records {
+            logger?.info(.init(stringLiteral: "key: \(record.key)"))
             switch record.state {
             case .shell(let command):
-                guard let result = try await StemShell.zsh(string: command, context: .init(environment: Shell.environment)) else {
+                guard let item = try await StemShell.zsh(string: command, context: .init(environment: Shell.environment)) else {
                     return
                 }
-                context.variables.register([.init(key: record.key, value: result)])
+                let value = try await context.variables.parse(item)
+                context.variables.register([.init(key: record.key, value: value)])
+                logger?.info(.init(stringLiteral: "value: \(value)"))
             case .value(let item):
-                context.variables.register([.init(key: record.key, value: item)])
+                let value = try await context.variables.parse(item)
+                context.variables.register([.init(key: record.key, value: value)])
+                logger?.info(.init(stringLiteral: "value: \(value)"))
             }
         }
     }

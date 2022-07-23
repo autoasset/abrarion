@@ -23,19 +23,27 @@ public struct SystemVariables {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
         
+        func removeURLPassword(_ url: String) -> String {
+            guard url.hasPrefix("https://") || url.hasPrefix("http://"),
+                  var components = URLComponents(string: url) else {
+                return url
+            }
+            /// 移除敏感信息
+            components.user = nil
+            components.password = nil
+            return components.string ?? url
+        }
+        
         func package_name() async throws -> String {
             var name: String?
             do {
-                let url = try await repository.lsRemote([.getURL], refs: [])
-                if url.hasPrefix("https://") || url.hasPrefix("http://"),
-                    var components = URLComponents(string: url) {
-                    /// 移除敏感信息
-                    components.user = nil
-                    components.password = nil
+                var url = try await repository.lsRemote([.getURL], refs: [])
+                url = removeURLPassword(url)
+                if var components = URLComponents(string: url) {
                     components.path = components.path.split(separator: ".").first?.description ?? components.path
-                    name = components.url?.absoluteString
-                } else {
-                    name = url
+                    name = components.url?.lastPathComponent
+                } else if let item = url.split(separator: "/").last {
+                    name = String(item)
                 }
             } catch {
                 
@@ -44,10 +52,16 @@ public struct SystemVariables {
         }
         
         func lastTagVersion() async throws -> STVersion {
-            for tag in try await repository.lsRemote.tags() {
-                if let version = STVersion(tag.shortName) {
-                    return version
+            do {
+                for tag in try await repository.lsRemote.tags() {
+                    if let version = STVersion(tag.shortName) {
+                        return version
+                    }
                 }
+            } catch {
+                #if !DEBUG
+                throw error
+                #endif
             }
             return STVersion(0, 0, 0)
         }
@@ -65,7 +79,10 @@ public struct SystemVariables {
             
                 .init(key: "package.url",
                       desc: "git 项目 远程链接",
-                      value: { try await repository.lsRemote.url()?.absoluteString ?? "" }),
+                      value: {
+                         let url = try await repository.lsRemote.url()?.absoluteString ?? ""
+                          return removeURLPassword(url)
+                      }),
                 .init(key: "git.last.tag.version",
                       desc: "最近一次 git tag 版本号",
                       value: { try await lastTagVersion().description }),
@@ -92,10 +109,10 @@ public struct SystemVariables {
                   value: {
                       if let logs = try await repository.log().first {
                           let show = try await repository.show(commit: logs.id)
-                          var result = ["\(show.message)",
-                                        "user: \(show.author.user.name)",
+                          var result = ["user: \(show.author.user.name)",
                                         "date: \(dateFormatter.string(from: show.author.date))",
-                                        "hash: \(show.ID)"]
+                                        "hash: \(show.ID)",
+                                        " msg: \(show.message)",]
                           
                           let deleted = show.items
                               .filter({ !Set([.renameFrom, .deleted, .copyFrom]).isDisjoint(with: $0.actions.map(\.type)) })
@@ -112,13 +129,21 @@ public struct SystemVariables {
                               .sorted()
                           
                           if deleted.isEmpty == false {
-                              result += ["deleted:"]
-                              result += deleted
+                              if deleted.count == 1, let msg = deleted.first?.trimmingCharacters(in: .whitespacesAndNewlines) {
+                                  result += ["deleted: \(msg)"]
+                              } else {
+                                  result += ["deleted:"]
+                                  result += deleted
+                              }
                           }
                           
                           if new.isEmpty == false {
-                              result += ["new:"]
-                              result += new
+                              if new.count == 1, let msg = new.first?.trimmingCharacters(in: .whitespacesAndNewlines) {
+                                  result += [" new: \(msg)"]
+                              } else {
+                                  result += [" new:"]
+                                  result += new
+                              }
                           }
                           return result.joined(separator: "\n")
                       } else {
