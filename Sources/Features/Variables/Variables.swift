@@ -49,6 +49,10 @@ public class VariablesManager {
         cache[variables.matchKey] = variables
     }
     
+    public func has(_ name: String) -> Bool {
+        cache[name] != nil
+    }
+    
     public func register(_ variables: [Variables]) {
         variables.forEach({ register($0) })
     }

@@ -65,9 +65,17 @@ public class MissionManager {
     }
     
     public func run(from json: JSON, context: MissionContext) async throws {
-        
+        /// 环境变量
         json["environment"].dictionaryValue
             .compactMapValues(\.string)
+            .forEach { item in
+                context.variables.register(Variables(key: item.key, value: item.value))
+            }
+        
+        /// 备选环境变量
+        json["substitute_environment"].dictionaryValue
+            .compactMapValues(\.string)
+            .filter { !context.variables.has($0.key) }
             .forEach { item in
                 context.variables.register(Variables(key: item.key, value: item.value))
             }
@@ -108,32 +116,10 @@ public class MissionManager {
              */
             guard let dictionary = mission.dictionary,
                   dictionary.keys.count == 1, dictionary.values.count == 1,
-                  let name = dictionary.keys.first, var args = dictionary.values.first else {
+                  let name = dictionary.keys.first,
+                  let args = dictionary.values.first else {
                 throw StemError(message: "mission(格式错误): \(mission.description)")
             }
-            
-            let mergeKey = "merge"
-            let merges = args[mergeKey]
-                .arrayValue
-                .compactMap(\.string)
-                .dictionary(key: \.self, value: { json[$0] })
-                .filter(\.value.isExists)
-            
-            
-            if merges.isEmpty == false {
-                args.dictionaryObject?.removeValue(forKey: mergeKey)
-                for (name, merge) in merges {
-                    if merge.dictionary == nil {
-                        throw StemError(message: "mission: 外置参数格式错误 \(name)")
-                    }
-                }
-                let merged = try merges.map(\.value).reduce(JSON()) { result, item in
-                    try result.merged(with: item)
-                }
-                args = try merged.merged(with: args)
-            }
-            
-            
             try await run(name: name, with: args, context: context)
         }
     }

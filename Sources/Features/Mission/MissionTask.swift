@@ -54,7 +54,10 @@ public struct MissionTask: MissionInstance {
         }
         
         let json = JSON(yaml)
-        context.variables.register(context.variables.cache.values)
+        let last_variables = context.variables.cache.values
+        
+        let context = MissionContext()
+        context.variables.register(last_variables)
         
         if let data = try options.environment?.data(),
            let text = String(data: data, encoding: .utf8),
@@ -71,6 +74,7 @@ public struct MissionTask: MissionInstance {
         
         let missionManager = MissionManager()
         missionManager.register(XCReport.shared, for: "report")
+        missionManager.register(PrintVariables(), for: "print_variables")
         missionManager.register(MissionTask(), for: "mission")
         missionManager.register(FlutterIconFontMaker(), for: "flutter_iconfont")
         missionManager.register(FlutterPubspecMaker(), for: "flutter_pubspec")
@@ -87,7 +91,18 @@ public struct MissionTask: MissionInstance {
         missionManager.register(XCIconFontMaker(), for: "xcassets_iconfonts")
         missionManager.register(XCDataMaker(), for: "xcassets_datas")
         logger?.info(.init(stringLiteral: context.relativePath(options.config)))
-        try await missionManager.run(from: json, context: context)
+        
+        do {
+            try await missionManager.run(from: json, context: context)
+        } catch {
+            let on_error = json["on_error"]
+            guard on_error.isExists else {
+                throw error
+            }
+            context.variables.register(.init(key: "error", value: error.localizedDescription))
+            let task = MissionTask()
+            try await task.evaluate(from: on_error, context: context)
+        }
     }
     
     public init() {}

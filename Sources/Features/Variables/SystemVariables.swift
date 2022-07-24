@@ -152,13 +152,25 @@ public struct SystemVariables {
                   }),
             .init(key: "git.current.commit.id",
                   desc: "上一次提交记录 ID",
+                  value: { try await repository.log().first?.id ?? "" }),
+            .init(key: "git.current.commit.user.email",
+                  desc: "上一次提交记录用户的 email",
+                  value: { try await repository.log().first?.commit.user.email ?? "" }),
+            .init(key: "git.current.commit.user.name",
+                  desc: "上一次提交记录用户的 名称",
+                  value: { try await repository.log().first?.commit.user.name ?? "" }),
+            .init(key: "git.current.commit.date",
+                  desc: "上一次提交记录的 日期",
                   value: {
-                      if let logs = try await repository.log().first {
-                          return logs.id
-                      } else {
-                          return ""
+                      if let date = try await repository.log().first?.commit.date {
+                         return dateFormatter.string(from: date)
                       }
-                  })
+                      return ""
+                  }),
+            .init(key: "git.current.commit.message",
+                  desc: "上一次提交记录的 信息",
+                  value: { try await repository.log().first?.commit.user.name ?? "" })
+
         ]
         
     }
