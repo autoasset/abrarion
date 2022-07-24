@@ -22,10 +22,10 @@ public class Cocoapods: MissionInstance {
         try await repository.add([], paths: ["."])
         try await repository.commit([.message("[ci skip] abrarion")], pathspecs: .all)
         do {
-            try await repository.push([.repo("origin")], refspecs: [.tag(.init(options.version))])
+            try await repository.push.tag(options.version)
             try trunkPush(options)
         } catch {
-            try await repository.push([.delete], refspecs: [.tag(.init(options.version))])
+            try await repository.push.delete(.tag(.init(options.version)))
             throw error
         }
     }
