@@ -17,7 +17,7 @@ public struct SystemVariables {
     }
     
     public static func gitVariables() async throws -> [Variables] {
-        let repository = try Repository(path: "./", environment: .shared)
+        let repository = try Repository(path: "./", environment: .init(type: .system))
         let folder = STFolder("./")
         let nameFormatter = NameFormatter(language: .swift, splitSet: .letters.union(.decimalDigits).inverted)
         let dateFormatter = DateFormatter()
