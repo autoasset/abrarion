@@ -30,6 +30,7 @@ public struct Shell: MissionInstance {
         
         var commands: [String]
         var allow_errors: Bool
+        var environment: [String: String]
         
         public init(from json: JSON, variables: VariablesManager) async throws {
             self.allow_errors = json["allow_errors"].boolValue
@@ -40,6 +41,7 @@ public struct Shell: MissionInstance {
             } else {
                 self.commands = try await variables.parse(json["commands"].arrayValue.map(\.stringValue))
             }
+            self.environment = json["environment"].dictionaryValue.compactMapValues(\.string)
         }
     }
     
@@ -51,7 +53,9 @@ public struct Shell: MissionInstance {
         for command in commands {
             do {
                 logger?.info(.init(stringLiteral: command))
-                guard let result = try await StemShell.zsh(string: command, context: .init(environment: Shell.environment)), !result.isEmpty else {
+                let env = Shell.environment.merging(options.environment, uniquingKeysWith: { $1 })
+                print(env)
+                guard let result = try await StemShell.zsh(string: command, context: .init(environment: env)), !result.isEmpty else {
                     return
                 }
                 logger?.info(.init(stringLiteral: result))
