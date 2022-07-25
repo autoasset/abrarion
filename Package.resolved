@@ -10,12 +10,30 @@
       }
     },
     {
+      "identity" : "stem",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/linhay/Stem",
+      "state" : {
+        "branch" : "master",
+        "revision" : "c4fcc74bf6ff4b40b302116c9bcd2faf206890db"
+      }
+    },
+    {
       "identity" : "swift-argument-parser",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-argument-parser",
       "state" : {
         "revision" : "df9ee6676cd5b3bf5b330ec7568a5644f547201b",
         "version" : "1.1.3"
+      }
+    },
+    {
+      "identity" : "swift-git",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/linhay/swift-git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "53ed4c88fadf2c00d9247213b089f4a4bbd05d63"
       }
     },
     {
