@@ -20,7 +20,7 @@ struct Publish: AsyncParsableCommand {
             let release = STFolder(".release")
             _ = try? release.delete()
             _ = try? release.create()
-            try await StemShell.zsh(string: "swift build -c release")
+            try await StemShell.zsh(string: "swift build -c release --arch arm64 --arch x86_64")
             let file = STFile(".release/abrarion-\(version).tar.gz")
             var exec = STFile(".build/release/abrarion")
             exec = try exec.copy(into: release)
