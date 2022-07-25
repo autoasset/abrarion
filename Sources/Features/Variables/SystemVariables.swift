@@ -50,11 +50,10 @@ public struct SystemVariables {
         
         func lastTagVersion() async throws -> STVersion {
             do {
-                for tag in try await repository.lsRemote.tags() {
-                    if let version = STVersion(tag.shortName) {
-                        return version
-                    }
-                }
+               return try await repository.lsRemote.tags()
+                    .map(\.shortName)
+                    .compactMap(STVersion.init)
+                    .max() ?? STVersion(0, 0, 0)
             } catch {
                 #if !DEBUG
                 throw error
