@@ -54,7 +54,6 @@ public struct Shell: MissionInstance {
             do {
                 logger?.info(.init(stringLiteral: command))
                 let env = Shell.environment.merging(options.environment, uniquingKeysWith: { $1 })
-                print(env)
                 guard let result = try await StemShell.zsh(string: command, context: .init(environment: env)), !result.isEmpty else {
                     return
                 }

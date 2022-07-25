@@ -12,6 +12,8 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMajor(from: "1.1.3")),
         .package(url: "https://github.com/linhay/swift-git", branch: "main"),
         .package(url: "https://github.com/linhay/Stem", branch: "master"),
+//        .package(path: "../Stem"),
+//        .package(path: "../swift-git"),
         .package(url: "https://github.com/JohnSundell/CollectionConcurrencyKit", .upToNextMajor(from: "0.2.0")),
     ],
     targets: [
