@@ -20,8 +20,9 @@ public class Cocoapods: MissionInstance {
         options = try await localLint(options)
         let repository = try SwiftGit.Repository(path: context.pwd.path, environment: .shared)
         try await repository.add([], paths: ["."])
-        try await repository.commit([.message("[ci skip] by abrarion")], pathspecs: .all)
+        try await repository.commit([.message("[ci skip] by abrarion(\(AppInfo.shared.version))")], pathspecs: .all)
         do {
+            _ = try? await repository.tag([.delete], tagname: options.version)
             try await repository.tag([], tagname: options.version)
             try await repository.push.tag(options.version)
             try trunkPush(options)
