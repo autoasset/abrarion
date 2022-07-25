@@ -22,7 +22,9 @@ struct Publish: AsyncParsableCommand {
             _ = try? release.create()
             try await StemShell.zsh(string: "swift build -c release")
             let file = STFile(".release/abrarion-\(version).tar.gz")
-            try await StemShell.zsh(string: "tar -cf \(file.path) .build/release/abrarion")
+            var exec = STFile(".build/release/abrarion")
+            exec = try exec.copy(into: release)
+            try await StemShell.zsh(string: "cd \(release.path) && tar -cf \(file.path) abrarion")
             guard let sha256 = try await StemShell.zsh(string: "shasum -a 256 \(file.path)")?
                 .split(separator: " ")
                 .first?

@@ -28,6 +28,15 @@
       }
     },
     {
+      "identity" : "swift-git",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/linhay/swift-git",
+      "state" : {
+        "branch" : "main",
+        "revision" : "7b0e80125baccc5d1090b892d149648e18c7a3eb"
+      }
+    },
+    {
       "identity" : "swift-log",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-log",
