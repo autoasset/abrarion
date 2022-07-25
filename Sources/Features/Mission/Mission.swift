@@ -64,23 +64,38 @@ public class MissionManager {
         }
     }
     
+    public struct Options {
+        
+        let missions: JSON
+        let environment: JSON
+        let substitute_environment: JSON
+        
+    }
+    
     public func run(from json: JSON, context: MissionContext) async throws {
+        let options = Options(missions: json["missions"],
+                              environment: json["environment"],
+                              substitute_environment: json["substitute_environment"])
+        try await run(from: options, context: context)
+    }
+    
+    public func run(from options: Options, context: MissionContext) async throws {
         /// 环境变量
-        json["environment"].dictionaryValue
+        options.environment.dictionaryValue
             .compactMapValues(\.string)
             .forEach { item in
                 context.variables.register(Variables(key: item.key, value: item.value))
             }
         
         /// 备选环境变量
-        json["substitute_environment"].dictionaryValue
+        options.substitute_environment.dictionaryValue
             .compactMapValues(\.string)
             .filter { !context.variables.has($0.key) }
             .forEach { item in
                 context.variables.register(Variables(key: item.key, value: item.value))
             }
         
-        for mission in json["missions"].arrayValue {
+        for mission in options.missions.arrayValue {
             
             /** 无配置参数任务
              {

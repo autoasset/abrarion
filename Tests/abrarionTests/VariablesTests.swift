@@ -31,5 +31,14 @@ class VariablesTests: XCTestCase {
         let parse1 = try await manager.parse("${key1}")
         assert(parse1 == "value")
     }
+    
+    func test_package_name() async throws {
+        if let url = URL(string: "git@github.com:AxApp/abrarion.git") {
+            XCTAssertEqual(url.path.split(separator: "/").last?.split(separator: ".").first, "abrarion")
+        }
+        if let url = URL(string: "https://github.com/AxApp/abrarion.git") {
+            XCTAssertEqual(url.path.split(separator: "/").last?.split(separator: ".").first, "abrarion")
+        }
+    }
 
 }

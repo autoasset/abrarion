@@ -39,6 +39,7 @@ struct Default: AsyncParsableCommand {
                                     context: context)
             try XCReport.shared.finish()
         } catch {
+            try XCReport.shared.finish()
             logger.error(.init(stringLiteral: error.localizedDescription))
             Abrarion.exit(withError: error)
         }

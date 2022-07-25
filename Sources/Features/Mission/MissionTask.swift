@@ -46,32 +46,7 @@ public struct MissionTask: MissionInstance {
         
     }
     
-    
-    public func evaluate(from options: Options, context: MissionContext) async throws {
-        guard let text = String(data: try options.config.data(), encoding: .utf8),
-              let yaml = try Yams.load(yaml: text) else {
-            return
-        }
-        
-        let json = JSON(yaml)
-        let last_variables = context.variables.cache.values
-        
-        let context = MissionContext()
-        context.variables.register(last_variables)
-        
-        if let data = try options.environment?.data(),
-           let text = String(data: data, encoding: .utf8),
-           let yaml = try Yams.load(yaml: text),
-           let array = JSON(yaml)
-            .array?
-            .compactMap(\.dictionary)
-            .map({ $0.compactMapValues(\.string) })
-            .filter({ $0.count == 1 })
-            .map({ Variables(key: $0.keys.first!, value: $0.values.first!) }),
-           array.isEmpty == false {
-            context.variables.register(array)
-        }
-        
+    func missionManger() -> MissionManager {
         let missionManager = MissionManager()
         missionManager.register(XCReport.shared, for: "report")
         missionManager.register(PrintVariables(), for: "print_variables")
@@ -90,6 +65,34 @@ public struct MissionTask: MissionInstance {
         missionManager.register(XCImageMaker(), for: "xcassets_images")
         missionManager.register(XCIconFontMaker(), for: "xcassets_iconfonts")
         missionManager.register(XCDataMaker(), for: "xcassets_datas")
+        return missionManager
+    }
+    
+    
+    public func evaluate(from options: Options, context: MissionContext) async throws {
+        guard let text = String(data: try options.config.data(), encoding: .utf8),
+              let yaml = try Yams.load(yaml: text) else {
+            return
+        }
+        
+        let json = JSON(yaml)
+        let last_variables = context.variables.cache.values
+        
+        let context = MissionContext()
+        context.variables.register(last_variables)
+        
+        if let data = try options.environment?.data(),
+           let text = String(data: data, encoding: .utf8),
+           let yaml = try Yams.load(yaml: text),
+           let array = JSON(yaml)
+            .dictionary?
+            .compactMapValues(\.string)
+            .map({ Variables(key: $0.key, value: $0.value) }),
+           array.isEmpty == false {
+            context.variables.register(array)
+        }
+        
+        let missionManager = missionManger()
         logger?.info(.init(stringLiteral: context.relativePath(options.config)))
         
         do {
@@ -100,8 +103,11 @@ public struct MissionTask: MissionInstance {
                 throw error
             }
             context.variables.register(.init(key: "error", value: error.localizedDescription))
-            let task = MissionTask()
-            try await task.evaluate(from: on_error, context: context)
+            let missionManager = missionManger()
+            try await missionManager.run(from: .init(missions: on_error,
+                                                     environment: .init(),
+                                                     substitute_environment: .init()),
+                                         context: context)
         }
     }
     

@@ -23,10 +23,10 @@ public struct SystemVariables {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
         
-        func removeURLPassword(_ url: String) -> String {
+        func removeURLPassword(_ url: String) -> String? {
             guard url.hasPrefix("https://") || url.hasPrefix("http://"),
                   var components = URLComponents(string: url) else {
-                return url
+                return nil
             }
             /// 移除敏感信息
             components.user = nil
@@ -37,12 +37,9 @@ public struct SystemVariables {
         func package_name() async throws -> String {
             var name: String?
             do {
-                var url = try await repository.lsRemote([.getURL], refs: [])
-                url = removeURLPassword(url)
-                if var components = URLComponents(string: url) {
-                    components.path = components.path.split(separator: ".").first?.description ?? components.path
-                    name = components.url?.lastPathComponent
-                } else if let item = url.split(separator: "/").last {
+                if let url = URL(string: try await repository.lsRemote([.getURL], refs: [])),
+                   let item = url.path.split(separator: "/").last?.split(separator: ".").first,
+                   !item.isEmpty {
                     name = String(item)
                 }
             } catch {
@@ -80,8 +77,8 @@ public struct SystemVariables {
                 .init(key: "package.url",
                       desc: "git 项目 远程链接",
                       value: {
-                         let url = try await repository.lsRemote.url()?.absoluteString ?? ""
-                          return removeURLPassword(url)
+                          let url = try await repository.lsRemote.url()?.absoluteString ?? ""
+                          return removeURLPassword(url) ?? url
                       }),
                 .init(key: "git.last.tag.version",
                       desc: "最近一次 git tag 版本号",

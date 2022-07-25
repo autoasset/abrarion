@@ -88,7 +88,7 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "YES"
-      customWorkingDirectory = "/Users/linhey/Desktop/abrarion"
+      customWorkingDirectory = "/Users/linhey/Desktop/asset-template"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
@@ -105,7 +105,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "publish"
+            argument = "--config .abrarion/missions.yaml --environment .abrarion/environment.yaml"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>
