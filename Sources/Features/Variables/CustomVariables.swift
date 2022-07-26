@@ -52,7 +52,7 @@ public struct CustomVariables: MissionInstance {
             logger?.info(.init(stringLiteral: "key: \(record.key)"))
             switch record.state {
             case .shell(let command):
-                guard let item = try await StemShell.zsh(string: command, context: .init(environment: Shell.environment)) else {
+                guard let item = try await StemShell.zsh(string: command, context: .init()) else {
                     return
                 }
                 let value = try await context.variables.parse(item)

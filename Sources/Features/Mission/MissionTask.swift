@@ -102,7 +102,12 @@ public struct MissionTask: MissionInstance {
             guard on_error.isExists else {
                 throw error
             }
-            context.variables.register(.init(key: "error", value: error.localizedDescription))
+            context.variables.register(.init(key: "error",
+                                             value: error
+                .localizedDescription
+                .replacingOccurrences(of: "\'", with: "\"")
+                .split(separator: "\n")
+                .joined(separator: ";")))
             let missionManager = missionManger()
             try await missionManager.run(from: .init(missions: on_error,
                                                      environment: .init(),

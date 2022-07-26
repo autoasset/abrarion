@@ -43,9 +43,7 @@ public class Cocoapods: MissionInstance {
             self.push_repository_url = try await variables.parse(json["push_repository_url"].stringValue)
         }
     }
-    
-    private static let environment = Shell.environment.merging(["CP_HOME_DIR": "\(NSHomeDirectory())/.cocoapods"], uniquingKeysWith: { $1 })
-    
+        
     func localLint(_ options: Options) async throws -> Options {
         /// 标准化 podspec 文件
         var options = options
@@ -70,8 +68,14 @@ public class Cocoapods: MissionInstance {
 
 public extension Cocoapods {
     
+    @discardableResult
+    func shell(_ commands: String) throws -> String? {
+        logger?.info(.init(stringLiteral: commands))
+        return try StemShell.zsh(string: commands)
+    }
+    
     private func podspec(_ model: Options) throws -> JSON {
-        guard let str = try StemShell.zsh(string: "pod ipc spec \(model.podspec_url)", context: .init(environment: Cocoapods.environment)) else {
+        guard let str = try shell("pod ipc spec \(model.podspec_url)") else {
             throw StemError(message: "cocoapod 解析失败")
         }
         return JSON(parseJSON: str)
@@ -112,8 +116,8 @@ public extension Cocoapods {
 /// version
 public extension Cocoapods {
     
-    static var version: STVersion {
-        guard let str = try? StemShell.zsh(string: "pod --version", context: .init(environment: environment)) else {
+     var version: STVersion {
+        guard let str = try? shell("pod --version") else {
             return .init(0, 0, 0)
         }
         return .init(stringLiteral: str.trimmingCharacters(in: .whitespacesAndNewlines))
@@ -143,8 +147,8 @@ public extension Cocoapods {
         }
     }
     
-    static func repositories() throws -> [Repository] {
-        guard let str = try StemShell.zsh(string: "pod repo list", context: .init(environment: environment)) else {
+     func repositories() throws -> [Repository] {
+        guard let str = try shell("pod repo list") else {
             return []
         }
         
@@ -153,26 +157,25 @@ public extension Cocoapods {
             .compactMap(Repository.init)
     }
     
-    static func repositoryAdd(url: String) throws {
+     func repositoryAdd(url: String) throws {
         guard let name = url.split(separator: "/").last?.split(separator: ".").first else {
             return
         }
-        try StemShell.zsh(string: "pod repo add \(name) \(url)", context: .init(environment: environment))
+        try shell("pod repo add \(name) \(url)")
     }
     
     func libLint(_ model: Options) throws -> Bool {
-        _ = try StemShell.zsh(string: "pod lib lint \(model.podspec_url) --allow-warnings", context: .init(environment: Cocoapods.environment))
+        _ = try shell("pod lib lint \(model.podspec_url) --allow-warnings")
         return true
     }
     
     func trunkPush(_ model: Options) throws {
-        guard let name = try Cocoapods.repositories().first(where: { $0.url == model.push_repository_url })?.name else {
-            try Cocoapods.repositoryAdd(url: model.push_repository_url)
+        guard let name = try repositories().first(where: { $0.url == model.push_repository_url })?.name else {
+            try repositoryAdd(url: model.push_repository_url)
             try trunkPush(model)
             return
         }
-        try StemShell.zsh(string: "pod repo push \(name) \(model.podspec_url) --allow-warnings",
-                          context: .init(environment: Cocoapods.environment))
+        try shell("pod repo push \(name) \(model.podspec_url) --allow-warnings")
     }
     
 }

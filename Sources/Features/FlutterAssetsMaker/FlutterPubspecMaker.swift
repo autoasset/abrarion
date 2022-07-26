@@ -45,13 +45,17 @@ public struct FlutterPubspecMaker: MissionInstance {
             let basePath = String(options.fonts.path.dropFirst(prefix.count))
             let files  = try options.fonts.allSubFilePaths().compactMap(\.asFile)
             if let first = files.first {
-                flutter["fonts"] = ["fonts": files
-                    .map(\.attributes.name)
-                    .map({ basePath + "/" + $0 })
-                    .dictionary(key: { _ in "asset" }) { $0 },
-                                    "family": files
+                let asset = basePath + "/" + first.attributes.name
+                let family = files
                     .map(\.attributes.nameComponents.name)
                     .reduce(first.attributes.nameComponents.name, { $0.commonPrefix(with: $1) })
+                flutter["fonts"] = [
+                    [
+                        "family": family,
+                        "fonts": [
+                            ["asset": asset]
+                        ]
+                    ]
                 ]
             }
         }

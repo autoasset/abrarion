@@ -12,20 +12,6 @@ public struct Shell: MissionInstance {
     
     public var logger: Logger?
     
-    public static let environment: [String : String] = [
-        "PATH": ["/bin",
-                 "/sbin",
-                 "/usr/bin",
-                 "/usr/sbin",
-                 "/opt/homebrew/bin",
-                 "/opt/homebrew/sbin",
-                 "/usr/local/bin",
-                 "/usr/local/sbin",
-                 "/usr/local/opt/ruby/bin",
-                 "/Library/Apple/usr/bin"].joined(separator: ":"),
-        "LANG": "en_US.UTF-8"
-    ]
-    
     struct Options {
         
         var commands: [String]
@@ -53,8 +39,7 @@ public struct Shell: MissionInstance {
         for command in commands {
             do {
                 logger?.info(.init(stringLiteral: command))
-                let env = Shell.environment.merging(options.environment, uniquingKeysWith: { $1 })
-                guard let result = try await StemShell.zsh(string: command, context: .init(environment: env)), !result.isEmpty else {
+                guard let result = try await StemShell.zsh(string: command, context: .init()), !result.isEmpty else {
                     return
                 }
                 logger?.info(.init(stringLiteral: result))
