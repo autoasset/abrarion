@@ -53,6 +53,7 @@ public struct MissionTask: MissionInstance {
         missionManager.register(MissionTask(), for: "mission")
         missionManager.register(FlutterIconFontMaker(), for: "flutter_iconfont")
         missionManager.register(FlutterPubspecMaker(), for: "flutter_pubspec")
+        missionManager.register(FlutterColorMaker(), for: "flutter_colors")
         missionManager.register(FlutterImageCodeMaker(), for: "flutter_images")
         missionManager.register(AndriodColorMaker(), for: "android_colors")
         missionManager.register(CustomVariables(), for: "variables")

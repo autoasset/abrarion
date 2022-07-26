@@ -60,7 +60,7 @@ public struct FlutterImageCodeMaker: MissionInstance, XCMaker {
         
        let code = """
         import 'package:flutter/material.dart';
-        /// Created by abrarion
+        /// Created by abrarion(\(AppInfo.shared.version))
         class \(options.template.class_name) {
         \(store)
         }

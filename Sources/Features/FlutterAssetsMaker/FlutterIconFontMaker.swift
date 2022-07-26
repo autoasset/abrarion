@@ -63,11 +63,9 @@ extension FlutterIconFontMaker {
         private var `extension`: String {
         """
         import 'package:flutter/widgets.dart';
-        
+        /// Created by abrarion(\(AppInfo.shared.version))
         class \(options.class_name) {
-        
         \(records.glyphs.map(code(with:)).sorted().joined(separator: "\n"))
-        
         }
         """
         }
