@@ -76,8 +76,6 @@ public extension Cocoapods {
             || item.key.lowercased().contains("gem")
             || item.key.lowercased().contains("ruby")
         }
-        environment["LANG"] = "en_US.UTF-8"
-        environment["HOME"] = ProcessInfo.processInfo.environment["HOME"]
         environment["CP_HOME_DIR"] = ProcessInfo.processInfo.environment["CP_HOME_DIR"]
         guard let exec = try StemShell.zsh(string: "which pod", context: .init(environment: environment))?
             .split(separator: "\n")

@@ -74,7 +74,7 @@ public struct SystemVariables {
                   value: { try await nameFormatter.snakeCased(package_name()) }),
             
                 .init(key: "package.url",
-                      desc: "git 项目 远程链接",
+                      desc: "git 项目远程链接",
                       value: {
                           let url = try await repository.lsRemote.url()?.absoluteString ?? ""
                           return removeURLPassword(url) ?? url
@@ -83,19 +83,19 @@ public struct SystemVariables {
                       desc: "最近一次 git tag 版本号",
                       value: { try await lastTagVersion().description }),
             .init(key: "git.next.tag.major_version",
-                  desc: "最近一次 git tag 版本号",
+                  desc: "获取 major.minor.patch 格式的 git tag 记录, 选取最大的version, 并在 major 部分 +1",
                   value: {
                       let version = try await lastTagVersion()
                       return STVersion(version.major + 1, version.minor, version.patch).description
                   }),
             .init(key: "git.next.tag.minor_version",
-                  desc: "最近一次 git tag 版本号",
+                  desc: "获取 major.minor.patch 格式的 git tag 记录, 选取最大的version, 并在 minor 部分 +1",
                   value: {
                       let version = try await lastTagVersion()
                       return STVersion(version.major, version.minor + 1, version.patch).description
                   }),
             .init(key: "git.next.tag.patch_version",
-                  desc: "最近一次 git tag 版本号",
+                  desc: "获取 major.minor.patch 格式的 git tag 记录, 选取最大的version, 并在 patch 部分 +1",
                   value: {
                       let version = try await lastTagVersion()
                       return STVersion(version.major, version.minor, version.patch + 1).description
@@ -153,10 +153,10 @@ public struct SystemVariables {
                   desc: "上一次提交记录用户的 email",
                   value: { try await repository.log().first?.commit.user.email ?? "" }),
             .init(key: "git.current.commit.user.name",
-                  desc: "上一次提交记录用户的 名称",
+                  desc: "上一次提交记录用户的名称",
                   value: { try await repository.log().first?.commit.user.name ?? "" }),
             .init(key: "git.current.commit.date",
-                  desc: "上一次提交记录的 日期",
+                  desc: "上一次提交记录的日期",
                   value: {
                       if let date = try await repository.log().first?.commit.date {
                          return dateFormatter.string(from: date)
@@ -164,7 +164,7 @@ public struct SystemVariables {
                       return ""
                   }),
             .init(key: "git.current.commit.message",
-                  desc: "上一次提交记录的 信息",
+                  desc: "上一次提交记录的信息",
                   value: { try await repository.log().first?.commit.user.name ?? "" })
 
         ]

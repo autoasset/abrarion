@@ -78,7 +78,7 @@ extension XCIconFontMaker {
             let formatter = NameFormatter(language: .swift, splitSet: .letters.union(.decimalDigits).inverted)
             let name = formatter.camelCased(named)
             return "/*\(named) bundle: \(options.bundle_name) */"
-            + "\n var \(name): \(options.instance_name) { "
+            + "\n static var \(name): \(options.instance_name) { "
             + #".init(string: "\u{"#
             + record.unicode
             + #"}", in: ""#
@@ -134,7 +134,7 @@ extension XCIconFontMaker {
     
     }
     
-    extension \(options.instance_protocol_name) {
+    public extension \(options.instance_protocol_name) {
     
         @available(iOS 9.0, macOS 10.11, tvOS 6.0, watchOS 2.0, *)
         func data() -> Foundation.Data {
@@ -172,7 +172,7 @@ extension XCIconFontMaker {
     
     public protocol \(options.list_protocol_name) {}
     
-    public struct \(options.instance_name): \(options.instance_protocol_name) {
+    public struct \(options.instance_name): \(options.instance_protocol_name), \(options.list_protocol_name) {
         
         public let string: String
         public let bundle: String

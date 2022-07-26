@@ -195,7 +195,7 @@ private extension XCDataMaker {
             let named = record.name
             let name = NameFormatter(language: .swift, splitSet: .letters.union(.decimalDigits).inverted).camelCased(named)
             let mark = "/*\(named) bundle: \(options.bundle_name) */"
-            return "\(mark) \n var \(name): \(options.instance_name) { .init(named: \"\(named)\", in: \"\(options.bundle_name.isEmpty ? "nil" : options.bundle_name)\") }"
+            return "\(mark) \n static var \(name): \(options.instance_name) { .init(named: \"\(named)\", in: \"\(options.bundle_name.isEmpty ? "nil" : options.bundle_name)\") }"
         }
         
         private var `extension`: String {
@@ -222,10 +222,10 @@ private extension XCDataMaker {
         init(named: String, in bundle: String?)
     }
     
-    extension \(options.instance_protocol_name) {
+    public extension \(options.instance_protocol_name) {
         
         @available(iOS 9.0, macOS 10.11, tvOS 6.0, watchOS 2.0, *)
-        public func value() -> Foundation.Data {
+        func value() -> Foundation.Data {
             guard let bundle = bundle,
                   let data = NSDataAsset(name: named, bundle: Bundle.module(name: bundle))?.data else {
                     \(#"assertionFailure("can't find image: \(named) in: \(bundle ?? "main")")"#)
@@ -237,7 +237,7 @@ private extension XCDataMaker {
     
     public protocol \(options.list_protocol_name) {}
     
-    public struct \(options.instance_name): \(options.instance_protocol_name) {
+    public struct \(options.instance_name): \(options.instance_protocol_name), \(options.list_protocol_name) {
         
         public let named: String
         public let bundle: String?

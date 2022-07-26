@@ -195,7 +195,7 @@ private extension XCColorMaker {
             let lightPack = light.rgbSpace.unpack(as: Int.self)
             let mark  = "/** light => \(light.hexString(.auto, prefix: .none)) r: \(lightPack.red) g: \(lightPack.green) b: \(lightPack.blue) a: \(light.alpha) */"
             name = (try? StemColor(throwing: name)) == nil ? name : "_" + name
-            return "\(mark) \n var \(name): \(options.instance_name) { .init(light: \(light.hexString(.auto, prefix: .bits)), dark: \(dark)) }"
+            return "\(mark) \n static var \(name): \(options.instance_name) { .init(light: \(light.hexString(.auto, prefix: .bits)), dark: \(dark)) }"
         }
         
         private var `extension`: String {

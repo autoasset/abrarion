@@ -18,12 +18,12 @@ struct Default: AsyncParsableCommand {
     
     static var configuration: CommandConfiguration = .init(subcommands: [Publish.self])
     
-    @Option(help: "A file to count lines in. If omitted, counts the lines of stdin.",
+    @Option(help: "任务流 yaml 文件路径",
               completion: .file(),
               transform: URL.init(fileURLWithPath:))
     var config: URL
     
-    @Option(help: "A file to count lines in. If omitted, counts the lines of stdin.",
+    @Option(help: "外置环境变量 yaml 文件路径",
               completion: .file(),
               transform: URL.init(fileURLWithPath:))
     var environment: URL?

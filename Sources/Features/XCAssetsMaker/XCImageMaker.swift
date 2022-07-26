@@ -295,7 +295,7 @@ private extension XCImageMaker {
             let named = record.name
             let name = NameFormatter(language: .swift, splitSet: .letters.union(.decimalDigits).inverted).camelCased(named)
             let mark = "/*\(isVector ? "vector: " : ""): \(named) bundle: \(options.bundle_name) */"
-            return "\(mark) \n var \(name): \(options.instance_name) { .init(named: \"\(named)\", in: \"\(options.bundle_name.isEmpty ? "nil" : options.bundle_name)\") }"
+            return "\(mark) \n static var \(name): \(options.instance_name) { .init(named: \"\(named)\", in: \"\(options.bundle_name.isEmpty ? "nil" : options.bundle_name)\") }"
         }
         
         private var `extension`: String {
@@ -322,7 +322,7 @@ private extension XCImageMaker {
         init(named: String, in bundle: String?)
     }
     
-    extension \(options.instance_protocol_name) {
+    public extension \(options.instance_protocol_name) {
         
     #if canImport(UIKit)
         func value() -> UIImage {
@@ -354,7 +354,7 @@ private extension XCImageMaker {
     
     public protocol \(options.list_protocol_name) {}
     
-    public struct \(options.instance_name): \(options.instance_protocol_name) {
+    public struct \(options.instance_name): \(options.instance_protocol_name), \(options.list_protocol_name) {
         
         public let named: String
         public let bundle: String?

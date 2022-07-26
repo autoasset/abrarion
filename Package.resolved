@@ -15,7 +15,7 @@
       "location" : "https://github.com/linhay/Stem",
       "state" : {
         "branch" : "master",
-        "revision" : "3b6f2525c27e2244aa77367573329034bb2bcc68"
+        "revision" : "ca5ec42b9be76369e836f1f9ec809af4fc86a215"
       }
     },
     {
@@ -33,7 +33,7 @@
       "location" : "https://github.com/linhay/swift-git",
       "state" : {
         "branch" : "main",
-        "revision" : "d93f052e8f4a074b90b578f2211637fda37c81db"
+        "revision" : "8cdd230a981f0cb2fe8e943255f7c19c659e23db"
       }
     },
     {
