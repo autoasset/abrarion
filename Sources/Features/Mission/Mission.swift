@@ -107,28 +107,6 @@ public class MissionManager {
                 continue
             }
             
-            /** 参数任务与外置参数调用
-             {
-             "missions":[
-             {
-             "task_name":{
-             "arg1":"value1",
-             "arg2":"value2",
-             "merge":[
-             "merge_1"
-             ]
-             }
-             }
-             ],
-             "environment": {
-             
-             }
-             "merge_1":{
-             "arg3":"value3",
-             "arg4":"value4"
-             }
-             }
-             */
             guard let dictionary = mission.dictionary,
                   dictionary.keys.count == 1, dictionary.values.count == 1,
                   let name = dictionary.keys.first,

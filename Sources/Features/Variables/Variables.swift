@@ -50,7 +50,7 @@ public class VariablesManager {
     }
     
     public func has(_ name: String) -> Bool {
-        cache[name] != nil
+        cache["${\(name)}"] != nil || cache[name] != nil
     }
     
     public func register(_ variables: [Variables]) {
