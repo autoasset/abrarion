@@ -175,10 +175,6 @@ extension XCImageMaker {
             let folder = folder.folder(name: name + ".imageset")
             try folder.delete()
             try folder.create()
-            if images.map(\.image.appearances.luminosities).joined().contains(.dark) {
-               try STFolder("/Users/linhey/Desktop/gaia-assets/.developer/contents/images").file(name: name + ".json")
-                    .overlay(with: contents.data)
-            }
             try folder.create(file: "Contents.json", data: contents.data)
             images.forEach { record in
                 do {

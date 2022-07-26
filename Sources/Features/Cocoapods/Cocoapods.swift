@@ -71,7 +71,7 @@ public extension Cocoapods {
     @discardableResult
     func shell(_ commands: String) throws -> String? {
         logger?.info(.init(stringLiteral: commands))
-        return try StemShell.zsh(string: commands)
+        return try StemShell.zsh(string: commands, context: .init(environment: ["CP_HOME_DIR": "\(NSHomeDirectory())/.cocoapods"]))
     }
     
     private func podspec(_ model: Options) throws -> JSON {
