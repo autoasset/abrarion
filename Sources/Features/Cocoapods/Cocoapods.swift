@@ -31,7 +31,7 @@ public class Cocoapods: MissionInstance {
             throw error
         }
     }
-
+    
     public struct Options  {
         var version: String
         var podspec_url: String
@@ -43,7 +43,7 @@ public class Cocoapods: MissionInstance {
             self.push_repository_url = try await variables.parse(json["push_repository_url"].stringValue)
         }
     }
-        
+    
     func localLint(_ options: Options) async throws -> Options {
         /// 标准化 podspec 文件
         var options = options
@@ -70,12 +70,28 @@ public extension Cocoapods {
     
     @discardableResult
     func shell(_ commands: String) throws -> String? {
-        logger?.info(.init(stringLiteral: commands))
-        return try StemShell.zsh(string: commands, context: .init(environment: ["CP_HOME_DIR": "\(NSHomeDirectory())/.cocoapods"]))
+        logger?.info(.init(stringLiteral: "pod " + commands))
+        var environment = ProcessInfo.processInfo.environment.filter { item in
+            item.key.lowercased().contains("rvm")
+            || item.key.lowercased().contains("gem")
+            || item.key.lowercased().contains("ruby")
+        }
+        environment["LANG"] = "en_US.UTF-8"
+        environment["HOME"] = ProcessInfo.processInfo.environment["HOME"]
+        environment["CP_HOME_DIR"] = ProcessInfo.processInfo.environment["CP_HOME_DIR"]
+        guard let exec = try StemShell.zsh(string: "which pod", context: .init(environment: environment))?
+            .split(separator: "\n")
+            .first?
+            .trimmingCharacters(in: .whitespacesAndNewlines) else {
+            return nil
+        }
+        return try StemShell.string(.init(fileURLWithPath: exec),
+                                    commands.split(separator: " ").map(\.description),
+                                    context: .init(environment: environment))
     }
     
     private func podspec(_ model: Options) throws -> JSON {
-        guard let str = try shell("pod ipc spec \(model.podspec_url)") else {
+        guard let str = try shell("ipc spec \(model.podspec_url)") else {
             throw StemError(message: "cocoapod 解析失败")
         }
         return JSON(parseJSON: str)
@@ -116,8 +132,8 @@ public extension Cocoapods {
 /// version
 public extension Cocoapods {
     
-     var version: STVersion {
-        guard let str = try? shell("pod --version") else {
+    var version: STVersion {
+        guard let str = try? shell("--version") else {
             return .init(0, 0, 0)
         }
         return .init(stringLiteral: str.trimmingCharacters(in: .whitespacesAndNewlines))
@@ -147,8 +163,8 @@ public extension Cocoapods {
         }
     }
     
-     func repositories() throws -> [Repository] {
-        guard let str = try shell("pod repo list") else {
+    func repositories() throws -> [Repository] {
+        guard let str = try shell("repo list") else {
             return []
         }
         
@@ -157,15 +173,15 @@ public extension Cocoapods {
             .compactMap(Repository.init)
     }
     
-     func repositoryAdd(url: String) throws {
+    func repositoryAdd(url: String) throws {
         guard let name = url.split(separator: "/").last?.split(separator: ".").first else {
             return
         }
-        try shell("pod repo add \(name) \(url)")
+        try shell("repo add \(name) \(url)")
     }
     
     func libLint(_ model: Options) throws -> Bool {
-        _ = try shell("pod lib lint \(model.podspec_url) --allow-warnings")
+        _ = try shell("lib lint \(model.podspec_url) --allow-warnings")
         return true
     }
     
@@ -175,7 +191,7 @@ public extension Cocoapods {
             try trunkPush(model)
             return
         }
-        try shell("pod repo push \(name) \(model.podspec_url) --allow-warnings")
+        try shell("repo push \(name) \(model.podspec_url) --allow-warnings")
     }
     
 }
