@@ -18,7 +18,7 @@ public class Cocoapods: MissionInstance {
     public func evaluate(from json: JSON, context: MissionContext) async throws {
         var options = try await Options(from: json, variables: context.variables)
         options = try await localLint(options)
-        let repository = try SwiftGit.Repository(path: context.pwd.path, environment: .shared)
+        let repository = try SwiftGit.Repository(path: context.pwd.path, environment: .init(type: .system))
         try await repository.add([], paths: ["."])
         try await repository.commit([.message("[ci skip] by abrarion(\(AppInfo.shared.version))")], pathspecs: .all)
         do {
