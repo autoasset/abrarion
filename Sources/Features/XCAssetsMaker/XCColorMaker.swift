@@ -92,7 +92,7 @@ extension XCColorMaker {
             var names = json["names"].arrayValue.compactMap(\.string)
             
             if names.isEmpty {
-                names = [any.hexString(.auto, prefix: .none)]
+                names = ["_\(any.hexString(.auto, prefix: .none))"]
             }
             
             var light: StemColor?
@@ -187,14 +187,13 @@ private extension XCColorMaker {
         }
         
         private func code(with record: Record) -> String {
-            guard var name = record.names.first else {
+            guard let name = record.names.first else {
                 return ""
             }
             let light = record.light ?? record.any
             let dark  = record.dark?.hexString(.auto, prefix: .bits) ?? "nil"
             let lightPack = light.rgbSpace.unpack(as: Int.self)
             let mark  = "/** light => \(light.hexString(.auto, prefix: .none)) r: \(lightPack.red) g: \(lightPack.green) b: \(lightPack.blue) a: \(light.alpha) */"
-            name = (try? StemColor(throwing: name)) == nil ? name : "_" + name
             return "\(mark) \n static var \(name): \(options.instance_name) { .init(light: \(light.hexString(.auto, prefix: .bits)), dark: \(dark)) }"
         }
         

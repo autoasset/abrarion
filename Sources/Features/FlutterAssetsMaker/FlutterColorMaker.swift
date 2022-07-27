@@ -51,11 +51,7 @@ public struct FlutterColorMaker: MissionInstance, XCMaker {
             let colorValue = record.any
             let color = record.any.hexString(.digits8, prefix: .bits)
             return record.names.map { name in
-                if name == colorValue.hexString(.auto, prefix: .none) {
-                    return "static const _\(name) = Color(\(color));"
-                } else {
-                    return "static const \(name) = Color(\(color));"
-                }
+                return "static const \(name) = Color(\(color));"
             }
         }
             .joined()
@@ -66,11 +62,7 @@ public struct FlutterColorMaker: MissionInstance, XCMaker {
             let colorValue = record.dark ?? record.any
             let color = colorValue.hexString(.digits8, prefix: .bits)
             return record.names.map { name in
-                if name == colorValue.hexString(.auto, prefix: .none) {
-                    return "static const _\(name) = Color(\(color));"
-                } else {
-                    return "static const \(name) = Color(\(color));"
-                }
+                return "static const \(name) = Color(\(color));"
             }
         }
             .joined()
