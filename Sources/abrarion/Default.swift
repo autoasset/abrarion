@@ -34,9 +34,10 @@ struct Default: AsyncParsableCommand {
         do {
             let context = MissionContext()
             try await context.variables.register(SystemVariables.variables())
-            let task = MissionTask()
-            try await task.evaluate(from: .init(config: .init(config), environment: environment.flatMap(STFile.init)),
-                                    context: context)
+            var task = MissionTask()
+            task.logger = .init(label: "mission")
+            let json = ["config": config.absoluteString, "environment": environment?.absoluteString].compactMapValues({ $0 })
+            try await task.evaluate(from: JSON(json), context: context)
             try XCReport.shared.finish()
         } catch {
             try XCReport.shared.finish()

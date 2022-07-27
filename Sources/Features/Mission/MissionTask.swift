@@ -17,24 +17,65 @@ public struct MissionTask: MissionInstance {
     
     public struct Options {
         
-        var config: STFile
-        var environment: STFile?
+        var config_file: STFile?
+        var environment_file: STFile?
         
-        public init(config: STFile, environment: STFile? = nil) {
+        var config: JSON
+        var environment: [Variables]
+        
+        public init(config: JSON, environment: [Variables]) {
             self.config = config
             self.environment = environment
         }
         
-        public init(from json: JSON, variables: VariablesManager) async throws {
-            if let item = json.string {
-                config = STFile(try await variables.parse(item))
-            } else {
-                config = STFile(try await variables.parse(json["config"].stringValue))
+       static func json(fromYaml file: STFile) throws -> JSON {
+           guard let data = try? file.data(),
+                 let text = String(data: data, encoding: .utf8),
+                 let yaml = try Yams.load(yaml: text) else {
+                throw StemError(message: "mission yaml 文件解析错误")
+
             }
-            if let item = json["environment"].string {
-                self.environment = STFile(try await variables.parse(item))
+            return JSON(yaml)
+        }
+        
+        static func environment(from dict: [String: JSON]) throws -> [Variables] {
+            return dict
+                .compactMapValues(\.string)
+                .map({ Variables(key: $0.key, value: $0.value) })
+        }
+        
+        public init(from json: JSON, variables: VariablesManager) async throws {
+            if let config = json["config"].string {
+                
+                let config_file = try await STFile(variables.parse(config))
+                let config_json = try Self.json(fromYaml: config_file)
+                
+                if let environment = json["environment"].string {
+                    
+                    let environment_file  = try await STFile(variables.parse(environment))
+                    let environment_json  = try Self.json(fromYaml: environment_file).dictionaryValue
+                    let environment_value = try Self.environment(from: environment_json)
+                    
+                     self.init(config: config_json, environment: environment_value)
+                    self.environment_file = environment_file
+                } else {
+                    self.init(config: config_json, environment: try Self.environment(from: json["environment"].dictionaryValue))
+                }
+                self.config_file = config_file
             } else {
-                self.environment = nil
+                let config = json["config"]
+                
+                if let environment = json["environment"].string {
+                    
+                    let environment_file  = try await STFile(variables.parse(environment))
+                    let environment_json  = try Self.json(fromYaml: environment_file).dictionaryValue
+                    let environment_value = try Self.environment(from: environment_json)
+                    
+                    self.init(config: config, environment: environment_value)
+                    self.environment_file = environment_file
+                } else {
+                    try self.init(config: config, environment: Self.environment(from: json["environment"].dictionaryValue))
+                }
             }
         }
         
@@ -71,35 +112,25 @@ public struct MissionTask: MissionInstance {
     
     
     public func evaluate(from options: Options, context: MissionContext) async throws {
-        guard let text = String(data: try options.config.data(), encoding: .utf8),
-              let yaml = try Yams.load(yaml: text) else {
-            return
-        }
-        
-        let json = JSON(yaml)
         let last_variables = context.variables.cache.values
         
         let context = MissionContext()
         context.variables.register(last_variables)
+        context.variables.register(options.environment)
+        let missionManager = missionManger()
         
-        if let data = try options.environment?.data(),
-           let text = String(data: data, encoding: .utf8),
-           let yaml = try Yams.load(yaml: text),
-           let array = JSON(yaml)
-            .dictionary?
-            .compactMapValues(\.string)
-            .map({ Variables(key: $0.key, value: $0.value) }),
-           array.isEmpty == false {
-            context.variables.register(array)
+        if let file = options.config_file {
+            if let environment = options.environment_file {
+                logger?.info(.init(stringLiteral: "config: \(context.relativePath(file)), environment: \(context.relativePath(environment))"))
+            } else {
+                logger?.info(.init(stringLiteral: context.relativePath(file)))
+            }
         }
         
-        let missionManager = missionManger()
-        logger?.info(.init(stringLiteral: context.relativePath(options.config)))
-        
         do {
-            try await missionManager.run(from: json, context: context)
+            try await missionManager.run(from: options.config, context: context)
         } catch {
-            let on_error = json["on_error"]
+            let on_error = options.config["on_error"]
             guard on_error.isExists else {
                 throw error
             }
