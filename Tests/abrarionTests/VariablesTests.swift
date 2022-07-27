@@ -33,11 +33,20 @@ class VariablesTests: XCTestCase {
     }
     
     func test_package_name() async throws {
-        if let url = URL(string: "git@github.com:AxApp/abrarion.git") {
+        let ssh = "git@github.com:AxApp/abrarion.git"
+        
+        if let url = URL(string: ssh) {
             XCTAssertEqual(url.path.split(separator: "/").last?.split(separator: ".").first, "abrarion")
         }
         if let url = URL(string: "https://github.com/AxApp/abrarion.git") {
             XCTAssertEqual(url.path.split(separator: "/").last?.split(separator: ".").first, "abrarion")
+        }
+        
+        if var components = URLComponents(string: "ssh://" + ssh.replacingOccurrences(of: ":", with: "/")) {
+            components.user = nil
+            components.path = components.path.split(separator: ".").dropLast().joined(separator: ".").description
+            components.scheme = "https"
+            XCTAssertEqual(components.string, "https://github.com/AxApp/abrarion")
         }
     }
 

@@ -50,14 +50,14 @@ public struct SystemVariables {
         
         func lastTagVersion() async throws -> STVersion {
             do {
-               return try await repository.lsRemote.tags()
+                return try await repository.lsRemote.tags()
                     .map(\.shortName)
                     .compactMap(STVersion.init)
                     .max() ?? STVersion(0, 0, 0)
             } catch {
-                #if !DEBUG
+#if !DEBUG
                 throw error
-                #endif
+#endif
             }
             return STVersion(0, 0, 0)
         }
@@ -72,16 +72,32 @@ public struct SystemVariables {
             .init(key: "package.name.snaked",
                   desc: "git 项目名称(下划线形式)",
                   value: { try await nameFormatter.snakeCased(package_name()) }),
-            
-                .init(key: "package.url",
-                      desc: "git 项目远程链接",
-                      value: {
+            .init(key: "package.url",
+                  desc: "git 项目远程链接",
+                  value: {
                           let url = try await repository.lsRemote.url()?.absoluteString ?? ""
                           return removeURLPassword(url) ?? url
                       }),
-                .init(key: "git.last.tag.version",
-                      desc: "最近一次 git tag 版本号",
-                      value: { try await lastTagVersion().description }),
+            .init(key: "package.https_url",
+                  desc: "git 项目远程链接,",
+                  value: {
+                      var url = try await repository.lsRemote.url()?.absoluteString ?? ""
+                      if url.hasPrefix("git@") {
+                          url = url.replacingOccurrences(of: ":", with: "/")
+                          url = "ssh://" + url
+                      }
+                      if var components = URLComponents(string: url) {
+                          components.user = nil
+                          components.password = nil
+                          components.path = components.path.split(separator: ".").dropLast().joined(separator: ".").description
+                          components.scheme = "https"
+                          url = components.string ?? url
+                      }
+                      return url
+                  }),
+            .init(key: "git.last.tag.version",
+                  desc: "最近一次 git tag 版本号",
+                  value: { try await lastTagVersion().description }),
             .init(key: "git.next.tag.major_version",
                   desc: "获取 major.minor.patch 格式的 git tag 记录, 选取最大的version, 并在 major 部分 +1",
                   value: {
@@ -159,14 +175,14 @@ public struct SystemVariables {
                   desc: "上一次提交记录的日期",
                   value: {
                       if let date = try await repository.log().first?.commit.date {
-                         return dateFormatter.string(from: date)
+                          return dateFormatter.string(from: date)
                       }
                       return ""
                   }),
             .init(key: "git.current.commit.message",
                   desc: "上一次提交记录的信息",
                   value: { try await repository.log().first?.commit.user.name ?? "" })
-
+            
         ]
         
     }
