@@ -28,11 +28,15 @@ public class Cocoapods: MissionInstance {
             try trunkPush(options)
         } catch {
             try await repository.push.delete(.tag(.init(options.version)))
+            if let name = options.name {
+                try? shell("cache clean \(options.name) --all")
+            }
             throw error
         }
     }
     
     public struct Options  {
+        var name: String?
         var version: String
         var podspec_url: String
         let push_repository_url: String
@@ -56,7 +60,7 @@ public class Cocoapods: MissionInstance {
         podspec = folder.file(name: String(podspec.attributes.name.split(separator: ".")[0]) + ".podspec.json")
         try podspec.overlay(with: jsonPodspec.rawData(options: [.sortedKeys, .withoutEscapingSlashes, .prettyPrinted]))
         options.podspec_url = podspec.path
-        
+        options.name = jsonPodspec["name"].string
         guard try libLint(options) else {
             return options
         }
