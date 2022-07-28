@@ -51,8 +51,9 @@ public struct FlutterImageCodeMaker: MissionInstance, XCMaker {
         let store = channels
             .flatMap({ $0 })
             .dictionary(key: \.attributes.name)
-            .map { row in
-                "static final \(row.value.attributes.nameComponents.name) = Image.asset('\(prefix)\(row.value.attributes.name)',package: '\(options.template.package_name)');"
+            .map { row -> String in
+                let name = FlutterVariable.parse(name: row.value.attributes.nameComponents.name, option: options.template)
+                return "static final \(name) = Image.asset('\(prefix)\(row.value.attributes.name)',package: '\(options.template.package_name)');"
             }
             .sorted()
             .joined(separator: "\n")

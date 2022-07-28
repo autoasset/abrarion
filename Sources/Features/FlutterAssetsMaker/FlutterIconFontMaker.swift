@@ -53,9 +53,7 @@ extension FlutterIconFontMaker {
         }
         
         private func code(with record: KhalaIconFont.Glyph) -> String {
-            let named = record.name
-            let formatter = NameFormatter(language: .swift, splitSet: .letters.union(.decimalDigits).inverted)
-            let name = formatter.camelCased(named)
+            let name = FlutterVariable.parse(name: record.name, option: options)
             let code = "static const IconData \(name) = const IconData(0x\(record.unicode), fontFamily: '\(records.font_family)',fontPackage: '\(options.package_name)');"
             return code
         }

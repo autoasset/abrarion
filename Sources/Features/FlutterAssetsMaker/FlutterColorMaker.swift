@@ -23,7 +23,7 @@ public struct FlutterColorMaker: MissionInstance, XCMaker {
         let output_dark: STFile?
         let template_light: FlutterCodeOptions
         let template_dark: FlutterCodeOptions?
-
+        
         public init(from json: JSON, variables: VariablesManager) async throws {
             self.output_light = try await STFile(variables.parse(json["output_light"].stringValue))
             self.template_light = try await .init(from: json["template_light"], variables: variables)
@@ -42,15 +42,15 @@ public struct FlutterColorMaker: MissionInstance, XCMaker {
             }
         }
     }
-
+    
     public func evaluate(from json: JSON, context: MissionContext) async throws {
         let options = try await Options(from: json, variables: context.variables)
         let records = try await XCColorMaker().records(options.inputs)
         
         let light = records.map { record -> [String] in
-            let colorValue = record.any
             let color = record.any.hexString(.digits8, prefix: .bits)
             return record.names.map { name in
+                let name = FlutterVariable.parse(name: name, option: options.template_light)
                 return "static const \(name) = Color(\(color));"
             }
         }
@@ -62,6 +62,10 @@ public struct FlutterColorMaker: MissionInstance, XCMaker {
             let colorValue = record.dark ?? record.any
             let color = colorValue.hexString(.digits8, prefix: .bits)
             return record.names.map { name in
+                var name = name
+                if let template = options.template_dark {
+                    name = FlutterVariable.parse(name: name, option: template)
+                }
                 return "static const \(name) = Color(\(color));"
             }
         }
@@ -88,7 +92,7 @@ public struct FlutterColorMaker: MissionInstance, XCMaker {
              }
              """.data(using: .utf8))
         }
-
+        
     }
-
+    
 }
