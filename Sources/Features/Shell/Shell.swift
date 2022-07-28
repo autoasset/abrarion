@@ -5,6 +5,7 @@
 //  Created by linhey on 2022/7/19.
 //
 
+import Foundation
 import Stem
 import Logging
 
@@ -33,13 +34,16 @@ public struct Shell: MissionInstance {
     
     public init() {}
     
+    
     public func evaluate(from json: JSON, context: MissionContext) async throws {
         let options  = try await Options(from: json, variables: context.variables)
         let commands = try await context.variables.parse(options.commands)
+        var context = StemShell.Context()
+        context.environment = ProcessInfo.processInfo.environment
         for command in commands {
             do {
                 logger?.info(.init(stringLiteral: command))
-                guard let result = try await StemShell.zsh(string: command, context: .init()), !result.isEmpty else {
+                guard let result = try await StemShell.zsh(string: command, context: context), !result.isEmpty else {
                     return
                 }
                 logger?.info(.init(stringLiteral: result))

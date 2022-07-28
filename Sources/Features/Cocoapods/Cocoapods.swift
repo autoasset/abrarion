@@ -29,7 +29,7 @@ public class Cocoapods: MissionInstance {
         } catch {
             try await repository.push.delete(.tag(.init(options.version)))
             if let name = options.name {
-                try? shell("cache clean \(options.name) --all")
+                _ = try? shell("cache clean \(name) --all")
             }
             throw error
         }
