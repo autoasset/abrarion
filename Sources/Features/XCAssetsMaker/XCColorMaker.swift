@@ -219,7 +219,7 @@ private extension XCColorMaker {
     
     public protocol \(options.list_protocol_name) {}
     
-    public struct \(options.instance_name): \(options.instance_protocol_name) {
+    public struct \(options.instance_name): \(options.instance_protocol_name), \(options.list_protocol_name) {
         
         #if canImport(UIKit)
         public typealias Color = UIColor

@@ -204,7 +204,7 @@ extension XCImageMaker {
             
             let name = file.attributes.name.lowercased()
             
-            if name.hasSuffix(".svg"), StemSVG(data) != nil {
+            if name.hasSuffix(".svg") {
                 renderAs = .template
                 scale = nil
             } else if let type = data.st.mimeType {

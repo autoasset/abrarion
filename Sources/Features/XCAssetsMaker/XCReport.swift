@@ -133,6 +133,4 @@ extension XCReport {
         var errors: [ErrorType] = []
     }
     
-    
-    
 }
