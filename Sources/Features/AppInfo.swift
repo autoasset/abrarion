@@ -9,5 +9,5 @@ import Foundation
 
 public struct AppInfo {
     public static let shared = AppInfo()
-    public let version = "0.0.18"
+    public let version = "0.0.20"
 }

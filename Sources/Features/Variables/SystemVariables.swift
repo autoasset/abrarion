@@ -102,13 +102,13 @@ public struct SystemVariables {
                   desc: "获取 major.minor.patch 格式的 git tag 记录, 选取最大的version, 并在 major 部分 +1",
                   value: {
                       let version = try await lastTagVersion()
-                      return STVersion(version.major + 1, version.minor, version.patch).description
+                      return STVersion(version.major + 1, 0, 0).description
                   }),
             .init(key: "git.next.tag.minor_version",
                   desc: "获取 major.minor.patch 格式的 git tag 记录, 选取最大的version, 并在 minor 部分 +1",
                   value: {
                       let version = try await lastTagVersion()
-                      return STVersion(version.major, version.minor + 1, version.patch).description
+                      return STVersion(version.major, version.minor + 1, 0).description
                   }),
             .init(key: "git.next.tag.patch_version",
                   desc: "获取 major.minor.patch 格式的 git tag 记录, 选取最大的version, 并在 patch 部分 +1",

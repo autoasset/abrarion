@@ -104,8 +104,14 @@ public struct XCImageMaker: MissionInstance, XCMaker {
         
         if let codeOptions = options.template {
             try XCDependentCodeMaker.createFindModule(in: .init(options.template_dependent_output))
+            /// 是否合并矢量图
+            let useTemplate = options.vector_template == nil
             try CodeMaker(isVector: false, records: records.filter({ record in
-                record.asset()?.properties.renderAs != .template
+                if useTemplate {
+                    return true
+                } else {
+                    return record.asset()?.properties.renderAs != .template
+                }
             }), options: codeOptions).evaluate()
         }
         
