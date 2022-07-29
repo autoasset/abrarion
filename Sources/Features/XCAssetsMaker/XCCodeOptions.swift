@@ -17,6 +17,7 @@ struct XCCodeOptions {
         self.list_output_path = ""
         self.instance_output_path = ""
         self.bundle_name = ""
+        self.color_prefix_when_name_is_hex = "_"
     }
     
     let list_protocol_name: String
@@ -27,6 +28,9 @@ struct XCCodeOptions {
     let list_output_path: String
     let instance_output_path: String
     let bundle_name: String
+    /// 当颜色色值与名称相同时所添加的前缀
+    var color_prefix_when_name_is_hex: String    
+
     
     init?(from json: JSON, default model: XCCodeOptions, variables: VariablesManager) async throws {
         if !json.isExists {
@@ -75,6 +79,11 @@ struct XCCodeOptions {
         
         if instance_output_path.isEmpty {
             throw StemError(message: "参数缺失: instance_output_path")
+        }
+        
+        self.color_prefix_when_name_is_hex = try await variables.parse(json["color_prefix_when_name_is_hex"].stringValue)
+        if self.color_prefix_when_name_is_hex.isEmpty {
+            self.color_prefix_when_name_is_hex = "_"
         }
     }
     

@@ -50,7 +50,7 @@ public struct FlutterColorMaker: MissionInstance, XCMaker {
         let light = records.map { record -> [String] in
             let color = record.any.hexString(.digits8, prefix: .bits)
             return record.names.map { name in
-                let name = FlutterVariable.parse(name: name, option: options.template_light)
+                let name = FlutterVariable.parseColor(name: name, option: options.template_light)
                 return "static const \(name) = Color(\(color));"
             }
         }
@@ -64,7 +64,7 @@ public struct FlutterColorMaker: MissionInstance, XCMaker {
             return record.names.map { name in
                 var name = name
                 if let template = options.template_dark {
-                    name = FlutterVariable.parse(name: name, option: template)
+                    name = FlutterVariable.parseColor(name: name, option: template)
                 }
                 return "static const \(name) = Color(\(color));"
             }

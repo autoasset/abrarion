@@ -78,7 +78,7 @@ class XCColorAssetsMakerTests: XCTestCase {
             "green":    ["EFFFF1","D5FBDA","ACFABD","7FE9A2","5BD48F","2CB876","209E6F","168466","0E6A5A","085852"],
             "red":      ["FFF5EF","FEE5D7","FDC6AF","F99E87","F96C5A","E3443F","CA2831","A91C2F","88112C","700A29"],
             "brown":    ["FFF8EF","FCEED9","F4D9B0","F0C483","DFAD63","BD8C44","A27031","885622","6D3F15","5A2E0D"],
-            "skyblue":  ["EEFAFC","D9F4FF","B3E6FF","8DD4FF","71C2FF","42A4FF","3080DB","215FB7","154393","0C2E7A"],
+            "skyblue":  ["ECF7FF","DBF0FF","B7DEFF","94CAFF","79B7FF","4D98FF","3876DB","2657B7","183C93","0E297A"],
             "n":        ["FFFFFF","F7F7F7","F0F0F0","E8E8E8","E0E0E0","CCCCCC","999999","666666","333333","000000"],
         ]
         let other = ["F5F6F9", "2A2624", "423D38"]
@@ -86,7 +86,7 @@ class XCColorAssetsMakerTests: XCTestCase {
         var json: [[String: Any]] = colors.map { item in
             item.value.enumerated().map { element in
                 [
-                    "names": ["\(item.key)_\(element.offset + 1)", "_\(element.element.uppercased())"],
+                    "names": ["\(item.key)_\(element.offset + 1)", "\(element.element.uppercased())"],
                     "any":  "#\(element.element.uppercased())",
                     "dark": "#\(element.element.uppercased())",
                 ]
@@ -96,7 +96,7 @@ class XCColorAssetsMakerTests: XCTestCase {
         
         json.append(contentsOf: other.map { item in
             [
-                "names": ["_\(item)"],
+                "names": ["\(item)"],
                 "any":  "#\(item)",
                 "dark": "#\(item)",
             ]
@@ -104,7 +104,9 @@ class XCColorAssetsMakerTests: XCTestCase {
         
         let data = try JSONSerialization.data(withJSONObject: json, options: [.sortedKeys, .withoutEscapingSlashes, .fragmentsAllowed])
         let str = String(data: data, encoding: .utf8)?
-        .replacingOccurrences(of: "},{", with: "},\n{")
+            .replacingOccurrences(of: "},{", with: "},\n{")
+            .replacingOccurrences(of: "[{", with: "[\n{")
+            .replacingOccurrences(of: "}]", with: "}\n]")
         try STFile("/Users/linhey/Desktop/dxyer-assets/.developer/colors/common/年轻化色值表.json").overlay(with: str?.data(using: .utf8))
     }
     

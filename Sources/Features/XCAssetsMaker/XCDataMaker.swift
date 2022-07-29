@@ -134,16 +134,22 @@ extension XCDataMaker {
         }
         
         func create(in folder: STFolder) throws -> Self? {
-            guard let contents = asset() else {
-                return nil
-            }
+
             let folder = folder.folder(name: name + ".dataset")
             try folder.delete()
             try folder.create()
-            try folder.create(file: "Contents.json", data: contents.data)
             try datas.forEach { record in
                 try record.file.copy(into: folder)
             }
+            
+            if let contents = contents {
+                try folder.create(file: "Contents.json", data: contents.file.data())
+            } else if let contents = asset() {
+                try folder.create(file: "Contents.json", data: contents.data)
+            } else {
+               return nil
+            }
+            
             return self
         }
         
@@ -164,9 +170,11 @@ extension XCDataMaker {
     
     struct Content {
         let filename: String
+        let file: STFile
         let asset: XCAsset<XCData>
         
         init(from file: STFile) throws {
+            self.file = file
             self.filename = file.attributes.nameComponents.name
             self.asset = try .init(from: JSON(file.data()))
         }

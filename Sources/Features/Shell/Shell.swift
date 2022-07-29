@@ -39,7 +39,10 @@ public struct Shell: MissionInstance {
         let options  = try await Options(from: json, variables: context.variables)
         let commands = try await context.variables.parse(options.commands)
         var context = StemShell.Context()
+#if arch(arm64)
+#elseif arch(x86_64)
         context.environment = ProcessInfo.processInfo.environment
+#endif
         for command in commands {
             do {
                 logger?.info(.init(stringLiteral: command))

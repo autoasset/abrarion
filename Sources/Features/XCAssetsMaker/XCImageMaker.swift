@@ -175,19 +175,23 @@ extension XCImageMaker {
         }
         
         func create(in folder: STFolder) throws -> Self? {
-            guard let contents = asset() else {
-                return nil
-            }
             let folder = folder.folder(name: name + ".imageset")
             try folder.delete()
             try folder.create()
-            try folder.create(file: "Contents.json", data: contents.data)
             images.forEach { record in
                 do {
                     try record.file.copy(into: folder)
                 } catch {
                     XCReport.shared.add(.error(payload: .init(message: error.localizedDescription)))
                 }
+            }
+            
+            if let contents = contents {
+                try folder.create(file: "Contents.json", data: contents.file.data())
+            } else if let contents = asset() {
+                try folder.create(file: "Contents.json", data: contents.data)
+            } else {
+               return nil
             }
             return self
         }

@@ -15,6 +15,7 @@ public struct XCImage: XCAssetContentProtocol {
     
     public let filename: String?
     public let appearances: [Appearance]
+    public let resizing: XCImageResizing?
     public let displayGamut: DisplayGamut?
     public let scale: XCImageScale?
     public let locale: Locale?
@@ -41,6 +42,7 @@ public struct XCImage: XCAssetContentProtocol {
         self.direction = direction
         self.size = size
         self.memory = memory
+        self.resizing = nil
     }
     
     public init(from json: JSON) throws {
@@ -52,6 +54,7 @@ public struct XCImage: XCAssetContentProtocol {
         direction = .init(from: json)
         size = .init(from: json)
         memory = .init(from: json)
+        resizing = .init(from: json)
         locale = json["locale"].string.flatMap(Locale.init(identifier:))
     }
     

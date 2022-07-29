@@ -177,4 +177,65 @@ class XCAssetsTests: XCTestCase {
         assert(colors[index].value.uInt == 0xFFFFFFFF)
     }
 
+    
+    func test_resizing_image() async throws {
+    let text =
+        """
+        {
+          "images" : [
+            {
+              "idiom" : "universal",
+              "scale" : "1x"
+            },
+            {
+              "resizing" : {
+                "mode" : "9-part",
+                "center" : {
+                  "mode" : "tile",
+                  "width" : 1,
+                  "height" : 1
+                },
+                "cap-insets" : {
+                  "bottom" : 16,
+                  "top" : 16,
+                  "right" : 28,
+                  "left" : 27
+                }
+              },
+              "idiom" : "universal",
+              "filename" : "mes_bg_me@2x.png",
+              "scale" : "2x"
+            },
+            {
+              "resizing" : {
+                "mode" : "9-part",
+                "center" : {
+                  "mode" : "tile",
+                  "width" : 1,
+                  "height" : 1
+                },
+                "cap-insets" : {
+                  "bottom" : 24,
+                  "top" : 24,
+                  "right" : 42,
+                  "left" : 41
+                }
+              },
+              "idiom" : "universal",
+              "filename" : "mes_bg_me@3x.png",
+              "scale" : "3x"
+            }
+          ],
+          "info" : {
+            "version" : 1,
+            "author" : "xcode"
+          }
+        }
+        """
+        let json = JSON(parseJSON: text)
+        let asset = try XCAsset<XCImage>(from: json)
+        // TODO
+        asset.contents.first
+    }
+    
 }

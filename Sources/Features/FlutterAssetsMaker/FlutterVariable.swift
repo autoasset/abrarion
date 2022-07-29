@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import StemColor
 
 struct FlutterVariable {
     
@@ -13,14 +14,6 @@ struct FlutterVariable {
     
     static func parse(name: String, option: FlutterCodeOptions) -> String {
         var new: String = name
-        
-        if option.prefix_replace_first_letter_when_first_letter_isnot_number_or_letter.isEmpty == false,
-           let first = new.first?.description,
-           let scalar = Unicode.Scalar(first),
-           CharacterSet.letters.union(.decimalDigits).inverted.contains(scalar) {
-            new = option.prefix_replace_first_letter_when_first_letter_isnot_number_or_letter + new.dropFirst().description
-        }
-        
         switch option.variable_name_type {
         case .camel:
             new = formatter.camelCased(new)
@@ -29,8 +22,20 @@ struct FlutterVariable {
         case .none:
             break
         }
-        
         return new
+    }
+    
+    static func parseColor(name: String, option: FlutterCodeOptions) -> String {
+        if (try? StemColor(throwing: name)) != nil {
+            return parse(name: option.color_prefix_when_name_is_hex + name, option: option)
+        } else {
+            let name = parse(name: name, option: option)
+            if (try? StemColor(throwing: name)) != nil {
+                return parse(name: option.color_prefix_when_name_is_hex + name, option: option)
+            } else {
+                return name
+            }
+        }
     }
     
 }
