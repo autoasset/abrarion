@@ -71,7 +71,6 @@ final class XCImageAssetsMakerTests: XCTestCase {
     
 }
 
-
 func assert(throwing: () async throws -> Bool) async rethrows {
    let flag = try await throwing()
     assert(flag)
