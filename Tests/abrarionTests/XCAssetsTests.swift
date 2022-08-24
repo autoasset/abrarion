@@ -234,8 +234,17 @@ class XCAssetsTests: XCTestCase {
         """
         let json = JSON(parseJSON: text)
         let asset = try XCAsset<XCImage>(from: json)
-        // TODO
-        asset.contents.first
+        if let resizing = asset.contents[0].resizing {
+            assert { resizing.mode == .part_9 }
+            assert { resizing.center.mode == .tile }
+            assert { resizing.center.width == 1 }
+            assert { resizing.center.height == 1 }
+            assert { resizing.cap_insets.bottom == 16 }
+            assert { resizing.cap_insets.top == 16 }
+            assert { resizing.cap_insets.left == 28 }
+            assert { resizing.cap_insets.right == 27 }
+        }
+        
     }
     
 }

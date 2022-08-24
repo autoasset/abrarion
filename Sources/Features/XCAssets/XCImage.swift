@@ -54,7 +54,7 @@ public struct XCImage: XCAssetContentProtocol {
         direction = .init(from: json)
         size = .init(from: json)
         memory = .init(from: json)
-        resizing = .init(from: json)
+        resizing = try .init(from: json)
         locale = json["locale"].string.flatMap(Locale.init(identifier:))
     }
     
