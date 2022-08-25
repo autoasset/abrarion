@@ -1,5 +1,7 @@
 # file_tags
 
+结构:
+
 ```yaml
 file_tags:
     # 待匹配的文件
@@ -9,16 +11,31 @@ file_tags:
     # 参与任务的文件标记类别
     vaild_tags:
         - flutter
+    # 不参与任务的文件标记类别
+    exclude_tags:
+        - error_files
     expressions:
         - name: flutter所使用的资源
           # 匹配模式
           # and: 通过全部 pattern 才会被标记 tags
           #  or: 通过任一 pattern 就会被标记 tags
-          kind: or | and
+          kind: and
           # 标记
           # 通过该规则的文件, 会被添加标记, 在相应任务内可以使用标记来区分文件.
           tags:
             - error_files
+          # 匹配规则, 若规则能匹配完整文件名, 则视为该规则通过
+          patterns:
+            - add_address(?:@\dx)?.png
+        - name: flutter所使用的资源
+          # 匹配模式
+          # and: 通过全部 pattern 才会被标记 tags
+          #  or: 通过任一 pattern 就会被标记 tags
+          kind: or
+          # 标记
+          # 通过该规则的文件, 会被添加标记, 在相应任务内可以使用标记来区分文件.
+          tags:
+            - flutter
           # 匹配规则, 若规则能匹配完整文件名, 则视为该规则通过
           patterns:
             - add_address(?:@\dx)?.png
@@ -28,3 +45,27 @@ file_tags:
           files:
             - ./flutter_tags.txt
 ```
+
+- 真正参与任务的文件: 
+
+    > vaild_tags 匹配到的文件, 移除 exclude_tags 匹配到的文件.
+    
+    具体实现:
+
+    ```swift
+    func vaild_files() -> Set<STFile> {
+        var vailds = Set<STFile>()
+        model.vaild_tags.forEach { tag in
+            if let files = store[tag] {
+                vailds.formUnion(files)
+            }
+        }
+        var exclude = Set<STFile>()
+        model.exclude_tags.forEach { tag in
+            if let files = store[tag] {
+                exclude.formUnion(files)
+            }
+        }
+        return vailds.subtracting(exclude)
+    }
+    ```

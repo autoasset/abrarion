@@ -24,13 +24,19 @@ class XCFileTagsManager: XCMaker {
 extension XCFileTagsManager {
 
     func vaild_files() -> Set<STFile> {
-        var set = Set<STFile>()
+        var vailds = Set<STFile>()
         model.vaild_tags.forEach { tag in
             if let files = store[tag] {
-                set.formUnion(files)
+                vailds.formUnion(files)
             }
         }
-        return set
+        var exclude = Set<STFile>()
+        model.exclude_tags.forEach { tag in
+            if let files = store[tag] {
+                exclude.formUnion(files)
+            }
+        }
+        return vailds.subtracting(exclude)
     }
     
 }

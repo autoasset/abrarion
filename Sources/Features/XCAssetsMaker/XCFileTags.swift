@@ -75,6 +75,7 @@ struct XCFileTags {
     
     let inputs: [String]
     let vaild_tags: [String]
+    let exclude_tags: [String]
     let expressions: [Expression]
     
     init?(from json: JSON, variables: VariablesManager) async throws {
@@ -82,9 +83,10 @@ struct XCFileTags {
         guard json.isExists else {
             return nil
         }
-        self.inputs      = try await parseStringList(from: json["inputs"], variables: variables)
-        self.vaild_tags  = try await parseStringList(from: json["vaild_tags"], variables: variables)
-        self.expressions = try await json["expressions"].arrayValue.asyncMap { item in
+        self.inputs       = try await parseStringList(from: json["inputs"], variables: variables)
+        self.vaild_tags   = try await parseStringList(from: json["vaild_tags"], variables: variables)
+        self.exclude_tags = try await parseStringList(from: json["exclude_tags"], variables: variables)
+        self.expressions  = try await json["expressions"].arrayValue.asyncMap { item in
             try await Expression(from: item, variables: variables)
         }
     }
