@@ -60,6 +60,14 @@ private extension XCFileTagsManager {
     
     func pass(_ payload: XCFileTags.Expression, filename: String) -> Bool {
         let ranage = NSRange(filename.startIndex..., in: filename)
+        if payload.patterns.isEmpty {
+            switch payload.substitute {
+            case .always_fail:
+                return false
+            case .always_pass:
+                return true
+            }
+        }
         switch payload.kind {
         case .and:
             return payload.patterns.contains { regex in

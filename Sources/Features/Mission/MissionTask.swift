@@ -97,6 +97,7 @@ public struct MissionTask: MissionInstance {
         missionManager.register(FlutterColorMaker(), for: "flutter_colors")
         missionManager.register(FlutterImageMaker(), for: "flutter_images")
         missionManager.register(AndriodColorMaker(), for: "android_colors")
+        missionManager.register(AndriodImagesMaker(), for: "android_images")
         missionManager.register(CustomVariables(), for: "variables")
         missionManager.register(Cocoapods(), for: "cocoapods_push")
         missionManager.register(Shell(), for: "shell")

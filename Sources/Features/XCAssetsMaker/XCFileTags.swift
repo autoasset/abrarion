@@ -29,17 +29,23 @@ struct XCFileTags {
         case and
     }
     
+    enum Substitute: String {
+        case always_pass
+        case always_fail
+    }
+    
     struct Expression {
         
         let name: String
         let kind: Kind
         let tags: [String]
+        let substitute: Substitute
         let patterns: [NSRegularExpression]
         
         init(from json: JSON, variables: VariablesManager) async throws {
             let name = try await variables.parse(json["name"].stringValue)
             self.name = name
-            
+            substitute = .init(rawValue: try await variables.parse(json["substitute"].stringValue)) ?? .always_fail
             guard let kind = Kind(rawValue: try await variables.parse(json["kind"].stringValue)) else {
                 throw StemError("XCFileTags: \(name) kind 缺失")
             }
@@ -49,12 +55,12 @@ struct XCFileTags {
             
             let files = try await parseStringList(from: json["files"], variables: variables)
                 .map(STFile.init)
-                .compactMap({ try $0.data() })
+                .compactMap({ try? $0.data() })
                 .compactMap({ String.init(data: $0, encoding: .utf8) })
                 .map({ $0.split(separator: "\n") })
                 .flatMap({ $0 })
+                .compactMap({ $0.description.trimmingCharacters(in: .whitespacesAndNewlines) })
                 .filter({ !$0.isEmpty })
-                .map(\.description)
             
             let patterns = try await parseStringList(from: json["patterns"], variables: variables)
             let files_patterns = try await variables.parse(files)

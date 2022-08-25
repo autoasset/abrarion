@@ -46,39 +46,18 @@ public struct FlutterImageMaker: MissionInstance, XCMaker {
         } else {
             vaild_files = try await Set(files(from: options.inputs))
         }
-        
-        var channels = [Int: Set<STFile>]()
-        
-        for file in vaild_files {
-            guard let channelStr = file
-                .attributes.nameComponents.name
-                .split(separator: "@")
-                .last?
-                .replacingOccurrences(of: "x", with: ""),
-                  let channel = Int(channelStr) else {
-                throw StemError("FlutterImageMaker: \(file.attributes.name) 未包含必要的倍率, 例如 xx@2x.jpg")
-            }
-            if channels[channel] == nil {
-                channels[channel] = .init()
-            }
-            channels[channel]?.update(with: file)
-        }
-        
+                
         let images = options.output_resources_path.folder(name: "images")
-        try channels.forEach { item in
-            let folder = images.folder(name: "\(item.key).0x")
-            _ = try? folder.create()
-            try item.value.forEach { file in
-                let name = [
-                    file.attributes.nameComponents.name
-                        .split(separator: "@")
-                        .dropLast()
-                        .joined(separator: "@"),
-                    file.attributes.nameComponents.extension
-                ]
-                    .compactMap({ $0 })
-                    .joined(separator: ".")
-                try file.replace(folder.file(name: name))
+        try XCImageMark.marked(vaild_files).forEach { item in
+            switch item.key {
+            case .scale(let scale), .gif(let scale):
+                let folder = images.folder(name: "\(scale).0x")
+                _ = try? folder.create()
+                try item.value.forEach { file in
+                    try file.replace(folder.file(name: XCImageMark.filename(noScaleFactor: file)))
+                }
+            case .android_vector, .vector, .unrecognisedGIFScale, .unrecognisedScale, .unknown:
+                break
             }
         }
         

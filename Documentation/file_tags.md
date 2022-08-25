@@ -24,9 +24,14 @@ file_tags:
           # 通过该规则的文件, 会被添加标记, 在相应任务内可以使用标记来区分文件.
           tags:
             - error_files
+          # 当 patterns 与 files 合并后, 规则条数仍为 0, 则通过该变量判断文件是否匹配
+          # always_fail: [默认] 全部失败
+          # always_pass: 全部匹配
+          substitute: always_fail
           # 匹配规则, 若规则能匹配完整文件名, 则视为该规则通过
           patterns:
             - add_address(?:@\dx)?.png
+        
         - name: flutter所使用的资源
           # 匹配模式
           # and: 通过全部 pattern 才会被标记 tags

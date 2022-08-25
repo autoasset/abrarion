@@ -198,40 +198,30 @@ extension XCImageMaker {
         let image: XCImage
         let renderAs: XCImageRenderAs
         
-        init(from file: STFile) throws {
-            guard let data = try? file.data() else {
-                throw StemError(message: "无法读取文件内容: \(file.attributes.name)")
-            }
-            
-            let scale: XCImageScale?
+        init?(from file: STFile) throws {
+            var scale: XCImageScale?
             let luminosity: Appearance.Luminosity?
-            
+                        
             let name = file.attributes.name.lowercased()
             
-            if name.hasSuffix(".svg") {
+            switch XCImageMark.marked(file) {
+            case .unknown, .android_vector, .gif, .unrecognisedGIFScale:
+                return nil
+            case .vector:
                 renderAs = .template
                 scale = nil
-            } else if let type = data.st.mimeType {
-                switch type {
-                case .pdf:
-                    renderAs = .template
-                    scale = nil
-                case .png, .jpeg:
-                    renderAs = .default
-                    if name.contains("@3x.") {
-                        scale = .x3
-                    } else if name.contains("@2x.") {
-                        scale = .x2
-                    } else if name.contains("@1x.") {
-                        scale = .x1
-                    } else {
-                        scale = nil
-                    }
+            case .unrecognisedScale:
+                renderAs = .default
+                scale = nil
+            case .scale(let value):
+                renderAs = .default
+                switch value {
+                case 1: scale = .x1
+                case 2: scale = .x2
+                case 3: scale = .x3
                 default:
-                    throw StemError(message: "文件未被判断为图片格式: \(file.attributes.name)")
+                    return nil
                 }
-            } else {
-                throw StemError(message: "文件未被判断为图片格式: \(file.attributes.name)")
             }
             
             if ["_dark@", "_dark."].contains(where: { name.contains($0) }) {
