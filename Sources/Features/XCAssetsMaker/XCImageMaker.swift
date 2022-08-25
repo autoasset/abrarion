@@ -11,6 +11,7 @@ import StemFilePath
 import Logging
 
 public struct XCImageMaker: MissionInstance, XCMaker {
+    
     public var logger: Logger?
     
     public struct JSONModeOptions {
@@ -18,22 +19,15 @@ public struct XCImageMaker: MissionInstance, XCMaker {
         fileprivate let vector_template: XCCodeOptions?
         /// 依赖代码输出文件夹位置
         fileprivate let template_dependent_output: String
-        fileprivate let input_file_lints: [XCFileLint]
+        fileprivate let file_tags: XCFileTags?
         fileprivate let contents: [String]
         fileprivate let inputs: [String]
         fileprivate let output: String
         
         public init(from json: JSON, variables: VariablesManager) async throws {
+            self.file_tags = try await XCFileTags(from: json, variables: variables)
             self.template = try await .init(from: json["template"], default: .init(type: "Image"), variables: variables)
             self.vector_template = try await .init(from: json["vector_template"], default: .init(type: "VectorImage"), variables: variables)
-            
-            var lints = [XCFileLint]()
-            for json in json["input_file_lints"].arrayValue {
-                if let item = try await XCFileLint(from: json, variables: variables) {
-                    lints.append(item)
-                }
-            }
-            self.input_file_lints = lints
             
             if let item = json["inputs"].string {
                 self.inputs = [try await variables.parse(item)]
@@ -76,7 +70,7 @@ public struct XCImageMaker: MissionInstance, XCMaker {
         let folder = STFolder(options.output)
         
         let records = try await files(from: options.inputs)
-            .compactMap { XCReport.shared.illegalFileName($0, with: options.input_file_lints) }
+            // .compactMap { XCReport.shared.illegalFileName($0, with: options.file_tagss) }
             .compactMap({ try? ImageRecord(from: $0) })
             .reduce([String: [ImageRecord]](), { result, record in
                 var result = result

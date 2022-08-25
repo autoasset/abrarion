@@ -10,15 +10,6 @@
       }
     },
     {
-      "identity" : "stem",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/linhay/Stem",
-      "state" : {
-        "branch" : "master",
-        "revision" : "6a351f699edebb9e84c6673fd5e15d001292663b"
-      }
-    },
-    {
       "identity" : "swift-argument-parser",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-argument-parser",

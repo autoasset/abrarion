@@ -20,35 +20,27 @@ public struct XCDataMaker: MissionInstance, XCMaker {
         /// 依赖代码输出文件夹位置
         var template_dependent_output: String
         var contents: [String]
-        var input_file_lints: [XCFileLint]
+        var file_tags: XCFileTags?
         var inputs: [String]
         var output: String
         
         internal init(template: XCCodeOptions?,
                       template_dependent_output: String,
                       contents: [String],
-                      input_file_lints: [XCFileLint],
+                      file_tags: XCFileTags,
                       inputs: [String],
                       output: String) {
             self.template = template
             self.template_dependent_output = template_dependent_output
-            self.input_file_lints = input_file_lints
+            self.file_tags = file_tags
             self.contents = contents
             self.inputs = inputs
             self.output = output
         }
         
         public init(from json: JSON, variables: VariablesManager) async throws {
-            self.template = try await .init(from: json["template"], default: .init(type: "Data"), variables: variables)
-            
-            var lints = [XCFileLint]()
-            for json in json["input_file_lints"].arrayValue {
-                if let item = try await XCFileLint(from: json, variables: variables) {
-                    lints.append(item)
-                }
-            }
-            self.input_file_lints = lints
-            
+            self.file_tags = try await XCFileTags(from: json, variables: variables)
+            self.template = try await .init(from: json["template"], default: .init(type: "Data"), variables: variables)                
             if let item = json["inputs"].string {
                 self.inputs = [try await variables.parse(item)]
             } else {
@@ -87,7 +79,7 @@ public struct XCDataMaker: MissionInstance, XCMaker {
         let folder = STFolder(options.output)
         
         let records = try await files(from: options.inputs)
-            .compactMap { XCReport.shared.illegalFileName($0, with: options.input_file_lints) }
+            // .compactMap { XCReport.shared.illegalFileName($0, with: options.file_tags) }
             .compactMap({ try? DataRecord(from: $0) })
             .reduce([String: [DataRecord]](), { result, record in
                 var result = result

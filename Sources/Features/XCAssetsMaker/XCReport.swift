@@ -72,7 +72,7 @@ public class XCReport: MissionInstance {
     }
     
     /// 非法的命名
-    func illegalFileName(_  file: STFile, with regexs: [XCFileLint]) -> STFile? {
+    func illegalFileName(_  file: STFile, with regexs: [XCFileTags]) -> STFile? {
         guard !regexs.isEmpty else {
             return file
         }
