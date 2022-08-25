@@ -27,12 +27,13 @@ brew upgrade autoasset/abrarion/abrarion
     file_tags:
         # 待匹配的文件
         inputs:
-            -
+            - publish-template-khala/products/flutter/2.0x
+            - publish-template-khala/products/flutter/3.0x
         # 参与任务的文件标记类别
         vaild_tags:
-            -  
+            -  flutter
         expressions:
-            - name: 文件名只能使用大小写字母下划线
+            - name: flutter所使用的资源
               # 匹配模式
               # and: 通过全部 pattern 才会被标记 tags
               #  or: 通过任一 pattern 就会被标记 tags
@@ -43,7 +44,7 @@ brew upgrade autoasset/abrarion/abrarion
                 - error_files
               # 匹配规则, 若规则能匹配完整文件名, 则视为该规则通过
               patterns:
-                - '^[a-zA-Z][0-9a-zA-Z\\_]*$'
+                - add_address(?:@\dx)?.png
               # 文件型匹配规则, 若规则能匹配完整文件名, 则视为该规则通过
               # 路径只能是已存在的文件
               # 文件内按行划分规则

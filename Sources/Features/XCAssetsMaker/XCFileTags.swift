@@ -41,7 +41,7 @@ struct XCFileTags {
             self.name = name
             
             guard let kind = Kind(rawValue: try await variables.parse(json["kind"].stringValue)) else {
-                throw StemError("XCFileLint: \(name) kind 缺失")
+                throw StemError("XCFileTags: \(name) kind 缺失")
             }
             
             self.kind = kind
@@ -63,12 +63,12 @@ struct XCFileTags {
                 do {
                     return try NSRegularExpression(pattern: item)
                 } catch {
-                    throw StemError("XCFileLint: \(name) \(item) 错误")
+                    throw StemError("XCFileTags: \(name) \(item) 错误")
                 }
             })
             
-            guard tags.isEmpty else {
-                throw StemError("XCFileLint: \(name) tags 缺失")
+            guard !tags.isEmpty else {
+                throw StemError("XCFileTags: \(name) tags 缺失")
             }
         }
     }
