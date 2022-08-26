@@ -4,10 +4,6 @@
 
 ```yaml
 file_tags:
-    # 待匹配的文件
-    inputs:
-        - publish-template-khala/products/flutter/2.0x
-        - publish-template-khala/products/flutter/3.0x
     # 参与任务的文件标记类别
     vaild_tags:
         - flutter
@@ -31,6 +27,10 @@ file_tags:
           # 匹配规则, 若规则能匹配完整文件名, 则视为该规则通过
           patterns:
             - add_address(?:@\dx)?.png
+          # 待匹配的文件
+          inputs:
+            - publish-template-khala/products/flutter/2.0x
+            - publish-template-khala/products/flutter/3.0x
         
         - name: flutter所使用的资源
           # 匹配模式
@@ -49,6 +49,10 @@ file_tags:
           # 文件内按行划分规则
           files:
             - ./flutter_tags.txt
+          # 待匹配的文件
+          inputs:
+            - publish-template-khala/products/flutter/2.0x
+            - publish-template-khala/products/flutter/3.0x
 ```
 
 - 真正参与任务的文件: 

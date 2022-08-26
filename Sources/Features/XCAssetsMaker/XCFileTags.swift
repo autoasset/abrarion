@@ -41,8 +41,10 @@ struct XCFileTags {
         let tags: [String]
         let substitute: Substitute
         let patterns: [NSRegularExpression]
-        
+        let inputs: [String]
+
         init(from json: JSON, variables: VariablesManager) async throws {
+            self.inputs = try await parseStringList(from: json["inputs"], variables: variables)
             let name = try await variables.parse(json["name"].stringValue)
             self.name = name
             substitute = .init(rawValue: try await variables.parse(json["substitute"].stringValue)) ?? .always_fail
@@ -79,7 +81,6 @@ struct XCFileTags {
         }
     }
     
-    let inputs: [String]
     let vaild_tags: [String]
     let exclude_tags: [String]
     let expressions: [Expression]
@@ -89,7 +90,6 @@ struct XCFileTags {
         guard json.isExists else {
             return nil
         }
-        self.inputs       = try await parseStringList(from: json["inputs"], variables: variables)
         self.vaild_tags   = try await parseStringList(from: json["vaild_tags"], variables: variables)
         self.exclude_tags = try await parseStringList(from: json["exclude_tags"], variables: variables)
         self.expressions  = try await json["expressions"].arrayValue.asyncMap { item in

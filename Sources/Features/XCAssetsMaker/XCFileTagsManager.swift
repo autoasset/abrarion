@@ -16,7 +16,7 @@ class XCFileTagsManager: XCMaker {
     
     init(_ model: XCFileTags) async throws {
         self.model = model
-        try await add(files(from: model.inputs))
+        try await task()
     }
     
 }
@@ -43,9 +43,9 @@ extension XCFileTagsManager {
 
 private extension XCFileTagsManager {
     
-    func add(_ inputs: [STFile]) {
-        model.expressions.forEach { payload in
-            inputs
+    func task() async throws {
+        for payload in model.expressions {
+            try await files(from: payload.inputs)
                 .filter { pass(payload, filename: $0.attributes.name) }
                 .forEach { file in
                     payload.tags.forEach { tag in
