@@ -126,13 +126,18 @@
 | 字段名       | 描述                     | 类型               | 默认值 | 是否必填 |
 | ------------ | ------------------------ | ------------------ | ------ | -------- |
 | name  | 文件标记的规则组名, 目前不参与任务逻辑 | string           | | 否 |
-| kind  | 匹配模式: <br />and: 通过全部 pattern 才会被标记 tags<br />or: 通过任一 pattern 就会被标记 tags | enum | | 当存在 patterns \| files 时必填 |
+| kind  | 匹配模式: <br />and: 通过全部 pattern 才会被标记 tags<br />or: 通过任一 pattern 就会被标记 tags<br/>reversed_or: 未通过任一 pattern 就会被标记 | enum | | 当存在 patterns \| files 时必填 |
 | tags | 文件标记 | string \|[string] | | 是 |
 | substitute | 无任何匹配规则时策略<br />always_pass: 全部标记<br />always_fail: 全部不标记 | enum | always_fail | 否 |
 | patterns | 匹配规则, 若规则能匹配完整文件名, 则视为该规则通过 | string \|[string] | [] | 否 |
 | files | 待匹配的文件 | string \|[string] | [] | 否 |
 
 # 注意事项
+
+- file_tags.expressions:
+
+  - 利用 kind == or, 可以建立白名单机制
+  - 利用 kind == reversed_or, 可以建立黑名单机制
 
 - 真正参与任务的文件: 
 

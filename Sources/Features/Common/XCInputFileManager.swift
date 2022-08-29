@@ -94,6 +94,11 @@ private extension XCInputFileManager {
                 let result = regex.matches(in: filename, range: ranage)
                 return result.first?.range == ranage
             }
+        case .reversed_or:
+            return payload.patterns.contains { regex in
+                let result = regex.matches(in: filename, range: ranage)
+                return result.first?.range == ranage
+            } == false
         }
     }
     

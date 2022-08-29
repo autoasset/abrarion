@@ -27,6 +27,7 @@ public struct XCFileTags {
     enum Kind: String {
         case or
         case and
+        case reversed_or
     }
     
     enum Substitute: String {
