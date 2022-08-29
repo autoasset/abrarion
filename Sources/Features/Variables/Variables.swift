@@ -72,6 +72,13 @@ public class VariablesManager {
         return text
     }
     
+    public func parse(_ text: String?) async throws -> String? {
+        guard let text = text else {
+            return nil
+        }
+        return try await parse(text)
+    }
+    
     public func parse(_ text: [String]) async throws -> [String] {
         var new = [String]()
         for item in text {

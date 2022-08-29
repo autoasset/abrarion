@@ -85,6 +85,10 @@ struct XCImageMark {
     
     /// 没有倍率标识的文件名
     static func filename(noScaleFactor file: STFile) -> String {
+        guard file.attributes.nameComponents.name.contains("@"),
+              file.attributes.nameComponents.name.last?.lowercased() == "x" else {
+            return file.attributes.name
+        }
         return [file.attributes.nameComponents.name
             .split(separator: "@")
             .dropLast()

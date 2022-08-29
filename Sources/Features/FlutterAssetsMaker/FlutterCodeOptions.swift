@@ -19,7 +19,7 @@ public struct FlutterCodeOptions {
     let output: STFile?
 
     public init(from json: JSON, variables: VariablesManager) async throws {
-        self.output = json["output"].string.flatMap(STFile.init)
+        self.output =  try await variables.parse(json["output"].string).flatMap(STFile.init)
         self.variable_name_type = try await .init(rawValue: variables.parse(json["variable_name_type"].stringValue)) ?? .camel
         self.color_prefix_when_name_is_hex = try await variables.parse(json["color_prefix_when_name_is_hex"].stringValue)
         self.class_name = try await variables.parse(json["class_name"].stringValue)
