@@ -19,9 +19,11 @@ class XCInputFileManager: XCMaker {
     
     private var store: [String: Set<STFile>] = [:]
     
-    init(_ model: XCInputsOptions) {
+    init(_ model: XCInputsOptions) async throws {
         if let action = model.file_tags {
             self.action = .tags(action)
+            store.removeAll()
+            try await task(model: action)
         } else {
             self.action = .files(model.inputs)
         }
@@ -30,26 +32,29 @@ class XCInputFileManager: XCMaker {
 }
 
 extension XCInputFileManager {
+    
+    func files(tags: [String]) async throws -> Set<STFile> {
+        switch action {
+        case .files:
+            return .init()
+        case .tags:
+            var vailds = Set<STFile>()
+            for tag in tags {
+                if let files = store[tag] {
+                    vailds.formUnion(files)
+                }
+            }
+            return vailds
+        }
+    }
 
     func vaild_files() async throws -> Set<STFile> {
         switch action {
         case .files(let inputs):
             return try await .init(self.files(from: inputs))
         case .tags(let model):
-            store.removeAll()
-            try await task(model: model)
-            var vailds = Set<STFile>()
-            model.vaild_tags.forEach { tag in
-                if let files = store[tag] {
-                    vailds.formUnion(files)
-                }
-            }
-            var exclude = Set<STFile>()
-            model.exclude_tags.forEach { tag in
-                if let files = store[tag] {
-                    exclude.formUnion(files)
-                }
-            }
+            let vailds  = try await files(tags: model.vaild_tags)
+            let exclude = try await files(tags: model.exclude_tags)
             return vailds.subtracting(exclude)
         }
     }
