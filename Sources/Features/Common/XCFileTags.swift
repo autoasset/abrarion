@@ -75,7 +75,7 @@ public struct XCFileTags {
                 throw StemError("XCFileTags: \(name) tags 缺失")
             }
 
-            if patterns.isEmpty {
+            if self.patterns.isEmpty {
                 self.kind = .and
             } else if let kind = Kind(rawValue: try await variables.parse(json["kind"].stringValue)) {
                 self.kind = kind
