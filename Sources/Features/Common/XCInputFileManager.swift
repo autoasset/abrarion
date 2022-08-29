@@ -8,42 +8,57 @@
 import Foundation
 import StemFilePath
 
-class XCFileTagsManager: XCMaker {
+class XCInputFileManager: XCMaker {
     
-    private let model: XCFileTags
+    private let action: Action
+    
+    enum Action {
+        case files([String])
+        case tags(XCFileTags)
+    }
     
     private var store: [String: Set<STFile>] = [:]
     
-    init(_ model: XCFileTags) async throws {
-        self.model = model
-        try await task()
+    init(_ model: XCInputsOptions) {
+        if let action = model.file_tags {
+            self.action = .tags(action)
+        } else {
+            self.action = .files(model.inputs)
+        }
     }
     
 }
 
-extension XCFileTagsManager {
+extension XCInputFileManager {
 
-    func vaild_files() -> Set<STFile> {
-        var vailds = Set<STFile>()
-        model.vaild_tags.forEach { tag in
-            if let files = store[tag] {
-                vailds.formUnion(files)
+    func vaild_files() async throws -> Set<STFile> {
+        switch action {
+        case .files(let inputs):
+            return try await .init(self.files(from: inputs))
+        case .tags(let model):
+            store.removeAll()
+            try await task(model: model)
+            var vailds = Set<STFile>()
+            model.vaild_tags.forEach { tag in
+                if let files = store[tag] {
+                    vailds.formUnion(files)
+                }
             }
-        }
-        var exclude = Set<STFile>()
-        model.exclude_tags.forEach { tag in
-            if let files = store[tag] {
-                exclude.formUnion(files)
+            var exclude = Set<STFile>()
+            model.exclude_tags.forEach { tag in
+                if let files = store[tag] {
+                    exclude.formUnion(files)
+                }
             }
+            return vailds.subtracting(exclude)
         }
-        return vailds.subtracting(exclude)
     }
     
 }
 
-private extension XCFileTagsManager {
+private extension XCInputFileManager {
     
-    func task() async throws {
+    func task(model: XCFileTags) async throws {
         for payload in model.expressions {
             try await files(from: payload.inputs)
                 .filter { pass(payload, filename: $0.attributes.name) }

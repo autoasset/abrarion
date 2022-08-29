@@ -14,12 +14,10 @@ struct AndriodImagesMaker: MissionInstance, XCMaker {
     public struct Options {
         
         let output_resources_path: STFolder
-        let inputs: [String]
-        let file_tags: XCFileTags?
+        let inputs: XCInputsOptions
         
         public init(from json: JSON, variables: VariablesManager) async throws {
-            self.inputs    = try await variables.parse(json["inputs"].arrayValue.compactMap(\.string))
-            self.file_tags = try await XCFileTags(from: json, variables: variables)
+            self.inputs = try await XCInputsOptions(from: json, variables: variables)
             guard json["output_resources_path"].isExists else {
                 throw StemError("AndriodImagesMaker: 未包含必要参数 output_resources_path")
             }
@@ -33,12 +31,7 @@ struct AndriodImagesMaker: MissionInstance, XCMaker {
     
     public func evaluate(from json: JSON, context: MissionContext) async throws {
         let options = try await Options(from: json, variables: context.variables)
-        let vaild_files: Set<STFile>
-        if let file_tags = options.file_tags {
-            vaild_files = try await XCFileTagsManager(file_tags).vaild_files()
-        } else {
-            vaild_files = try await Set(files(from: options.inputs))
-        }
+        let vaild_files = try await XCInputFileManager(options.inputs).vaild_files()
      
         let images = options.output_resources_path
         try XCImageMark.marked(vaild_files).forEach { item in

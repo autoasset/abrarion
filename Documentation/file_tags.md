@@ -119,13 +119,18 @@
 | ------------ | ------------------------ | ------------------ | ------ | -------- |
 | vaild_tags   | 参与任务的文件标记类别   | string \| [string] | | 是 |
 | exclude_tags | 不参与任务的文件标记类别 | string \| [string] | | 是 |
-| expressions  | 文件标记的规则组        | [object]           | | 是 |
-| expressions.name  | 文件标记的规则组名, 目前不参与任务逻辑 | string           | | 是 |
-| expressions.kind  | 匹配模式: <br />and: 通过全部 pattern 才会被标记 tags<br />or: 通过任一 pattern 就会被标记 tags | enum | | 当存在 patterns \| files 时必填 |
-| expressions.tags | 文件标记 | string \|[string] | | 是 |
-| expressions.substitute | 无任何匹配规则时策略<br />always_pass: 全部标记<br />always_fail: 全部不标记 | enum | always_fail | 否 |
-| expressions.patterns | 匹配规则, 若规则能匹配完整文件名, 则视为该规则通过 | string \|[string] | [] | 否 |
-| expressions.files | 待匹配的文件 | string \|[string] | [] | 否 |
+| expressions  | 文件标记的规则组        | [object] [结构说明](#filetagsexpressions)           | | 是 |
+
+## file_tags.expressions
+
+| 字段名       | 描述                     | 类型               | 默认值 | 是否必填 |
+| ------------ | ------------------------ | ------------------ | ------ | -------- |
+| name  | 文件标记的规则组名, 目前不参与任务逻辑 | string           | | 否 |
+| kind  | 匹配模式: <br />and: 通过全部 pattern 才会被标记 tags<br />or: 通过任一 pattern 就会被标记 tags | enum | | 当存在 patterns \| files 时必填 |
+| tags | 文件标记 | string \|[string] | | 是 |
+| substitute | 无任何匹配规则时策略<br />always_pass: 全部标记<br />always_fail: 全部不标记 | enum | always_fail | 否 |
+| patterns | 匹配规则, 若规则能匹配完整文件名, 则视为该规则通过 | string \|[string] | [] | 否 |
+| files | 待匹配的文件 | string \|[string] | [] | 否 |
 
 # 注意事项
 

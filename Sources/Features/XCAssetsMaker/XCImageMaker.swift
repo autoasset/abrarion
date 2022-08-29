@@ -19,29 +19,16 @@ public struct XCImageMaker: MissionInstance, XCMaker {
         fileprivate let vector_template: XCCodeOptions?
         /// 依赖代码输出文件夹位置
         fileprivate let template_dependent_output: String
-        fileprivate let file_tags: XCFileTags?
         fileprivate let contents: [String]
-        fileprivate let inputs: [String]
         fileprivate let output: String
-        
+        fileprivate let inputs: XCInputsOptions
+
         public init(from json: JSON, variables: VariablesManager) async throws {
-            self.file_tags = try await XCFileTags(from: json, variables: variables)
+            self.inputs   = try await XCInputsOptions(from: json, variables: variables)
             self.template = try await .init(from: json["template"], default: .init(type: "Image"), variables: variables)
+            self.contents = try await variables.parse(json["contents"].stringArrayValue)
+            self.output   = try await variables.parse(json["output"].stringValue)
             self.vector_template = try await .init(from: json["vector_template"], default: .init(type: "VectorImage"), variables: variables)
-            
-            if let item = json["inputs"].string {
-                self.inputs = [try await variables.parse(item)]
-            } else {
-                self.inputs = try await variables.parse(json["inputs"].arrayValue.compactMap(\.string))
-            }
-            
-            if let item = json["contents"].string {
-                self.contents = [try await variables.parse(item)]
-            } else {
-                self.contents = try await variables.parse(json["contents"].arrayValue.compactMap(\.string))
-            }
-            
-            self.output = try await variables.parse(json["output"].stringValue)
             
             if self.template == nil, self.vector_template == nil {
                 self.template_dependent_output = ""
@@ -69,7 +56,7 @@ public struct XCImageMaker: MissionInstance, XCMaker {
         
         let folder = STFolder(options.output)
         
-        let records = try await files(from: options.inputs)
+        let records = try await XCInputFileManager(options.inputs).vaild_files()
             // .compactMap { XCReport.shared.illegalFileName($0, with: options.file_tagss) }
             .compactMap({ try? ImageRecord(from: $0) })
             .reduce([String: [ImageRecord]](), { result, record in

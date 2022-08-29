@@ -25,7 +25,7 @@ public struct XCIconFontMaker: MissionInstance, XCMaker {
             self.input_json  = STFile(try await variables.parse(json["input_json"].stringValue))
             self.input_font  = STFile(try await variables.parse(json["input_font"].stringValue))
             self.dataOptions = try await .init(from: json, variables: variables)
-            self.dataOptions.inputs = [self.input_font.path]
+            self.dataOptions.inputs = .init(inputs: [self.input_font.path])
             self.dataOptions.contents = []
         }
         

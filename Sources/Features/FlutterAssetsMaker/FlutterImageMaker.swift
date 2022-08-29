@@ -16,15 +16,13 @@ public struct FlutterImageMaker: MissionInstance, XCMaker {
         
         let pubspec: STFile
         let output_resources_path: STFolder
-        let inputs: [String]
         let template: FlutterCodeOptions
-        let file_tags: XCFileTags?
-        
+        let inputs: XCInputsOptions
+
         public init(from json: JSON, variables: VariablesManager) async throws {
-            self.inputs    = try await variables.parse(json["inputs"].arrayValue.compactMap(\.string))
-            self.file_tags = try await XCFileTags(from: json, variables: variables)
-            self.template  = try await FlutterCodeOptions(from: json["template"], variables: variables)
-            self.pubspec   = STFile(try await variables.parse(json["pubspec"].stringValue))
+            self.inputs   = try await XCInputsOptions(from: json, variables: variables)
+            self.template = try await FlutterCodeOptions(from: json["template"], variables: variables)
+            self.pubspec  = try await STFile(variables.parse(json["pubspec"].stringValue))
             guard json["output_resources_path"].isExists else {
                 throw StemError("FlutterImageMaker: 未包含必要参数 output_resources_path")
             }
@@ -39,13 +37,7 @@ public struct FlutterImageMaker: MissionInstance, XCMaker {
     
     public func evaluate(from json: JSON, context: MissionContext) async throws {
         let options = try await Options(from: json, variables: context.variables)
-        
-        let vaild_files: Set<STFile>
-        if let file_tags = options.file_tags {
-            vaild_files = try await XCFileTagsManager(file_tags).vaild_files()
-        } else {
-            vaild_files = try await Set(files(from: options.inputs))
-        }
+        let vaild_files = try await XCInputFileManager(options.inputs).vaild_files()
                 
         let images = options.output_resources_path.folder(name: "images")
         try XCImageMark.marked(vaild_files).forEach { item in

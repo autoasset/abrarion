@@ -22,7 +22,7 @@ fileprivate func parseStringList(from json: JSON, variables: VariablesManager) a
 }
 
 
-struct XCFileTags {
+public struct XCFileTags {
     
     enum Kind: String {
         case or

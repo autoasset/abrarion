@@ -17,3 +17,4 @@ brew upgrade autoasset/abrarion/abrarion
 
 - [flutter_images](./Documentation/flutter_images.md)
 - [android_images](./Documentation/android_images.md)
+- [xcassets_images](./Documentation/xcassets_images.md)
