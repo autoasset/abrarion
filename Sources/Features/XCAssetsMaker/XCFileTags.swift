@@ -48,11 +48,6 @@ struct XCFileTags {
             let name = try await variables.parse(json["name"].stringValue)
             self.name = name
             substitute = .init(rawValue: try await variables.parse(json["substitute"].stringValue)) ?? .always_fail
-            guard let kind = Kind(rawValue: try await variables.parse(json["kind"].stringValue)) else {
-                throw StemError("XCFileTags: \(name) kind 缺失")
-            }
-            
-            self.kind = kind
             self.tags = try await parseStringList(from: json["tags"], variables: variables)
             
             let files = try await parseStringList(from: json["files"], variables: variables)
@@ -78,6 +73,15 @@ struct XCFileTags {
             guard !tags.isEmpty else {
                 throw StemError("XCFileTags: \(name) tags 缺失")
             }
+
+            if patterns.isEmpty {
+                self.kind = .and
+            } else if let kind = Kind(rawValue: try await variables.parse(json["kind"].stringValue)) {
+                self.kind = kind
+            } else {
+                throw StemError("XCFileTags: \(name) kind 缺失")
+            }
+            
         }
     }
     
