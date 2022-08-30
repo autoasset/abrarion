@@ -40,7 +40,7 @@ struct Publish: AsyncParsableCommand {
             
             let documentation = STFolder("Documentation")
             let release_documentation = STFolder(".release/homebrew-abrarion/Documentation")
-            _ = try? release.delete()
+            _ = try? release_documentation.delete()
             try documentation.copy(into: .init(".release/homebrew-abrarion"))
             
             let readme = STFile("./README.md")
