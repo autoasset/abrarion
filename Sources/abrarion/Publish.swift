@@ -37,8 +37,15 @@ struct Publish: AsyncParsableCommand {
                                                         repository: "git@github.com:autoasset/homebrew-abrarion.git",
                                                         directory: ".release/homebrew-abrarion")
             try STFile(".release/homebrew-abrarion/Formula/abrarion.rb").overlay(with: forual.data(using: .utf8))
+            
+            let documentation = STFolder("Documentation")
+            let release_documentation = STFolder(".release/homebrew-abrarion/Documentation")
+            _ = try? release.delete()
+            try documentation.copy(into: .init(".release/homebrew-abrarion"))
+            
             let readme = STFile("./README.md")
             try readme.replace(.init(".release/homebrew-abrarion/README.md"))
+            
             try await repository.add([], paths: ["."])
             try await repository.commit([.message(version)])
             try await repository.push([], refspecs: [])

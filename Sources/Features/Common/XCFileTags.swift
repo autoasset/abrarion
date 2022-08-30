@@ -43,7 +43,7 @@ public struct XCFileTags {
         let substitute: Substitute
         let patterns: [NSRegularExpression]
         let inputs: [String]
-
+        
         init(from json: JSON, variables: VariablesManager) async throws {
             self.inputs = try await parseStringList(from: json["inputs"], variables: variables)
             let name = try await variables.parse(json["name"].stringValue)
@@ -74,15 +74,14 @@ public struct XCFileTags {
             guard !tags.isEmpty else {
                 throw StemError("XCFileTags: \(name) tags 缺失")
             }
-
-            if self.patterns.isEmpty {
-                self.kind = .and
-            } else if let kind = Kind(rawValue: try await variables.parse(json["kind"].stringValue)) {
+            
+            if let kind = Kind(rawValue: try await variables.parse(json["kind"].stringValue)) {
                 self.kind = kind
+            } else if self.patterns.isEmpty {
+                self.kind = .and
             } else {
                 throw StemError("XCFileTags: \(name) kind 缺失")
             }
-            
         }
     }
     
