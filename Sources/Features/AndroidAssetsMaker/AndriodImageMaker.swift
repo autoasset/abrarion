@@ -48,7 +48,7 @@ struct AndriodImagesMaker: MissionInstance, XCMaker {
             }
             self.output_resources_path = STFolder(try await variables.parse(json["output_resources_path"].stringValue))
             self.substitute_inputs = try await json["substitute_inputs"].arrayValue.asyncMap({ json in
-               try await SubstituteInput(from: json, variables: variables)
+                try await SubstituteInput(from: json, variables: variables)
             })
         }
     }
@@ -61,27 +61,36 @@ struct AndriodImagesMaker: MissionInstance, XCMaker {
         let options = try await Options(from: json, variables: context.variables)
         let manager = try await XCInputFileManager(options.inputs)
         let vaild_files = try await manager.vaild_files()
-     
+        
         let images = options.output_resources_path
-        try XCImageMark.marked(vaild_files).forEach { item in
+        let marked = XCImageMark.marked(vaild_files)
+        let maxScale = marked.keys.compactMap { kind -> Int? in
+            switch kind {
+            case .scale(let scale), .gif(let scale):
+                return scale
+            default:
+                return nil
+            }
+        }.max()
+        
+        try marked.forEach { item in
             let folder: STFolder
+            
             switch item.key {
             case .scale(let scale), .gif(let scale):
-                switch scale {
-                case 1:
-                    folder = images.folder(name: Density.mdpi.rawValue)
-                case 2:
-                    folder = images.folder(name: Density.xhdpi.rawValue)
-                case 3:
-                    folder = images.folder(name: Density.xxxhdpi.rawValue)
-                case 4:
-                    folder = images.folder(name: Density.xxxhdpi.rawValue)
-                default:
+                guard let density = self.density(from: scale) else {
                     return
                 }
+                folder = images.folder(name: density.rawValue)
             case .android_vector:
                 folder = images.folder(name: Density.drawable.rawValue)
-            case .unrecognisedScale, .unrecognisedGIFScale, .unknown, .vector:
+            case .unrecognisedGIFScale:
+                guard let scale = maxScale else {
+                    return
+                }
+                let density = self.density(from: scale) ?? .xxhdpi
+                folder = images.folder(name: density.rawValue)
+            case .unrecognisedScale, .unknown, .vector:
                 return
             }
             _ = try? folder.create()
@@ -119,4 +128,15 @@ struct AndriodImagesMaker: MissionInstance, XCMaker {
             
         }
     }
+    
+    private func density(from scale: Int) -> Density? {
+        switch scale {
+        case 1:  return .mdpi
+        case 2:  return .xhdpi
+        case 3:  return .xxhdpi
+        case 4:  return .xxxhdpi
+        default: return nil
+        }
+    }
+    
 }

@@ -40,15 +40,35 @@ public struct FlutterImageMaker: MissionInstance, XCMaker {
         let vaild_files = try await XCInputFileManager(options.inputs).vaild_files()
                 
         let images = options.output_resources_path.folder(name: "images")
-        try XCImageMark.marked(vaild_files).forEach { item in
+        
+        let marked = XCImageMark.marked(vaild_files)
+        let maxScale = marked.keys.compactMap { kind -> Int? in
+            switch kind {
+            case .scale(let scale), .gif(let scale):
+                return scale
+            default:
+                return nil
+            }
+        }.max()
+        
+       try marked.forEach { item in
             switch item.key {
             case .scale(let scale), .gif(let scale):
-                let folder = images.folder(name: "\(scale).0x")
+                let folder = images.folder(name: density(from: scale))
                 _ = try? folder.create()
                 try item.value.forEach { file in
                     try file.replace(folder.file(name: XCImageMark.filename(noScaleFactor: file)))
                 }
-            case .android_vector, .vector, .unrecognisedGIFScale, .unrecognisedScale, .unknown:
+            case .unrecognisedGIFScale:
+                guard let scale = maxScale else {
+                    return
+                }
+                let folder = images.folder(name: self.density(from: scale))
+                _ = try? folder.create()
+                try item.value.forEach { file in
+                    try file.replace(folder.file(name: XCImageMark.filename(noScaleFactor: file)))
+                }
+            case .android_vector, .vector, .unrecognisedScale, .unknown:
                 break
             }
         }
@@ -76,4 +96,8 @@ public struct FlutterImageMaker: MissionInstance, XCMaker {
         try options.template.output?.overlay(with: code.data(using: .utf8))
     }
     
+    private func density(from scale: Int) -> String {
+        return "\(scale).0x"
+    }
+
 }
