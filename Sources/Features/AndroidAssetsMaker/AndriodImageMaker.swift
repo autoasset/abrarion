@@ -21,7 +21,7 @@ struct AndriodImagesMaker: MissionInstance, XCMaker {
         case xxxhdpi  = "drawable-xxxhdpi"
     }
     
-    struct SubstituteInput {
+    struct CustomInput {
         let density: Density
         let tags: [String]
         
@@ -39,7 +39,8 @@ struct AndriodImagesMaker: MissionInstance, XCMaker {
         
         let output_resources_path: STFolder
         let inputs: XCInputsOptions
-        let substitute_inputs: [SubstituteInput]
+        let substitute_inputs: [CustomInput]
+        let custom_inputs: [CustomInput]
         
         public init(from json: JSON, variables: VariablesManager) async throws {
             self.inputs = try await XCInputsOptions(from: json, variables: variables)
@@ -48,7 +49,10 @@ struct AndriodImagesMaker: MissionInstance, XCMaker {
             }
             self.output_resources_path = STFolder(try await variables.parse(json["output_resources_path"].stringValue))
             self.substitute_inputs = try await json["substitute_inputs"].arrayValue.asyncMap({ json in
-                try await SubstituteInput(from: json, variables: variables)
+                try await CustomInput(from: json, variables: variables)
+            })
+            self.custom_inputs = try await json["custom_inputs"].arrayValue.asyncMap({ json in
+                try await CustomInput(from: json, variables: variables)
             })
         }
     }
@@ -59,6 +63,7 @@ struct AndriodImagesMaker: MissionInstance, XCMaker {
     
     public func evaluate(from json: JSON, context: MissionContext) async throws {
         let options = try await Options(from: json, variables: context.variables)
+        
         let manager = try await XCInputFileManager(options.inputs)
         let vaild_files = try await manager.vaild_files()
         
@@ -93,10 +98,7 @@ struct AndriodImagesMaker: MissionInstance, XCMaker {
             case .unrecognisedScale, .unknown, .vector:
                 return
             }
-            _ = try? folder.create()
-            try item.value.forEach { file in
-                try file.replace(folder.file(name: XCImageMark.filename(noScaleFactor: file)))
-            }
+            try self.custom_replace(item.value, into: folder)
         }
         
         try await options.substitute_inputs.asyncForEach { input in
@@ -105,37 +107,86 @@ struct AndriodImagesMaker: MissionInstance, XCMaker {
                 return
             }
             let folder = images.folder(name: input.density.rawValue)
-            _ = try? folder.create()
-            
-            /// 处理 .9 图
-            let namesList = try folder
-                .allSubFilePaths()
-                .compactMap(\.asFile)
-                .map(\.attributes.name)
-                .compactMap({ $0.split(separator: ".").first })
-            let namesSet = Set(namesList)
-            
-            try files.filter { file in
-                if !file.attributes.name.hasPrefix("."),
-                   let name = file.attributes.name.split(separator: ".").first {
-                    return !namesSet.contains(name)
-                } else {
-                    return false
-                }
-            }.forEach { file in
-                try file.copy(into: folder)
+            try self.substitute_replace(.init(files), into: folder)
+        }
+        
+        try await options.custom_inputs.asyncForEach { input in
+            let files = try await manager.files(tags: input.tags)
+            guard files.isEmpty == false else {
+                return
             }
-            
+            let folder = images.folder(name: input.density.rawValue)
+            try self.custom_replace(.init(files), into: folder)
         }
     }
     
-    private func density(from scale: Int) -> Density? {
+}
+
+
+private extension AndriodImagesMaker {
+    
+    func density(from scale: Int) -> Density? {
         switch scale {
         case 1:  return .mdpi
         case 2:  return .xhdpi
         case 3:  return .xxhdpi
         case 4:  return .xxxhdpi
         default: return nil
+        }
+    }
+    
+    
+    func android_filename(_ file: STFile) -> String {
+        let name = XCImageMark.filename(noScaleFactor: file)
+        if name.contains(".9") {
+            return name.replacingOccurrences(of: ".9", with: "")
+        } else {
+            return name
+        }
+    }
+    
+    func substitute_replace(_ files: Set<STFile>, into folder: STFolder) throws {
+        _ = try? folder.create()
+
+        let currentFiles = try folder
+            .subFilePaths()
+            .compactMap(\.asFile)
+        
+        var store: [String: STFile] = [:]
+        
+        for file in currentFiles {
+            store[android_filename(file)] = file
+        }
+        
+        for file in files {
+            if store[android_filename(file)] != nil {
+                continue
+            }
+            
+            let to = folder.file(name: XCImageMark.filename(noScaleFactor: file))
+            try file.replace(to)
+        }
+    }
+    
+    func custom_replace(_ files: Set<STFile>, into folder: STFolder) throws {
+        _ = try? folder.create()
+
+        let currentFiles = try folder
+            .subFilePaths()
+            .compactMap(\.asFile)
+        
+        var store: [String: STFile] = [:]
+        
+        for file in currentFiles {
+            store[android_filename(file)] = file
+        }
+        
+        for file in files {
+            if let current = store[android_filename(file)] {
+                try current.delete()
+            }
+            let to = folder.file(name: XCImageMark.filename(noScaleFactor: file))
+            try file.replace(to)
         }
     }
     
