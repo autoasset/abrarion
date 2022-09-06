@@ -11,10 +11,8 @@ let package = Package(
         .package(url: "https://github.com/JohnSundell/CollectionConcurrencyKit", .upToNextMajor(from: "0.2.0")),
         .package(url: "https://github.com/apple/swift-log", .upToNextMajor(from: "1.4.2")),
         .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMajor(from: "1.1.3")),
-        .package(url: "https://github.com/linhay/swift-git", branch: "main"),
-        // .package(url: "https://github.com/linhay/Stem", branch: "master"),
-        // .package(path: "../swift-git"),
-         .package(path: "../Stem"),
+        .package(url: "https://github.com/linhay/swift-git", .upToNextMajor(from: "1.1.0")),
+        .package(url: "https://github.com/linhay/Stem", .upToNextMajor(from: "1.1.3")),
     ],
     targets: [
         .target(name: "Features",
