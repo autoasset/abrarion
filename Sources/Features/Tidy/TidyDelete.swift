@@ -33,11 +33,11 @@ public struct TidyDelete: MissionInstance {
             switch input.referenceType {
             case .file(let file):
                 try file.delete()
-                logger?.info(.init(stringLiteral: context.relativePath(file)))
+                logger?.info(.init(stringLiteral: file.relativePath(from: AppInfo.shared.pwd)))
             case .folder(let folder):
                 if options.filter_patterns.isEmpty {
                     try folder.delete()
-                    logger?.info(.init(stringLiteral: context.relativePath(folder)))
+                    logger?.info(.init(stringLiteral: folder.relativePath(from: AppInfo.shared.pwd)))
                 } else {
                     for path in try folder.subFilePaths() {
                         let name  = path.attributes.name
@@ -50,7 +50,7 @@ public struct TidyDelete: MissionInstance {
                         }
                         if flag {
                             try path.delete()
-                            logger?.info(.init(stringLiteral: context.relativePath(path)))
+                            logger?.info(.init(stringLiteral: path.relativePath(from: AppInfo.shared.pwd)))
                         }
                     }
                 }

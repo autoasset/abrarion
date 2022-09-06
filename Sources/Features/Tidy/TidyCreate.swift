@@ -36,7 +36,7 @@ public struct TidyCreate: MissionInstance {
     
     public func evaluate(from json: JSON, context: MissionContext) async throws {
         let options = try await Options(from: json, variables: context.variables)
-        logger?.info(.init(stringLiteral: context.relativePath(options.output)))
+        logger?.info(.init(stringLiteral: options.output.relativePath(from: AppInfo.shared.pwd)))
         let data: Data?
         switch options.input {
         case .input(let file):

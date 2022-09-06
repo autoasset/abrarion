@@ -34,7 +34,7 @@ public struct TidyCopy: MissionInstance {
     
     public func evaluate(from json: JSON, context: MissionContext) async throws {
         let options = try await Options(from: json, variables: context.variables)
-        logger?.info(.init(stringLiteral: context.relativePath(options.output)))
+        logger?.info(.init(stringLiteral: options.output.relativePath(from: AppInfo.shared.pwd)))
         for input in options.inputs {
             switch input.referenceType {
             case .file(let file):

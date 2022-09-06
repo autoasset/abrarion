@@ -6,8 +6,11 @@
 //
 
 import Foundation
+import StemFilePath
 
 public struct AppInfo {
     public static let shared = AppInfo()
+    
+    public let pwd = STFolder("./")
     public let version = "0.0.31"
 }

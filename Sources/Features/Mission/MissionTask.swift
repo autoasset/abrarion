@@ -122,9 +122,10 @@ public struct MissionTask: MissionInstance {
         
         if let file = options.config_file {
             if let environment = options.environment_file {
-                logger?.info(.init(stringLiteral: "config: \(context.relativePath(file)), environment: \(context.relativePath(environment))"))
+                
+                logger?.info(.init(stringLiteral: "config: \(file.relativePath(from: AppInfo.shared.pwd)), environment: \(environment.relativePath(from: AppInfo.shared.pwd))"))
             } else {
-                logger?.info(.init(stringLiteral: context.relativePath(file)))
+                logger?.info(.init(stringLiteral: file.relativePath(from: AppInfo.shared.pwd)))
             }
         }
         
