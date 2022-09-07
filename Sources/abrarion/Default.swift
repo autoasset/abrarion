@@ -19,14 +19,14 @@ struct Default: AsyncParsableCommand {
     static var configuration: CommandConfiguration = .init(subcommands: [Publish.self])
     
     @Option(help: "任务流 yaml 文件路径",
-              completion: .file(),
-              transform: URL.init(fileURLWithPath:))
+            completion: .file(),
+            transform: URL.init(fileURLWithPath:))
     var config: URL
     
     @Option(help: "外置环境变量 yaml 文件路径",
-              completion: .file(),
-              transform: URL.init(fileURLWithPath:))
-    var environment: URL?
+            completion: .file(),
+            transform: URL.init(fileURLWithPath:))
+    var environment: [URL]
     
     func run() async throws {
         Git._shared = try Git(environment: .init(type: .system))
@@ -36,7 +36,8 @@ struct Default: AsyncParsableCommand {
             try await context.variables.register(SystemVariables.variables())
             var task = MissionTask()
             task.logger = .init(label: "mission")
-            let json = ["config": config.absoluteString, "environment": environment?.absoluteString].compactMapValues({ $0 })
+            let json: [String: Any] = ["config": config.absoluteString,
+                                       "environment": environment.map(\.absoluteString)]
             try await task.evaluate(from: JSON(json), context: context)
             try XCReport.shared.finish()
         } catch {

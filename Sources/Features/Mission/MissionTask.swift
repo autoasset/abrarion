@@ -18,7 +18,7 @@ public struct MissionTask: MissionInstance {
     public struct Options {
         
         var config_file: STFile?
-        var environment_file: STFile?
+        var environment_file: [STFile]?
         
         var config: JSON
         var environment: [Variables]
@@ -33,50 +33,74 @@ public struct MissionTask: MissionInstance {
                  let text = String(data: data, encoding: .utf8),
                  let yaml = try Yams.load(yaml: text) else {
                 throw StemError(message: "mission yaml 文件解析错误")
-
             }
             return JSON(yaml)
         }
         
-        static func environment(from dict: [String: JSON]) throws -> [Variables] {
-            return dict
-                .compactMapValues(\.string)
-                .map({ Variables(key: $0.key, value: $0.value) })
-        }
         
         public init(from json: JSON, variables: VariablesManager) async throws {
-            if let config = json["config"].string {
-                
-                let config_file = try await STFile(variables.parse(config))
-                let config_json = try Self.json(fromYaml: config_file)
-                
-                if let environment = json["environment"].string {
-                    
-                    let environment_file  = try await STFile(variables.parse(environment))
-                    let environment_json  = try Self.json(fromYaml: environment_file).dictionaryValue
-                    let environment_value = try Self.environment(from: environment_json)
-                    
-                     self.init(config: config_json, environment: environment_value)
-                    self.environment_file = environment_file
+            
+            func environment(from dict: [String: JSON]) throws -> [Variables] {
+                return dict
+                    .compactMapValues(\.string)
+                    .map({ Variables(key: $0.key, value: $0.value) })
+            }
+            
+            func pluralVariablesFile(json: JSON) async throws -> [STFile]? {
+                let array: [String]
+                if let item = json.array?.compactMap(\.string) {
+                    array = item
+                } else if let item = json.string {
+                    array = [item]
                 } else {
-                    self.init(config: config_json, environment: try Self.environment(from: json["environment"].dictionaryValue))
+                    return nil
                 }
-                self.config_file = config_file
-            } else {
-                let config = json["config"]
-                
-                if let environment = json["environment"].string {
-                    
-                    let environment_file  = try await STFile(variables.parse(environment))
-                    let environment_json  = try Self.json(fromYaml: environment_file).dictionaryValue
-                    let environment_value = try Self.environment(from: environment_json)
-                    
-                    self.init(config: config, environment: environment_value)
-                    self.environment_file = environment_file
-                } else {
-                    try self.init(config: config, environment: Self.environment(from: json["environment"].dictionaryValue))
+                return try await array.asyncMap { item in
+                    try await STFile(variables.parse(item))
                 }
             }
+            
+            func mergePluralFileVariables(_ files: [STFile]) async throws -> [Variables] {
+                var variableKeySet = Set<String>()
+                return try await files
+                    .asyncCompactMap { file -> [Variables] in
+                        let json = try Self.json(fromYaml: file).dictionaryValue
+                        return try environment(from: json)
+                    }
+                    .reversed()
+                    .flatMap({ $0 })
+                    .filter({ variableKeySet.insert($0.key).inserted })
+            }
+            
+            func mergeJsonVariables() throws -> [Variables] {
+                try environment(from: json["environment"].dictionaryValue)
+            }
+            
+            let config_json: JSON
+            let environment: [Variables]
+            let config_file: STFile?
+            let environment_file: [STFile]?
+
+            if let config = json["config"].string {
+                let file = try await STFile(variables.parse(config))
+                config_json = try Self.json(fromYaml: file)
+                config_file = file
+            } else {
+                config_json = json["config"]
+                config_file = nil
+            }
+            
+            if let files = try await pluralVariablesFile(json: json["environment"]) {
+                environment_file = files
+                environment = try await mergePluralFileVariables(files)
+            } else {
+                environment_file = nil
+                environment = try mergeJsonVariables()
+            }
+            
+            self.init(config: config_json, environment: environment)
+            self.config_file = config_file
+            self.environment_file = environment_file
         }
         
     }
@@ -122,8 +146,10 @@ public struct MissionTask: MissionInstance {
         
         if let file = options.config_file {
             if let environment = options.environment_file {
-                
-                logger?.info(.init(stringLiteral: "config: \(file.relativePath(from: AppInfo.shared.pwd)), environment: \(environment.relativePath(from: AppInfo.shared.pwd))"))
+                let env_paths = environment.map { file in
+                    file.relativePath(from: AppInfo.shared.pwd)
+                }.joined(separator: "  ")
+                logger?.info(.init(stringLiteral: "config: \(file.relativePath(from: AppInfo.shared.pwd)), environment: \(env_paths)"))
             } else {
                 logger?.info(.init(stringLiteral: file.relativePath(from: AppInfo.shared.pwd)))
             }
