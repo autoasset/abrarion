@@ -122,6 +122,7 @@ public struct MissionTask: MissionInstance {
         missionManager.register(FlutterImageMaker(), for: "flutter_images")
         missionManager.register(AndriodColorMaker(), for: "android_colors")
         missionManager.register(AndriodImagesMaker(), for: "android_images")
+        missionManager.register(AndroidNightImageOrganization(), for: "android_night_images_organization")
         missionManager.register(CustomVariables(), for: "variables")
         missionManager.register(Cocoapods(), for: "cocoapods_push")
         missionManager.register(Shell(), for: "shell")

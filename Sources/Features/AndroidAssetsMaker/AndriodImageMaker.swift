@@ -11,23 +11,13 @@ import StemFilePath
 
 struct AndriodImagesMaker: MissionInstance, XCMaker {
     
-    enum Density: String {
-        case drawable = "drawable"
-        case ldpi     = "drawable-ldpi"
-        case mdpi     = "drawable-mdpi"
-        case hdpi     = "drawable-hdpi"
-        case xhdpi    = "drawable-xhdpi"
-        case xxhdpi   = "drawable-xxhdpi"
-        case xxxhdpi  = "drawable-xxxhdpi"
-    }
-    
     struct CustomInput {
-        let density: Density
+        let density: AndriodDensity
         let tags: [String]
         
         public init(from json: JSON, variables: VariablesManager) async throws {
             let densityValue = try await variables.parse(json["density"].stringValue)
-            guard let density = Density(rawValue: densityValue) else {
+            guard let density = AndriodDensity(rawValue: densityValue) else {
                 throw StemError("android density error: \(densityValue)")
             }
             self.tags = try await variables.parse(json["tags"].stringArrayValue)
@@ -55,6 +45,7 @@ struct AndriodImagesMaker: MissionInstance, XCMaker {
                 try await CustomInput(from: json, variables: variables)
             })
         }
+        
     }
     
     public var logger: Logger?
@@ -79,26 +70,24 @@ struct AndriodImagesMaker: MissionInstance, XCMaker {
         }.max()
         
         try marked.forEach { item in
-            let folder: STFolder
-            
+            let density: AndriodDensity
             switch item.key {
             case .scale(let scale), .gif(let scale):
-                guard let density = self.density(from: scale) else {
+                guard let temp = self.density(from: scale) else {
                     return
                 }
-                folder = images.folder(name: density.rawValue)
+                density = temp
             case .android_vector:
-                folder = images.folder(name: Density.drawable.rawValue)
+                density = .drawable
             case .unrecognisedGIFScale:
                 guard let scale = maxScale else {
                     return
                 }
-                let density = self.density(from: scale) ?? .xxhdpi
-                folder = images.folder(name: density.rawValue)
+                density = self.density(from: scale) ?? .xxhdpi
             case .unrecognisedScale, .unknown, .vector:
                 return
             }
-            try self.custom_replace(item.value, into: folder)
+            try self.custom_replace(item.value, density: density, src: images, isReplace: true)
         }
         
         try await options.substitute_inputs.asyncForEach { input in
@@ -106,8 +95,7 @@ struct AndriodImagesMaker: MissionInstance, XCMaker {
             guard files.isEmpty == false else {
                 return
             }
-            let folder = images.folder(name: input.density.rawValue)
-            try self.substitute_replace(.init(files), into: folder)
+            try self.custom_replace(.init(files), density: input.density, src: images, isReplace: false)
         }
         
         try await options.custom_inputs.asyncForEach { input in
@@ -115,8 +103,7 @@ struct AndriodImagesMaker: MissionInstance, XCMaker {
             guard files.isEmpty == false else {
                 return
             }
-            let folder = images.folder(name: input.density.rawValue)
-            try self.custom_replace(.init(files), into: folder)
+            try self.custom_replace(.init(files), density: input.density, src: images, isReplace: true)
         }
     }
     
@@ -125,7 +112,7 @@ struct AndriodImagesMaker: MissionInstance, XCMaker {
 
 private extension AndriodImagesMaker {
     
-    func density(from scale: Int) -> Density? {
+    func density(from scale: Int) -> AndriodDensity? {
         switch scale {
         case 1:  return .mdpi
         case 2:  return .xhdpi
@@ -145,30 +132,11 @@ private extension AndriodImagesMaker {
         }
     }
     
-    func substitute_replace(_ files: Set<STFile>, into folder: STFolder) throws {
-        _ = try? folder.create()
-
-        let currentFiles = try folder
-            .subFilePaths()
-            .compactMap(\.asFile)
-        
-        var store: [String: STFile] = [:]
-        
-        for file in currentFiles {
-            store[android_filename(file)] = file
-        }
-        
-        for file in files {
-            if store[android_filename(file)] != nil {
-                continue
-            }
-            
-            let to = folder.file(name: XCImageMark.filename(noScaleFactor: file))
-            try file.replace(to)
-        }
-    }
-    
-    func custom_replace(_ files: Set<STFile>, into folder: STFolder) throws {
+    func custom_replace(_ files: Set<STFile>,
+                        density: AndriodDensity,
+                        src: STFolder,
+                        isReplace: Bool) throws {
+        let folder = src.folder(name: density.rawValue)
         _ = try? folder.create()
 
         let currentFiles = try folder
@@ -183,7 +151,11 @@ private extension AndriodImagesMaker {
         
         for file in files {
             if let current = store[android_filename(file)] {
-                try current.delete()
+                if isReplace {
+                    try current.delete()
+                } else {
+                    continue
+                }
             }
             let to = folder.file(name: XCImageMark.filename(noScaleFactor: file))
             try file.replace(to)
