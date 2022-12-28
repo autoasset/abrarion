@@ -13,15 +13,19 @@ import Stem
 public struct AndroidNightImageOrganization: MissionInstance {
     
     public struct Options {
+        /// 是否启用
+        let enable: Bool
         let output_resources_path: STFolder
         /// 是否移除孤儿文件, a.png 与 a_dark.png 必须成对出现, 否则 a_dark.png 将被删除
-        let isRemoveOrphanFile: Bool
+        let is_remove_orphan_file: Bool
         public init(from json: JSON, variables: VariablesManager) async throws {
             guard json["output_resources_path"].isExists else {
                 throw StemError("AndroidNightImageOrganization: 未包含必要参数 output_resources_path")
             }
+        
             self.output_resources_path = try await STFolder(variables.parse(json["output_resources_path"].stringValue))
-            self.isRemoveOrphanFile = try await JSON(variables.parse(json["is_remove_orphan_file"].stringValue)).bool ?? true
+            self.is_remove_orphan_file = try await JSON(variables.parse(json["is_remove_orphan_file"].stringValue)).bool ?? true
+            self.enable = try await JSON(variables.parse(json["enable"].stringValue)).bool ?? true
         }
     }
     
@@ -31,6 +35,9 @@ public struct AndroidNightImageOrganization: MissionInstance {
     
     public func evaluate(from json: JSON, context: MissionContext) async throws {
         let options = try await Options(from: json, variables: context.variables)
+        guard options.enable else {
+            return
+        }
         let src = options.output_resources_path
 
         let label = "_dark."
@@ -50,7 +57,7 @@ public struct AndroidNightImageOrganization: MissionInstance {
             /// a.png 与 a_dark.png 必须成对出现, 否则 a_dark.png 将被删除
             for file in dark_files {
                 if !light_folder.file(name: file.attributes.name.replacingOccurrences(of: label, with: ".")).isExist {
-                    if options.isRemoveOrphanFile {
+                    if options.is_remove_orphan_file {
                         try? file.delete()
                     }
                     darkSet.remove(file)
