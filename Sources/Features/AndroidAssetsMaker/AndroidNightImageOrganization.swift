@@ -24,8 +24,8 @@ public struct AndroidNightImageOrganization: MissionInstance {
             }
         
             self.output_resources_path = try await STFolder(variables.parse(json["output_resources_path"].stringValue))
-            self.is_remove_orphan_file = try await JSON(variables.parse(json["is_remove_orphan_file"].stringValue)).bool ?? true
-            self.enable = try await JSON(variables.parse(json["enable"].stringValue)).bool ?? true
+            self.is_remove_orphan_file = try await variables.parse(json: json["is_remove_orphan_file"]) ?? true
+            self.enable = try await variables.parse(json: json["enable"]) ?? true
         }
     }
     

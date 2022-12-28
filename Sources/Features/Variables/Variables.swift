@@ -7,6 +7,7 @@
 
 import Foundation
 import Logging
+import Stem
 
 public protocol VariablesProtocol {
     var key: String { get }
@@ -59,6 +60,24 @@ public class VariablesManager {
     
     public func register(_ variables: Dictionary<String, Variables>.Values) {
         variables.forEach({ register($0) })
+    }
+    
+    public func parse(json: JSON) async throws -> Bool? {
+        if let bool = json.bool {
+            return bool
+        }
+        
+        guard let str = json.string else {
+            return nil
+        }
+        
+        let value = try await parse(str)
+        
+        switch value.lowercased() {
+        case "yes", "true": return true
+        case "no", "false": return false
+        default: return nil
+        }
     }
     
     /// 解析带变量的文本

@@ -28,10 +28,10 @@ public struct MissionTask: MissionInstance {
             self.environment = environment
         }
         
-       static func json(fromYaml file: STFile) throws -> JSON {
-           guard let data = try? file.data(),
-                 let text = String(data: data, encoding: .utf8),
-                 let yaml = try Yams.load(yaml: text) else {
+        static func json(fromYaml file: STFile) throws -> JSON {
+            guard let data = try? file.data(),
+                  let text = String(data: data, encoding: .utf8),
+                  let yaml = try Yams.load(yaml: text) else {
                 throw StemError(message: "mission yaml 文件解析错误")
             }
             return JSON(yaml)
@@ -41,8 +41,14 @@ public struct MissionTask: MissionInstance {
         public init(from json: JSON, variables: VariablesManager) async throws {
             
             func environment(from dict: [String: JSON]) throws -> [Variables] {
-                return dict
-                    .compactMapValues(\.string)
+                dict
+                    .compactMapValues({ json -> String? in
+                        if let bool = json.bool {
+                            return bool ? "true" : "false"
+                        } else {
+                            return json.string
+                        }
+                    })
                     .map({ Variables(key: $0.key, value: $0.value) })
             }
             
@@ -80,7 +86,7 @@ public struct MissionTask: MissionInstance {
             let environment: [Variables]
             let config_file: STFile?
             let environment_file: [STFile]?
-
+            
             if let config = json["config"].string {
                 let file = try await STFile(variables.parse(config))
                 config_json = try Self.json(fromYaml: file)
