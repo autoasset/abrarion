@@ -48,7 +48,7 @@ struct Publish: AsyncParsableCommand {
             
             try await repository.add([], paths: ["."])
             try await repository.commit([.message(version)])
-            try await repository.push([], refspecs: [])
+            _ = try? await repository.push([], refspecs: [])
             _ = try? await repository.tag([.delete], tagname: version)
             _ = try? await repository.push.delete(.tag(.init(version)))
             try await repository.tag([], tagname: version)
