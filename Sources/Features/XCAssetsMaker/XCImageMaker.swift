@@ -17,6 +17,7 @@ public struct XCImageMaker: MissionInstance, XCMaker {
     public struct JSONModeOptions {
         fileprivate let template: XCCodeOptions?
         fileprivate let vector_template: XCCodeOptions?
+        fileprivate let vector_render_as: XCImageRenderAs?
         /// 依赖代码输出文件夹位置
         fileprivate let template_dependent_output: String
         fileprivate let contents: [String]
@@ -25,6 +26,7 @@ public struct XCImageMaker: MissionInstance, XCMaker {
 
         public init(from json: JSON, variables: VariablesManager) async throws {
             self.inputs   = try await XCInputsOptions(from: json, variables: variables)
+            self.vector_render_as = .init(rawValue: try await variables.parse(json["vector_render_as"].stringValue))
             self.template = try await .init(from: json["template"], default: .init(type: "Image"), variables: variables)
             self.contents = try await variables.parse(json["contents"].stringArrayValue)
             self.output   = try await variables.parse(json["output"].stringValue)
@@ -71,9 +73,9 @@ public struct XCImageMaker: MissionInstance, XCMaker {
             .map({ item -> AssetsRecord in
                 if let content = contents[item.key] {
                     usedContents.update(with: content.file)
-                    return AssetsRecord(name: item.key, images: item.value, contents: content)
+                    return AssetsRecord(name: item.key, images: item.value, contents: content, options: options)
                 } else {
-                    return AssetsRecord(name: item.key, images: item.value, contents: nil)
+                    return AssetsRecord(name: item.key, images: item.value, contents: nil, options: options)
                 }
             })
             .map(XCReport.shared.vaild(_:))
@@ -116,6 +118,7 @@ extension XCImageMaker {
         let name: String
         let images: [ImageRecord]
         let contents: Content?
+        let options: JSONModeOptions
         
         func asset() -> XCAsset<XCImage>? {
             if let contents = contents {
@@ -141,15 +144,21 @@ extension XCImageMaker {
             }
             
             if let images = renderDict[.template] {
-                return .init(contents: images.map(\.image), properties: .init(renderAs: .template, preservesVectorRepresentation: true))
+                return .init(contents: images.map(\.image),
+                             properties: .init(renderAs: options.vector_render_as ?? .template,
+                                               preservesVectorRepresentation: true))
             }
             
             if let images = renderDict[.original] {
-                return .init(contents: images.map(\.image), properties: .init(renderAs: .original, preservesVectorRepresentation: false))
+                return .init(contents: images.map(\.image), 
+                             properties: .init(renderAs: .original,
+                                               preservesVectorRepresentation: false))
             }
             
             if let images = renderDict[.default] {
-                return .init(contents: images.map(\.image), properties: .init(renderAs: .default, preservesVectorRepresentation: false))
+                return .init(contents: images.map(\.image),
+                             properties: .init(renderAs: .default,
+                                               preservesVectorRepresentation: false))
             }
             
             return nil

@@ -7,10 +7,10 @@ let package = Package(
     name: "abrarion",
     platforms: [.macOS(.v12)],
     dependencies: [
-        .package(url: "https://github.com/jpsim/Yams.git", .upToNextMajor(from: "5.0.1")),
+        .package(url: "https://github.com/jpsim/Yams.git", .upToNextMajor(from: "5.0.6")),
         .package(url: "https://github.com/JohnSundell/CollectionConcurrencyKit", .upToNextMajor(from: "0.2.0")),
-        .package(url: "https://github.com/apple/swift-log", .upToNextMajor(from: "1.4.2")),
-        .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMajor(from: "1.1.3")),
+        .package(url: "https://github.com/apple/swift-log", .upToNextMajor(from: "1.5.3")),
+        .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMajor(from: "1.2.3")),
         .package(url: "https://github.com/linhay/swift-git", .upToNextMajor(from: "1.1.0")),
         .package(url: "https://github.com/linhay/Stem", .upToNextMajor(from: "1.1.3")),
     ],
