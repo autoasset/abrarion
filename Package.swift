@@ -13,10 +13,12 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMajor(from: "1.2.3")),
         .package(url: "https://github.com/linhay/swift-git", .upToNextMajor(from: "1.1.0")),
         .package(url: "https://github.com/linhay/Stem", .upToNextMajor(from: "1.1.3")),
+        .package(url: "https://github.com/scinfu/SwiftSoup", .upToNextMajor(from: "2.6.0"))
     ],
     targets: [
         .target(name: "Features",
                 dependencies: [
+                    "SwiftSoup",
                     .product(name: "Logging", package: "swift-log"),
                     .product(name: "SwiftGit", package: "swift-git"),
                     .product(name: "Stem", package: "Stem"),
@@ -28,6 +30,7 @@ let package = Package(
             name: "abrarion",
             dependencies: [
                 "Features",
+                "SwiftSoup",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "Yams", package: "Yams")
             ]),

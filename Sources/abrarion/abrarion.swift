@@ -10,7 +10,8 @@ struct Abrarion: AsyncParsableCommand {
                                                            version: AppInfo.shared.version,
                                                            subcommands: [Default.self,
                                                                          VariablesCommand.self,
-                                                                         Publish.self],
+                                                                         Publish.self,
+                                                                         VectorDrawableToSVG.self],
                                                            defaultSubcommand: Default.self)
     
     func run() async throws { }
