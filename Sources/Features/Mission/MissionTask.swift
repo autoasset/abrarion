@@ -135,6 +135,7 @@ public struct MissionTask: MissionInstance {
         missionManager.register(TidyDelete(), for: "tidy_delete")
         missionManager.register(TidyCreate(), for: "tidy_create")
         missionManager.register(TidyCopy(), for: "tidy_copy")
+        missionManager.register(TidySize(), for: "tidy_size")
         missionManager.register(XCColorMaker(), for: "xcassets_colors")
         missionManager.register(XCImageMaker(), for: "xcassets_images")
         missionManager.register(XCIconFontMaker(), for: "xcassets_iconfonts")
