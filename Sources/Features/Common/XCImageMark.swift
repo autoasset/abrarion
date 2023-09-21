@@ -58,7 +58,7 @@ struct XCImageMark {
             return .gif(scale)
         case .pdf:
             return .vector
-        case .png, .jpeg:
+        case .png, .jpeg, .webp:
             guard let str = file.attributes.nameComponents.name.split(separator: "@").last?.dropLast().description,
                   let scale = Int(str) else {
                 return .unrecognisedScale
