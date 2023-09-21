@@ -120,6 +120,7 @@ public struct MissionTask: MissionInstance {
     func missionManger() -> MissionManager {
         let missionManager = MissionManager()
         missionManager.register(XCReport.shared, for: "report")
+        missionManager.register(KhalaReportInspection(), for: "khala_report_inspection")
         missionManager.register(PrintVariables(), for: "print_variables")
         missionManager.register(MissionTask(), for: "mission")
         missionManager.register(FlutterIconFontMaker(), for: "flutter_iconfont")
@@ -171,11 +172,12 @@ public struct MissionTask: MissionInstance {
                 throw error
             }
             Logger(label: "error").info(.init(stringLiteral: error.localizedDescription))
-            context.variables.register(.init(key: "error", value: error
+            context.variables.register(.init(key: "error", value: "\n" + error
                 .localizedDescription
                 .replacingOccurrences(of: "\'", with: "\"")
                 .split(separator: "\n")
-                .joined(separator: ";")))
+                .filter({ !$0.isEmpty })
+                .joined(separator: "\n")))
             let missionManager = missionManger()
             try await missionManager.run(from: .init(missions: on_error,
                                                      environment: .init(),
