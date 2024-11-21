@@ -1,6 +1,6 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by linhey on 2022/7/19.
 //
@@ -9,6 +9,7 @@ import Foundation
 import Stem
 import STJSON
 import Logging
+import STFilePath
 
 public struct Shell: MissionInstance {
     
@@ -33,17 +34,40 @@ public struct Shell: MissionInstance {
         }
     }
     
-    public init() {}
+    var environment: [String: String] = [:]
     
+    public init() async {
+        do {
+            let dict = try STFile("~/.abrarion/environment.txt").read()
+                .split(separator: "\n")
+                .compactMap { row -> (key: String, value: String)? in
+                    let list = row.split(separator: "=", maxSplits: 1)
+                    guard list.count == 2 else {
+                        return nil
+                    }
+                    return (list[0].description, list[1].description)
+                }.dictionary(key: \.key, value: \.value)
+            
+            var syncs = [String]()
+            if let value = try? STFile("~/.abrarion/sync-environment-keys.txt")
+                .read()
+                .split(separator: "\n")
+                .map(\.description) {
+                syncs = value
+            }
+            
+            for key in Set(["SSH_AUTH_SOCK"] + syncs) {
+                environment[key] = dict[key]
+            }
+        } catch {
+            
+        }
+    }
     
     public func evaluate(from json: JSON, context: MissionContext) async throws {
         let options  = try await Options(from: json, variables: context.variables)
         let commands = try await context.variables.parse(options.commands)
-        var context = StemShell.Context()
-#if arch(arm64)
-#elseif arch(x86_64)
-        context.environment = ProcessInfo.processInfo.environment
-#endif
+        let context = StemShell.Context(environment: self.environment.merging(options.environment, uniquingKeysWith: { $1 }))
         for command in commands {
             do {
                 logger?.info(.init(stringLiteral: command))

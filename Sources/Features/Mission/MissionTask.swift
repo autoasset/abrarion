@@ -120,7 +120,7 @@ public struct MissionTask: MissionInstance {
         
     }
     
-    func missionManger() -> MissionManager {
+    func missionManger() async -> MissionManager {
         let missionManager = MissionManager()
         missionManager.register(XCReport.shared, for: "report")
         missionManager.register(KhalaReportInspection(), for: "khala_report_inspection")
@@ -135,7 +135,7 @@ public struct MissionTask: MissionInstance {
         missionManager.register(AndroidNightImageOrganization(), for: "android_night_images_organization")
         missionManager.register(CustomVariables(), for: "variables")
         missionManager.register(Cocoapods(), for: "cocoapods_push")
-        missionManager.register(Shell(), for: "shell")
+        await missionManager.register(Shell(), for: "shell")
         missionManager.register(TidyDelete(), for: "tidy_delete")
         missionManager.register(TidyCreate(), for: "tidy_create")
         missionManager.register(TidyCopy(), for: "tidy_copy")
@@ -154,7 +154,7 @@ public struct MissionTask: MissionInstance {
         let context = MissionContext()
         context.variables.register(last_variables)
         context.variables.register(options.environment)
-        let missionManager = missionManger()
+        let missionManager = await missionManger()
         
         if let file = options.config_file {
             if let environment = options.environment_file {
@@ -181,7 +181,7 @@ public struct MissionTask: MissionInstance {
                 .split(separator: "\n")
                 .filter({ !$0.isEmpty })
                 .joined(separator: "\n")))
-            let missionManager = missionManger()
+            let missionManager = await missionManger()
             try await missionManager.run(from: .init(missions: on_error,
                                                      environment: .init(),
                                                      substitute_environment: .init()),
