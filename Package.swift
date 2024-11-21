@@ -5,18 +5,18 @@ import PackageDescription
 
 let package = Package(
     name: "abrarion",
-    platforms: [.macOS(.v12)],
+    platforms: [.macOS(.v13)],
     dependencies: [
-        .package(url: "git@github.com:linhay/STJSON.git", from: "1.1.4"),
+        .package(url: "https://github.com/linhay/STJSON.git", from: "1.1.4"),
         .package(url: "https://github.com/swhitty/SwiftDraw", from: "0.18.1"),
         .package(url: "https://github.com/jpsim/Yams.git", from: "5.1.3"),
         .package(url: "https://github.com/JohnSundell/CollectionConcurrencyKit", from: "0.2.0"),
-        .package(url: "git@github.com:apple/swift-log.git", from: "1.6.1"),
+        .package(url: "https://github.com/apple/swift-log.git", from: "1.6.1"),
         .package(url: "git@github.com:apple/swift-argument-parser.git", from: "1.5.0"),
         .package(url: "https://github.com/linhay/swift-git", from: "1.1.0"),
-        .package(url: "https://github.com/linhay/Stem", from: "2.0.1"),
+        .package(path: "/Users/linhey/Desktop/Stem"),
         .package(url: "https://github.com/linhay/STFilePath", from: "1.2.0"),
-        .package(url: "git@github.com:scinfu/SwiftSoup.git", from: "2.7.5")
+        .package(url: "https://github.com/scinfu/SwiftSoup.git", from: "2.7.5")
     ],
     targets: [
         .target(name: "Features",

@@ -13,9 +13,7 @@ import SwiftGit
 import Logging
 
 public class Cocoapods: MissionInstance {
-    
-    public var logger: Logger?
-    
+        
     public func evaluate(from json: JSON, context: MissionContext) async throws {
         var options = try await Options(from: json, variables: context.variables)
         options = try await localLint(options)
@@ -26,11 +24,11 @@ public class Cocoapods: MissionInstance {
             _ = try? await repository.tag([.delete], tagname: options.version)
             try await repository.tag([], tagname: options.version)
             try await repository.push.tag(options.version)
-            try trunkPush(options)
+            try await trunkPush(options)
         } catch {
             try await repository.push.delete(.tag(.init(options.version)))
             if let name = options.name {
-                _ = try? shell("cache clean \(name) --all")
+                _ = try? await shell("cache clean \(name) --all")
             }
             throw error
         }
@@ -52,7 +50,7 @@ public class Cocoapods: MissionInstance {
     func localLint(_ options: Options) async throws -> Options {
         /// 标准化 podspec 文件
         var options = options
-        let jsonPodspec = try validate(json: podspec(options), model: options)
+        let jsonPodspec = try await validate(json: podspec(options), model: options)
         var podspec = STFile(options.podspec_url)
         guard let folder = podspec.parentFolder() else {
             return options
@@ -62,39 +60,47 @@ public class Cocoapods: MissionInstance {
         try podspec.overlay(with: jsonPodspec.rawData(options: [.sortedKeys, .withoutEscapingSlashes, .prettyPrinted]))
         options.podspec_url = podspec.path
         options.name = jsonPodspec["name"].string
-        guard try libLint(options) else {
+        guard try await libLint(options) else {
             return options
         }
         return options
     }
     
-    public init() {}
+    let shell: Shell
+    public var logger: Logger?
+
+    public init(shell: Shell) {
+        self.shell = shell
+    }
 }
 
 public extension Cocoapods {
     
     @discardableResult
-    func shell(_ commands: String) throws -> String? {
-        logger?.info(.init(stringLiteral: "pod " + commands))
-        var environment = ProcessInfo.processInfo.environment.filter { item in
-            item.key.lowercased().contains("rvm")
-            || item.key.lowercased().contains("gem")
-            || item.key.lowercased().contains("ruby")
-        }
-        environment["CP_HOME_DIR"] = ProcessInfo.processInfo.environment["CP_HOME_DIR"]
-        guard let exec = try StemShell.zsh(string: "which pod", context: .init(environment: environment))?
-            .split(separator: "\n")
-            .first?
-            .trimmingCharacters(in: .whitespacesAndNewlines) else {
+    func shell(_ commands: String) async throws -> String? {
+        do {
+            let pod = try await shell.zsh("which pod")
+            return try await shell.data(exec: URL.init(filePath: pod),
+                                         commands.split(separator: " ").map(\.description),
+                                         context: { ctx in
+                if let paths = ctx.environment["PATH"]?.split(separator: ":") {
+                    ctx.environment["PATH"] = paths.filter({ path in
+                        if path.contains("homebrew"), path.contains("ruby") {
+                            return false
+                        } else {
+                            return true
+                        }
+                    }).joined(separator: ":")
+                }
+            })
+        } catch {
+            debugPrint(error.localizedDescription)
             return nil
         }
-        return try StemShell.string(.init(fileURLWithPath: exec),
-                                    commands.split(separator: " ").map(\.description),
-                                    context: .init(environment: environment))
     }
     
-    private func podspec(_ model: Options) throws -> JSON {
-        guard let str = try shell("ipc spec \(model.podspec_url)") else {
+    private func podspec(_ model: Options) async throws -> JSON {
+        guard let str = try await shell("ipc spec \(model.podspec_url)") else {
             throw StemError(message: "cocoapod 解析失败")
         }
         return JSON(parseJSON: str)
@@ -136,10 +142,12 @@ public extension Cocoapods {
 public extension Cocoapods {
     
     var version: STVersion {
-        guard let str = try? shell("--version") else {
-            return .init(0, 0, 0)
+        get async {
+            guard let str = try? await shell("--version") else {
+                return .init(0, 0, 0)
+            }
+            return .init(stringLiteral: str.trimmingCharacters(in: .whitespacesAndNewlines))
         }
-        return .init(stringLiteral: str.trimmingCharacters(in: .whitespacesAndNewlines))
     }
     
 }
@@ -166,8 +174,8 @@ public extension Cocoapods {
         }
     }
     
-    func repositories() throws -> [Repository] {
-        guard let str = try shell("repo list") else {
+    func repositories() async throws -> [Repository] {
+        guard let str = try await shell("repo list") else {
             return []
         }
         
@@ -176,25 +184,25 @@ public extension Cocoapods {
             .compactMap(Repository.init)
     }
     
-    func repositoryAdd(url: String) throws {
+    func repositoryAdd(url: String) async throws {
         guard let name = url.split(separator: "/").last?.split(separator: ".").first else {
             return
         }
-        try shell("repo add \(name) \(url)")
+        try await shell("repo add \(name) \(url)")
     }
     
-    func libLint(_ model: Options) throws -> Bool {
-        _ = try shell("lib lint \(model.podspec_url) --allow-warnings")
+    func libLint(_ model: Options) async throws -> Bool {
+        _ = try await shell("lib lint \(model.podspec_url) --allow-warnings")
         return true
     }
     
-    func trunkPush(_ model: Options) throws {
-        guard let name = try repositories().first(where: { $0.url == model.push_repository_url })?.name else {
-            try repositoryAdd(url: model.push_repository_url)
-            try trunkPush(model)
+    func trunkPush(_ model: Options) async throws {
+        guard let name = try await repositories().first(where: { $0.url == model.push_repository_url })?.name else {
+            try await repositoryAdd(url: model.push_repository_url)
+            try await trunkPush(model)
             return
         }
-        try shell("repo push \(name) \(model.podspec_url) --allow-warnings")
+        try await shell("repo push \(name) \(model.podspec_url) --allow-warnings")
     }
     
 }

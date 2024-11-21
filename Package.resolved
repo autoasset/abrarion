@@ -10,15 +10,6 @@
       }
     },
     {
-      "identity" : "stem",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/linhay/Stem",
-      "state" : {
-        "revision" : "6a350d05baa038116367297ef53dc80cc9312c30",
-        "version" : "2.0.1"
-      }
-    },
-    {
       "identity" : "stfilepath",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/linhay/STFilePath",
@@ -30,7 +21,7 @@
     {
       "identity" : "stjson",
       "kind" : "remoteSourceControl",
-      "location" : "git@github.com:linhay/STJSON.git",
+      "location" : "https://github.com/linhay/STJSON.git",
       "state" : {
         "revision" : "3c974607a6db409f072e2f8c314e9d0c49259979",
         "version" : "1.1.4"
@@ -57,7 +48,7 @@
     {
       "identity" : "swift-log",
       "kind" : "remoteSourceControl",
-      "location" : "git@github.com:apple/swift-log.git",
+      "location" : "https://github.com/apple/swift-log.git",
       "state" : {
         "revision" : "9cb486020ebf03bfa5b5df985387a14a98744537",
         "version" : "1.6.1"
@@ -75,7 +66,7 @@
     {
       "identity" : "swiftsoup",
       "kind" : "remoteSourceControl",
-      "location" : "git@github.com:scinfu/SwiftSoup.git",
+      "location" : "https://github.com/scinfu/SwiftSoup.git",
       "state" : {
         "revision" : "0837db354faf9c9deb710dc597046edaadf5360f",
         "version" : "2.7.6"

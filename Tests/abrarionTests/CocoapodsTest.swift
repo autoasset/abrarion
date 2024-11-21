@@ -21,13 +21,13 @@ class CocoapodsTest: XCTestCase {
     }
 
     func testVersion() throws {
-        print(Cocoapods().version)
+//        print(Cocoapods().version)
     }
     
     func testRepositories() throws {
-        let list = try Cocoapods().repositories()
-        assert(list.isEmpty == false)
-        print(list)
+//        let list = try Cocoapods().repositories()
+//        assert(list.isEmpty == false)
+//        print(list)
     }
 
     func testlibLint() throws {

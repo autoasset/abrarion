@@ -17,7 +17,7 @@ import SwiftGit
 
 struct Default: AsyncParsableCommand {
     
-    static var configuration: CommandConfiguration = .init(subcommands: [Publish.self])
+    static var configuration: CommandConfiguration = .init(subcommands: [Publish.self, ZSH.self])
     
     @Option(help: "任务流 yaml 文件路径",
             completion: .file(),
