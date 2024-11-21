@@ -120,7 +120,7 @@ public struct MissionTask: MissionInstance {
         
     }
     
-    func missionManger() async throws -> MissionManager {
+    func missionManger() async -> MissionManager {
         let missionManager = MissionManager()
         missionManager.register(XCReport.shared, for: "report")
         missionManager.register(KhalaReportInspection(), for: "khala_report_inspection")
@@ -134,9 +134,8 @@ public struct MissionTask: MissionInstance {
         missionManager.register(AndriodImagesMaker(), for: "android_images")
         missionManager.register(AndroidNightImageOrganization(), for: "android_night_images_organization")
         missionManager.register(CustomVariables(), for: "variables")
-        let shell = await Shell()
-        missionManager.register(shell, for: "shell")
-        missionManager.register(Cocoapods(shell: shell), for: "cocoapods_push")
+        missionManager.register(Cocoapods(), for: "cocoapods_push")
+        missionManager.register(Shell(), for: "shell")
         missionManager.register(TidyDelete(), for: "tidy_delete")
         missionManager.register(TidyCreate(), for: "tidy_create")
         missionManager.register(TidyCopy(), for: "tidy_copy")
@@ -155,7 +154,7 @@ public struct MissionTask: MissionInstance {
         let context = MissionContext()
         context.variables.register(last_variables)
         context.variables.register(options.environment)
-        let missionManager = try await missionManger()
+        let missionManager = missionManger()
         
         if let file = options.config_file {
             if let environment = options.environment_file {
@@ -182,7 +181,7 @@ public struct MissionTask: MissionInstance {
                 .split(separator: "\n")
                 .filter({ !$0.isEmpty })
                 .joined(separator: "\n")))
-            let missionManager = try await missionManger()
+            let missionManager = missionManger()
             try await missionManager.run(from: .init(missions: on_error,
                                                      environment: .init(),
                                                      substitute_environment: .init()),
