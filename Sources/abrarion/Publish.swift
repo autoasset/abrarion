@@ -8,7 +8,8 @@
 import Foundation
 import ArgumentParser
 import Stem
-import StemFilePath
+import STJSON
+import STFilePath
 import SwiftGit
 
 struct Publish: AsyncParsableCommand {

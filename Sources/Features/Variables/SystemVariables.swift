@@ -7,8 +7,9 @@
 
 import Foundation
 import SwiftGit
-import StemFilePath
+import STFilePath
 import Stem
+import STJSON
 
 public struct SystemVariables {
     

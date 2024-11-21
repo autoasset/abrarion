@@ -9,7 +9,8 @@ import XCTest
 import XCTest
 import Features
 import Stem
-import StemFilePath
+import STJSON
+import STFilePath
 import Combine
 
 class IconFontTests: XCTestCase {

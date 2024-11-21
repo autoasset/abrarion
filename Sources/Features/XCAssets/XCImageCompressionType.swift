@@ -7,6 +7,7 @@
 
 import Foundation
 import Stem
+import STJSON
 
 public enum XCImageCompressionType: String {
     /// 图像使用自动有损压缩。

@@ -6,8 +6,9 @@
 //
 
 import Foundation
-import StemColor
 import Stem
+import STJSON
+import StemColor
 
 public struct XCColor: XCAssetContentProtocol {
     

@@ -7,7 +7,8 @@
 
 import Foundation
 import Stem
-import StemFilePath
+import STJSON
+import STFilePath
 import Logging
 
 public struct XCImageMaker: MissionInstance, XCMaker {
@@ -165,7 +166,7 @@ extension XCImageMaker {
         }
         
         func create(in folder: STFolder) throws -> Self? {
-            let folder = folder.folder(name: name + ".imageset")
+            let folder = folder.folder(name + ".imageset")
             try folder.delete()
             try folder.create()
             images.forEach { record in

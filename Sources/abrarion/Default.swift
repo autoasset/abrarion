@@ -10,7 +10,8 @@ import Features
 import ArgumentParser
 import Yams
 import Stem
-import StemFilePath
+import STJSON
+import STFilePath
 import Logging
 import SwiftGit
 

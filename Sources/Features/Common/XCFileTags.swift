@@ -7,7 +7,8 @@
 
 import Foundation
 import Stem
-import StemFilePath
+import STJSON
+import STFilePath
 
 fileprivate func parseStringList(from json: JSON, variables: VariablesManager) async throws -> [String] {
     var items = json

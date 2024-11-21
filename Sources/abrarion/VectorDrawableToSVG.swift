@@ -7,7 +7,7 @@
 
 import Foundation
 import ArgumentParser
-import StemFilePath
+import STFilePath
 import SwiftSoup
 
 struct VectorDrawableToSVG: AsyncParsableCommand {

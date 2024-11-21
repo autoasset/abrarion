@@ -6,8 +6,10 @@
 //
 
 import Stem
+import STJSON
+import StemColor
 import Foundation
-import StemFilePath
+import STFilePath
 import Logging
 
 public struct TidySize: MissionInstance {
@@ -37,7 +39,7 @@ public struct TidySize: MissionInstance {
             case .file(let file):
                 files.append(file)
             case .folder(let folder):
-                let paths = try folder.allSubFilePaths(predicates: .skipsHiddenFiles).compactMap(\.asFile)
+                let paths = try folder.allSubFilePaths([.skipsHiddenFiles]).compactMap(\.asFile)
                 files.append(contentsOf: paths)
             case .none:
                 break

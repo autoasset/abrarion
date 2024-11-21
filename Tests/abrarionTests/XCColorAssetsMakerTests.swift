@@ -8,7 +8,8 @@
 import XCTest
 import Features
 import Stem
-import StemFilePath
+import STJSON
+import STFilePath
 
 class XCColorAssetsMakerTests: XCTestCase {
     
@@ -62,8 +63,8 @@ class XCColorAssetsMakerTests: XCTestCase {
         ]
         """
         try workFolder
-            .folder(name: "inputs").create()
-            .file(name: "list1.json").create(with: list1.data(using: .utf8))
+            .folder("inputs").create()
+            .file("list1.json").create(with: list1.data(using: .utf8))
         
         let maker = XCColorMaker()
         let options = try await XCColorMaker.Options(from: JSON(data: jsonEncoder.encode(ColorJSONModeOptions())), variables: .init())

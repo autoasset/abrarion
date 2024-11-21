@@ -6,8 +6,10 @@
 //
 
 import Foundation
-import StemFilePath
+import STFilePath
 import Stem
+import StemColor
+import STJSON
 import Logging
 
 protocol XCErrorReportPayload: Codable {
@@ -50,7 +52,7 @@ public class XCReport: MissionInstance {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .withoutEscapingSlashes, .sortedKeys]
         try options?.output?
-            .file(name: "abrarion_report.json")
+            .file("abrarion_report.json")
             .overlay(with: encoder.encode(payload))
     }
     

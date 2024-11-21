@@ -7,6 +7,7 @@
 
 import Foundation
 import Stem
+import STJSON
 
 public enum XCDataCompressionType: String {
     /// 使用自动压缩。

@@ -7,6 +7,8 @@
 
 import Foundation
 import Stem
+import STJSON
+import STJSON
 
 /// https://developer.apple.com/library/archive/documentation/Xcode/Reference/xcode_ref-Asset_Catalog_Format/ImageSetType.html
 public struct XCImageProperties: XCAssetProtocol {

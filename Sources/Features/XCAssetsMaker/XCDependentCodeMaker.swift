@@ -5,7 +5,7 @@
 //  Created by linhey on 2022/6/27.
 //
 
-import StemFilePath
+import STFilePath
 
 struct XCDependentCodeMaker {
     
@@ -30,7 +30,7 @@ struct XCDependentCodeMaker {
             }
         }
         """
-        let file = folder.file(name: "AbrarionBundleFinder.swift")
+        let file = folder.file("AbrarionBundleFinder.swift")
         try file.overlay(with: code.data(using: .utf8))
     }
     

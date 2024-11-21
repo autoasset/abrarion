@@ -8,7 +8,8 @@
 import XCTest
 import Features
 import Stem
-import StemFilePath
+import STJSON
+import STFilePath
 import Combine
 
 final class XCImageAssetsMakerTests: XCTestCase {

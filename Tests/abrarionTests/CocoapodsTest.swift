@@ -7,6 +7,7 @@
 
 import XCTest
 import Stem
+import STJSON
 import Features
 
 class CocoapodsTest: XCTestCase {

@@ -7,8 +7,10 @@
 
 import Foundation
 import Stem
+import STJSON
+import Stem
 import StemColor
-import StemFilePath
+import STFilePath
 import Logging
 
 public struct XCColorMaker: MissionInstance, XCMaker {
@@ -161,7 +163,7 @@ private extension XCColorMaker {
     }
     
     func createAsset(in folder: STFolder, asset: XCAssetProtocol, record: Record) throws {
-        let folder = folder.folder(name: record.names[0] + ".colorset")
+        let folder = folder.folder(record.names[0] + ".colorset")
         try folder.delete()
         try folder.create()
         try folder.create(file: "Contents.json", data: asset.data)

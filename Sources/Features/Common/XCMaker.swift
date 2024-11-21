@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import StemFilePath
+import STFilePath
 
 protocol XCMaker {}
 

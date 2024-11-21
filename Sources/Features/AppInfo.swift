@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import StemFilePath
+import STFilePath
 
 public struct AppInfo {
     public static let shared = AppInfo()

@@ -7,6 +7,8 @@
 
 import Foundation
 import Stem
+import STJSON
+import STJSON
 
 public struct XCImageResizing {
     

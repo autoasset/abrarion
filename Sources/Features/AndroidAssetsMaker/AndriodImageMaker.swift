@@ -6,8 +6,10 @@
 //
 
 import Stem
+import STJSON
+import StemColor
 import Logging
-import StemFilePath
+import STFilePath
 
 struct AndriodImagesMaker: MissionInstance, XCMaker {
     
@@ -136,7 +138,7 @@ private extension AndriodImagesMaker {
                         density: AndriodDensity,
                         src: STFolder,
                         isReplace: Bool) throws {
-        let folder = src.folder(name: density.rawValue)
+        let folder = src.folder(density.rawValue)
         _ = try? folder.create()
 
         let currentFiles = try folder
@@ -157,7 +159,7 @@ private extension AndriodImagesMaker {
                     continue
                 }
             }
-            let to = folder.file(name: XCImageMark.filename(noScaleFactor: file))
+            let to = folder.file(XCImageMark.filename(noScaleFactor: file))
             try file.replace(to)
         }
     }

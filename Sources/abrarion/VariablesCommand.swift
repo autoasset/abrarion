@@ -7,6 +7,7 @@
 
 import ArgumentParser
 import Stem
+import STJSON
 import Features
 
 struct VariablesCommand: AsyncParsableCommand {

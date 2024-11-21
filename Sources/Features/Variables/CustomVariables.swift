@@ -6,9 +6,9 @@
 //
 
 import Stem
-import StemFilePath
+import STJSON
+import STFilePath
 import Logging
-import CollectionConcurrencyKit
 
 public struct CustomVariables: MissionInstance {
     
@@ -36,7 +36,9 @@ public struct CustomVariables: MissionInstance {
     struct Options {
         let records: [Record]
         public init(from json: JSON, variables: VariablesManager) async throws {
-            if let item = try await json.array?.asyncCompactMap({ try await Record(from: $0, variables: variables) }) {
+            if let item = try await json.array?.asyncCompactMap({ json in
+                try await Record(from: json, variables: variables)
+            }) {
                 self.records = item
             } else {
                 self.records = [try await Record(from: json, variables: variables)]

@@ -7,7 +7,8 @@
 
 import Foundation
 import Stem
-import StemFilePath
+import STJSON
+import STFilePath
 import Logging
 import Yams
 
@@ -29,11 +30,13 @@ public struct MissionTask: MissionInstance {
         }
         
         static func json(fromYaml file: STFile) throws -> JSON {
-            guard let data = try? file.data(),
+            guard let file = file.path.removingPercentEncoding.flatMap(STFile.init),
+                  let data = try? file.data(),
                   let text = String(data: data, encoding: .utf8),
                   let yaml = try Yams.load(yaml: text) else {
                 throw StemError(message: "mission yaml 文件解析错误")
             }
+            
             return JSON(yaml)
         }
         

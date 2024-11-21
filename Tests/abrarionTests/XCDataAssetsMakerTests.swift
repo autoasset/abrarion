@@ -9,7 +9,8 @@ import Foundation
 import XCTest
 import Features
 import Stem
-import StemFilePath
+import STJSON
+import STFilePath
 
 final class XCDataAssetsMakerTests: XCTestCase {
 

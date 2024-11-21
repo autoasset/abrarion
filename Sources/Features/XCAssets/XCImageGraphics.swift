@@ -7,6 +7,7 @@
 
 import Foundation
 import Stem
+import STJSON
 
 enum XCImageGraphics: String {
     

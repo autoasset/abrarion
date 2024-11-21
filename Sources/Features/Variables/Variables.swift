@@ -8,6 +8,7 @@
 import Foundation
 import Logging
 import Stem
+import STJSON
 
 public protocol VariablesProtocol {
     var key: String { get }

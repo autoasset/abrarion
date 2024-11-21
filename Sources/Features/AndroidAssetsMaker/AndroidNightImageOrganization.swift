@@ -7,8 +7,10 @@
 
 import Foundation
 import Logging
-import StemFilePath
+import STFilePath
 import Stem
+import STJSON
+import StemColor
 
 public struct AndroidNightImageOrganization: MissionInstance {
     
@@ -43,7 +45,7 @@ public struct AndroidNightImageOrganization: MissionInstance {
         let label = "_dark."
         
         for density in AndriodDensity.allCases {
-            let light_folder = src.folder(name: density.rawValue)
+            let light_folder = src.folder(density.rawValue)
             guard light_folder.isExist else {
                 continue
             }
@@ -56,7 +58,7 @@ public struct AndroidNightImageOrganization: MissionInstance {
             var darkSet = Set(dark_files)
             /// a.png 与 a_dark.png 必须成对出现, 否则 a_dark.png 将被删除
             for file in dark_files {
-                if !light_folder.file(name: file.attributes.name.replacingOccurrences(of: label, with: ".")).isExist {
+                if !light_folder.file(file.attributes.name.replacingOccurrences(of: label, with: ".")).isExist {
                     if options.is_remove_orphan_file {
                         try? file.delete()
                     }
@@ -68,11 +70,11 @@ public struct AndroidNightImageOrganization: MissionInstance {
                 continue
             }
             
-            let night_folder = src.folder(name: density.night)
+            let night_folder = src.folder(density.night)
             _ = try? night_folder.create()
             
             for file in darkSet {
-                let to = night_folder.file(name: file.attributes.name.replacingOccurrences(of: label, with: "."))
+                let to = night_folder.file(file.attributes.name.replacingOccurrences(of: label, with: "."))
                 try file.replace(to)
                 try file.delete()
             }

@@ -8,6 +8,7 @@
 import Foundation
 import Logging
 import Stem
+import STJSON
 
 public struct PrintVariables: MissionInstance {
     

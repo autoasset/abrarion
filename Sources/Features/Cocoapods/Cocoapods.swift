@@ -7,7 +7,8 @@
 
 import Foundation
 import Stem
-import StemFilePath
+import STJSON
+import STFilePath
 import SwiftGit
 import Logging
 
@@ -57,7 +58,7 @@ public class Cocoapods: MissionInstance {
             return options
         }
         try podspec.delete()
-        podspec = folder.file(name: String(podspec.attributes.name.split(separator: ".")[0]) + ".podspec.json")
+        podspec = folder.file(String(podspec.attributes.name.split(separator: ".")[0]) + ".podspec.json")
         try podspec.overlay(with: jsonPodspec.rawData(options: [.sortedKeys, .withoutEscapingSlashes, .prettyPrinted]))
         options.podspec_url = podspec.path
         options.name = jsonPodspec["name"].string
@@ -114,7 +115,7 @@ public extension Cocoapods {
             }
             var flag = true
             for path in list.compactMap(\.string) {
-                if path.hasSuffix(".xcassets"), !folder.subpath(name: path).isExist {
+                if path.hasSuffix(".xcassets"), !folder.subpath(path).isExist {
                     continue
                 } else {
                     flag = false
