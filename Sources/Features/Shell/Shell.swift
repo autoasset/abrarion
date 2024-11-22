@@ -34,70 +34,39 @@ public struct Shell: MissionInstance {
         }
     }
     
-    var environment: [String: String] = [:]
+    let shell: StemShell.Instance
     
-    public init() async {
-        do {
-            environment = try STFile("~/.abrarion/environment.txt").read()
-                .split(separator: "\n")
-                .compactMap { row -> (key: String, value: String)? in
-                    let list = row.split(separator: "=", maxSplits: 1)
-                    guard list.count == 2 else {
-                        return nil
-                    }
-                    return (list[0].description, list[1].description)
-                }.dictionary(key: \.key, value: \.value)
-        } catch {
-            
-        }
+    init(shell: StemShell.Instance) {
+        self.shell = shell
     }
     
     public func evaluate(from json: JSON, context: MissionContext) async throws {
         let options  = try await Options(from: json, variables: context.variables)
         let commands = try await context.variables.parse(options.commands)
-        try await evaluate(commands: commands, environment: options.environment, allow_errors: options.allow_errors)
+        try evaluate(commands: commands,
+                     environment: options.environment,
+                     allow_errors: options.allow_errors)
     }
 
-    public func zsh( _ commands: String,
-                     environment: [String: String] = [:],
-                     allow_errors: Bool = false,
-                     context: ((_ ctx: inout StemShell.Context) -> Void)? = nil) async throws -> String {
-        var ctx = StemShell.Context(environment: self.environment.merging(environment, uniquingKeysWith: { $1 }))
-        context?(&ctx)
-        return try await StemShell.zsh(string: commands, context: ctx) ?? ""
-    }
-    
-    public func data(exec: URL, _ commands: [String],
-                     environment: [String: String] = [:],
-                     allow_errors: Bool = false,
-                     context: ((_ ctx: inout StemShell.Context) -> Void)? = nil) async throws -> String {
-        var ctx = StemShell.Context(environment: self.environment.merging(environment, uniquingKeysWith: { $1 }))
-        context?(&ctx)
-        let data = try await StemShell.data(exec, commands, context: ctx)
-        return .init(data: data, encoding: .utf8) ?? ""
-    }
-    
-    @discardableResult
-    public func evaluate(commands: [String], environment: [String: String] = [:], allow_errors: Bool = false) async throws -> String {
-        let context = StemShell.Context(environment: self.environment.merging(environment, uniquingKeysWith: { $1 }))
+    public func evaluate(commands: [String],
+                         environment: [String: String] = [:],
+                         allow_errors: Bool = false) throws {
+        let context = StemShell.Context(environment: environment)
         for command in commands {
             do {
                 logger?.info(.init(stringLiteral: command))
-                guard let result = try await StemShell.zsh(string: command, context: context), !result.isEmpty else {
-                    return ""
+                guard let result = try shell.shell(string: .init(command: command, context: context)) else {
+                    continue
                 }
-                logger?.info(.init(stringLiteral: result))
-                return result
+                logger?.info(.init(stringLiteral: "\n" + result))
             } catch {
                 if allow_errors {
                     print(error)
-                    return error.localizedDescription
                 } else {
                     throw error
                 }
             }
         }
-        return ""
     }
     
 }

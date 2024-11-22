@@ -14,7 +14,10 @@ import STFilePath
 public struct MissionContext {
     
     public var variables = VariablesManager()
-    public init() {}
+    public var shell: StemShell.Instance
+    public init(shell: StemShell.Instance) {
+        self.shell = shell
+    }
     
 }
 

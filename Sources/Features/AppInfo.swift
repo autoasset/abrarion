@@ -12,5 +12,5 @@ public struct AppInfo {
     public static let shared = AppInfo()
     
     public let pwd = STFolder("./")
-    public let version = "1.0.2"
+    public let version = "1.0.5"
 }

@@ -10,6 +10,15 @@
       }
     },
     {
+      "identity" : "stem",
+      "kind" : "remoteSourceControl",
+      "location" : "git@github.com:linhay/Stem.git",
+      "state" : {
+        "revision" : "4a68ea7def80f0c786ab71964ba6cc63da3570e5",
+        "version" : "2.0.3"
+      }
+    },
+    {
       "identity" : "stfilepath",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/linhay/STFilePath",
@@ -30,7 +39,7 @@
     {
       "identity" : "swift-argument-parser",
       "kind" : "remoteSourceControl",
-      "location" : "git@github.com:apple/swift-argument-parser.git",
+      "location" : "https://github.com/apple/swift-argument-parser.git",
       "state" : {
         "revision" : "41982a3656a71c768319979febd796c6fd111d5c",
         "version" : "1.5.0"
@@ -41,8 +50,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/linhay/swift-git",
       "state" : {
-        "revision" : "8cdd230a981f0cb2fe8e943255f7c19c659e23db",
-        "version" : "1.1.0"
+        "revision" : "ca04ce2a7b050f0b4ba043ef6dae5672a92868f4",
+        "version" : "2.0.1"
       }
     },
     {

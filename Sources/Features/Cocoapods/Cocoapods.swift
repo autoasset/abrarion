@@ -15,9 +15,14 @@ import Logging
 public class Cocoapods: MissionInstance {
         
     public func evaluate(from json: JSON, context: MissionContext) async throws {
+        guard let podPath = try shell.shell(string: .init(command: "which pod")) else {
+            throw StemError("can't find pod")
+        }
+        self.shellArgs.exec = URL(filePath: podPath)
+        
         var options = try await Options(from: json, variables: context.variables)
         options = try await localLint(options)
-        let repository = try SwiftGit.Repository(path: AppInfo.shared.pwd.path, environment: .init(type: .system))
+        let repository = try Git.shared.repository(at: AppInfo.shared.pwd.path)
         try await repository.add([], paths: ["."])
         try await repository.commit([.message("[ci skip] by abrarion(\(AppInfo.shared.version))")], pathspecs: .all)
         do {
@@ -66,10 +71,12 @@ public class Cocoapods: MissionInstance {
         return options
     }
     
-    let shell: Shell
+    let shell: StemShell.Instance
+    var shellArgs: StemShell.Arguments = .init(commands: [])
+
     public var logger: Logger?
 
-    public init(shell: Shell) {
+    public init(shell: StemShell.Instance) {
         self.shell = shell
     }
 }
@@ -79,20 +86,9 @@ public extension Cocoapods {
     @discardableResult
     func shell(_ commands: String) async throws -> String? {
         do {
-            let pod = try await shell.zsh("which pod")
-            return try await shell.data(exec: URL.init(filePath: pod),
-                                         commands.split(separator: " ").map(\.description),
-                                         context: { ctx in
-                if let paths = ctx.environment["PATH"]?.split(separator: ":") {
-                    ctx.environment["PATH"] = paths.filter({ path in
-                        if path.contains("homebrew"), path.contains("ruby") {
-                            return false
-                        } else {
-                            return true
-                        }
-                    }).joined(separator: ":")
-                }
-            })
+            var args = shellArgs
+            args.commands = commands.split(separator: " ").map(\.description)
+            return try shell.string(args)
         } catch {
             debugPrint(error.localizedDescription)
             return nil

@@ -17,7 +17,7 @@ import SwiftGit
 
 struct Default: AsyncParsableCommand {
     
-    static var configuration: CommandConfiguration = .init(subcommands: [Publish.self, ZSH.self])
+    static var configuration: CommandConfiguration = .init(subcommands: [Publish.self])
     
     @Option(help: "任务流 yaml 文件路径",
             completion: .file(),
@@ -28,12 +28,16 @@ struct Default: AsyncParsableCommand {
             completion: .file(),
             transform: URL.init(fileURLWithPath:))
     var environment: [URL]
-    
+        
     func run() async throws {
-        Git._shared = try Git(environment: .init(type: .system))
+        let shell = try setupShell()
+        
+        try Git._shared = Git(environment: .init(type: .system, shell: shell))
+        try Git.shared.shell = shell
+        
         let logger = Logger(label: "[abrarion]")
         do {
-            let context = MissionContext()
+            let context = MissionContext(shell: shell)
             try await context.variables.register(SystemVariables.variables())
             var task = MissionTask()
             task.logger = .init(label: "mission")

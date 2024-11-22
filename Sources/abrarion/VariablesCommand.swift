@@ -17,7 +17,7 @@ struct VariablesCommand: AsyncParsableCommand {
     func run() async throws {
         var mission = PrintVariables()
         mission.logger = .init(label: "variables")
-        try await mission.evaluate(from: JSON(), context: .init())
+        try await mission.evaluate(from: JSON(), context: .init(shell: setupShell()))
     }
     
 }
