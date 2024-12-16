@@ -8,7 +8,7 @@
 import Foundation
 import Stem
 import STJSON
-import StemColor
+import STColor
 
 struct AndroidVariable {
     

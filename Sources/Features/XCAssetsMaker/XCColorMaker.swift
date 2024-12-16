@@ -9,7 +9,7 @@ import Foundation
 import Stem
 import STJSON
 import Stem
-import StemColor
+import STColor
 import STFilePath
 import Logging
 

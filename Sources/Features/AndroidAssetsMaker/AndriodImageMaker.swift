@@ -7,7 +7,7 @@
 
 import Stem
 import STJSON
-import StemColor
+import STColor
 import Logging
 import STFilePath
 

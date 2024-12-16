@@ -7,7 +7,7 @@
 
 import Foundation
 import Stem
-import StemColor
+import STColor
 import STJSON
 
 struct FlutterVariable {

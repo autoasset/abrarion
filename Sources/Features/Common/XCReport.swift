@@ -8,7 +8,7 @@
 import Foundation
 import STFilePath
 import Stem
-import StemColor
+import STColor
 import STJSON
 import Logging
 

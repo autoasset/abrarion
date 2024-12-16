@@ -10,12 +10,21 @@
       }
     },
     {
+      "identity" : "stcolor",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/linhay/STColor.git",
+      "state" : {
+        "revision" : "18b47d9d8a5b6ca71894a6c946197db663eadfa1",
+        "version" : "1.0.0"
+      }
+    },
+    {
       "identity" : "stem",
       "kind" : "remoteSourceControl",
       "location" : "git@github.com:linhay/Stem.git",
       "state" : {
-        "revision" : "4a68ea7def80f0c786ab71964ba6cc63da3570e5",
-        "version" : "2.0.3"
+        "revision" : "fe88a25503aa55313938008a781d9bf8dc821c74",
+        "version" : "2.1.0"
       }
     },
     {
