@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:abrarion}",
+            "name": "Debug abrarion",
+            "target": "abrarion",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug abrarion"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:abrarion}",
+            "name": "Release abrarion",
+            "target": "abrarion",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release abrarion"
+        }
+    ]
+}
