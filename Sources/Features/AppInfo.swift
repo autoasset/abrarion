@@ -11,5 +11,5 @@ import STFilePath
 public struct AppInfo {
     public static let shared = AppInfo()
     public let pwd = STFolder("./")
-    public let version = "1.1.0"
+    public let version = "2.0.1"
 }
