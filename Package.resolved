@@ -28,15 +28,6 @@
       }
     },
     {
-      "identity" : "stfilepath",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/linhay/STFilePath",
-      "state" : {
-        "revision" : "a5a0203c4214333aa71789576beeeddb95393cc9",
-        "version" : "1.2.5"
-      }
-    },
-    {
       "identity" : "stjson",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/linhay/STJSON.git",

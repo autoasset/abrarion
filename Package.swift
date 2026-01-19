@@ -15,7 +15,8 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.7.0"),
         .package(url: "https://github.com/linhay/swift-git", from: "2.0.3"),
         .package(url: "git@github.com:linhay/Stem.git", from: "2.1.0"),
-        .package(url: "https://github.com/linhay/STFilePath", from: "1.2.0"),
+//        .package(url: "https://github.com/linhay/STFilePath", from: "1.2.4"),
+        .package(path: "/Users/linhey/Desktop/STFilePath"),
         .package(url: "https://github.com/scinfu/SwiftSoup.git", from: "2.7.5")
     ],
     targets: [

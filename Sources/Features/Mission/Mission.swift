@@ -47,7 +47,7 @@ public class MissionManager {
     func run(name: String, with options: JSON, context: MissionContext) async throws {
         if let instance = cache[name] {
             let date = Date.now
-            instance.logger?.info(.init(stringLiteral: "⏳⏳⏳ begining"))
+            instance.logger?.info(.init(stringLiteral: "⏳⏳⏳ begining [\(name)]"))
             try await instance.evaluate(from: options, context: context)
             let sed = NSNumber(value: (Date.now.timeIntervalSince1970 - date.timeIntervalSince1970) * 1000)
             let duration = durationFormatter.string(from: sed) ?? ""

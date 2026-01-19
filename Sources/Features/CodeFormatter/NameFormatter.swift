@@ -23,111 +23,134 @@
 import Foundation
 
 public class NameFormatter {
-    
+
     /// 系统保留字
     /// https://docs.swift.org/swift-book/ReferenceManual/LexicalStructure.html#:~:text=the%20following%20keywords%20are%20reserved%20and%20can%E2%80%99t%20be%20used%20as%20identifiers
     struct SwiftReservedWords {
-        static let declarations = ["associatedtype", "class", "deinit", "enum", "extension", "fileprivate", "func", "import", "init", "inout", "internal", "let", "open", "operator", "private", "precedencegroup", "protocol", "public", "rethrows", "static", "struct", "subscript", "typealias", "var"]
-        static let statements = ["break", "case", "catch", "continue", "default", "defer", "do", "else", "fallthrough", "for", "guard", "if", "in", "repeat", "return", "throw", "switch", "where", "while"]
-        static let expressionsAndTypes = ["Any", "as", "catch", "false", "is", "nil", "rethrows", "self", "Self", "super", "throw", "throws", "true", "try"]
+        static let declarations = [
+            "associatedtype", "class", "deinit", "enum", "extension", "fileprivate", "func",
+            "import", "init", "inout", "internal", "let", "open", "operator", "private",
+            "precedencegroup", "protocol", "public", "rethrows", "static", "struct", "subscript",
+            "typealias", "var",
+        ]
+        static let statements = [
+            "break", "case", "catch", "continue", "default", "defer", "do", "else", "fallthrough",
+            "for", "guard", "if", "in", "repeat", "return", "throw", "switch", "where", "while",
+        ]
+        static let expressionsAndTypes = [
+            "Any", "as", "catch", "false", "is", "nil", "rethrows", "self", "Self", "super",
+            "throw", "throws", "true", "try",
+        ]
         static let patterns = ["_"]
-        static let beginWithNumberSign = ["#available", "#colorLiteral", "#column", "#dsohandle", "#elseif", "#else", "#endif", "#error", "#fileID", "#fileLiteral", "#filePath", "#file", "#function", "#if", "#imageLiteral", "#keyPath", "#line", "#selector", "#sourceLocation", "#warning"]
-        static let particularContexts = ["associativity", "convenience", "didSet", "dynamic", "final", "get", "indirect", "infix", "lazy", "left", "mutating", "none", "nonmutating", "optional", "override", "postfix", "precedence", "prefix", "Protocol", "required", "right", "set", "some", "Type", "unowned", "weak", "willSet"]
-        
-        static let all: Set<String> = .init(declarations + statements + expressionsAndTypes + patterns + beginWithNumberSign + particularContexts)
+        static let beginWithNumberSign = [
+            "#available", "#colorLiteral", "#column", "#dsohandle", "#elseif", "#else", "#endif",
+            "#error", "#fileID", "#fileLiteral", "#filePath", "#file", "#function", "#if",
+            "#imageLiteral", "#keyPath", "#line", "#selector", "#sourceLocation", "#warning",
+        ]
+        static let particularContexts = [
+            "associativity", "convenience", "didSet", "dynamic", "final", "get", "indirect",
+            "infix", "lazy", "left", "mutating", "none", "nonmutating", "optional", "override",
+            "postfix", "precedence", "prefix", "Protocol", "required", "right", "set", "some",
+            "Type", "unowned", "weak", "willSet",
+        ]
+
+        static let all: Set<String> = .init(
+            declarations + statements + expressionsAndTypes + patterns + beginWithNumberSign
+                + particularContexts)
     }
-    
+
     public enum Language {
         case swift
     }
-    
+
     private let language: Language
     /// 分割字符
     private let splitCharSet: CharacterSet
-    
+
     public init(language: Language, splitSet: CharacterSet) {
         self.splitCharSet = splitSet
         self.language = language
     }
-    
+
 }
 
-public extension NameFormatter {
-    
+extension NameFormatter {
+
     /// 驼峰
-    func camelCased(_ str: String) -> String {
+    public func camelCased(_ str: String) -> String {
         let name = splitWords(str)
             .enumerated()
             .map { $0.offset > 0 ? $0.element.capitalized : $0.element.lowercased() }
             .joined()
         return reservedWords(name)
     }
-    
+
     /// 下划线
-    func snakeCased(_ str: String) -> String {
+    public func snakeCased(_ str: String) -> String {
         let name = splitWords(str).joined(separator: "_")
         return reservedWords(name)
     }
-    
+
     private func reservedWords(_ name: String) -> String {
         switch language {
         case .swift:
             if SwiftReservedWords.all.contains(name) {
-               return "`\(name)`"
+                return "`\(name)`"
             }
         }
         return name
     }
-    
+
 }
 
-public extension NameFormatter {
-    
-    func splitWords(_ str: String) -> [String] {
+extension NameFormatter {
+
+    public func splitWords(_ str: String) -> [String] {
         var words = [String]()
         var buffer = [String]()
         var bufferIsNumber = false
-        
+
         for item in str {
             let char = String(item)
-            
+
             if CharacterSet(charactersIn: char).isSubset(of: splitCharSet) {
                 words.append(buffer.joined())
                 buffer.removeAll()
                 continue
             }
-            
+
             /// 切割非法字符
             guard item.isNumber || ("a"..."z").contains(item.lowercased()) else {
                 words.append(buffer.joined())
                 buffer.removeAll()
                 continue
             }
-            
-            guard item.isLowercase else {
+
+            guard !item.isUppercase else {
                 words.append(buffer.joined())
                 buffer.removeAll()
                 buffer.append(char)
+                bufferIsNumber = false
                 continue
             }
-            
+
             /// 切割数字/字母
             if buffer.isEmpty {
                 bufferIsNumber = item.isNumber
             }
-            
+
             if item.isNumber == bufferIsNumber {
                 buffer.append(char)
             } else {
                 words.append(buffer.joined())
                 buffer.removeAll()
                 buffer.append(char)
+                bufferIsNumber = item.isNumber
             }
         }
-        
+
         words.append(buffer.joined())
         return words.filter({ $0.isEmpty == false }).map({ $0.lowercased() })
     }
-    
-    
+
 }
