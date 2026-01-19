@@ -11,14 +11,14 @@
 ```
 .
 ├── Package.swift           # Dependencies (WARNING: Absolute local path used)
-├── sources/
+├── Sources/
 │   ├── abrarion/           # CLI Entry (@main, Subcommands)
 │   └── Features/           # Monolithic target for ALL logic
 │       ├── Mission/        # Core Execution Engine
 │       ├── XCAssets/       # Deep Domain Models (Apple Assets)
 │       ├── *Maker/         # Platform implementations (Android, Flutter, etc)
 │       └── Common/         # Shared Utils (Reporting, FileTags)
-├── tests/
+├── Tests/
 │   └── abrarionTests/      # Data-driven XCTest suite
 ├── scripts/                # Build & Release automation
 └── .github/workflows/      # Release CI

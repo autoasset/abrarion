@@ -228,6 +228,24 @@ FORMULA
     git tag "${VERSION}"
     git push origin "${VERSION}"
     
+    # 创建 homebrew-abrarion 的 GitHub Release
+    echo "📦 Creating Homebrew tap GitHub release..."
+    if command -v gh &> /dev/null; then
+        # 复制 tarball 到 homebrew-abrarion 目录
+        cp "../abrarion-${VERSION}.tar.gz" .
+        
+        gh release delete "${VERSION}" -y 2>/dev/null || true
+        gh release create "${VERSION}" \
+            "abrarion-${VERSION}.tar.gz" \
+            --title "${VERSION}" \
+            --notes "${VERSION}"
+        
+        # 清理临时文件
+        rm "abrarion-${VERSION}.tar.gz"
+    else
+        echo "⚠️  警告: gh 命令未找到，跳过 Homebrew tap GitHub Release 创建"
+    fi
+    
     cd ../..
     
     echo ""
