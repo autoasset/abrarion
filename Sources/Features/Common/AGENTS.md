@@ -1,21 +1,24 @@
 # COMMON UTILITIES
 
-**Context:** Shared Utilities
-**Reason:** Cross-cutting concerns
-**Status:** Core Stable
+**Context:** Shared Infrastructure
+**Reason:** Cross-cutting concerns for all Makers
 
 ## OVERVIEW
-The `Common` directory contains the foundational logic shared across all Makers and Missions. It provides essential services for error reporting, file filtering, and input management, ensuring consistency in how assets are processed and validated.
+`Sources/Features/Common` provides the shared toolkit for file discovery, asset tagging, and error reporting.
 
-## KEY UTILITIES
-| Utility | Role | Key Functionality |
-|---------|------|-------------------|
-| `XCReport` | **Error Aggregator** | Collects redundant files, missing assets, and validation errors into a unified `abrarion_report.json`. |
-| `XCFileTags` | **Filtering Engine** | Defines complex inclusion/exclusion rules using `tags`, `patterns` (regex), and logical operators (`and`, `or`, `reversed_or`). |
-| `XCInputFileManager` | **File Orchestrator** | Resolves raw input paths or tag-based queries into a concrete set of `STFile` objects for processing. |
+## KEY COMPONENTS
+- **`XCInputFileManager`**: The query engine. Finds files based on:
+  - `inputs`: Raw paths.
+  - `tags`: Inclusion/exclusion logic.
+  - `patterns`: Regex matching.
+- **`XCImageMark`**: The parser.
+  - Detects scale (`@2x`, `@3x`).
+  - Detects dark mode (`_dark`).
+  - Identifies format (SVG, PNG, PDF).
+- **`XCReport`**: The auditor.
+  - Singleton (`.shared`) error collector.
+  - Generates `abrarion_report.json` at the end of execution.
 
-## REPORTING STRATEGY
-`XCReport` follows a singleton pattern (`.shared`) to allow any component to log issues during execution without complex dependency injection.
-- **Fail-Soft:** Non-critical issues (e.g., redundant files) are aggregated and reported at the end rather than crashing the process.
-- **Payload Schema:** Errors are categorized into `ErrorType`, covering everything from illegal file names to missing required assets in `.contents` files.
-- **CI Integration:** The generated JSON report is designed to be parsed by CI pipelines to provide feedback on asset health.
+## CONVENTIONS
+- **Tags**: Used heavily to filter assets for different platforms (e.g., `tag: "android"` vs `tag: "ios"`).
+- **Fail-Soft**: `XCReport` accumulates errors; does not crash execution unless critical.

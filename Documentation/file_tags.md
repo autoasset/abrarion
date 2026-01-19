@@ -1,164 +1,101 @@
 # file_tags
 
-> 文件标记
+`file_tags` 提供了一种灵活的文件筛选机制，用于替代简单的文件路径列表 (`inputs`)。它允许通过标签、正则匹配、文件列表等方式组合筛选文件。
 
-- 输入所有文件标置为指定标记
+## 结构说明
 
-  ``` yaml
-  file_tags:
-    vaild_tags: 
-      - flutter
-    expressions:
-      - inputs:
-          - publish-template-khala/products/flutter/2.0x
-          - publish-template-khala/products/flutter/3.0x
-        name: flutter
-        tags: flutter
-        substitute: always_pass
-  ```
+### XCFileTags
 
-- 只匹配符合规则文件规则的文件
+| 字段名 | 描述 | 类型 | 默认值 | 是否必填 |
+| :--- | :--- | :--- | :--- | :--- |
+| vaild_tags | 有效的标签列表 (只保留包含这些标签的文件) | [string] | | 否 |
+| exclude_tags | 排除的标签列表 (排除包含这些标签的文件) | [string] | | 否 |
+| expressions | 表达式列表 (定义如何给文件打标签) | [Expression](#expression)[] | | 是 |
 
-  ``` yaml
-  # ./flutter_tags.txt 内容:
-  # add_address(?:@\dx)?.png
-  # add_address2(?:@\dx)?.png
+### Expression
 
-  file_tags:
-    vaild_tags: 
-      - flutter
-    expressions:
-      - inputs:
-          - ...
-          - ...
-        name: flutter
-        tags: flutter
-        substitute: always_fail
-        files:
-            - ./flutter_tags.txt
-  ```
+定义一组文件并将它们标记为特定的 `tags`。
 
-- 只匹配指定规则的文件
+| 字段名 | 描述 | 类型 | 默认值 | 是否必填 |
+| :--- | :--- | :--- | :--- | :--- |
+| name | 表达式名称 (用于调试/报错) | string | | 是 |
+| tags | 赋予匹配文件的标签列表 | [string] | | 是 |
+| patterns | 正则表达式列表 (匹配文件路径) | [string] | | 否 |
+| inputs | 输入文件路径列表 (直接指定文件) | [string] | | 否 |
+| files | 包含匹配规则的文件路径列表 (从文件中读取正则规则，每行一个) | [string] | | 否 |
+| kind | 匹配逻辑 (`or`, `and`, `reversed_or`) | enum | `and` (仅当 patterns 为空时默认，否则必填) | 否 |
+| substitute | 无匹配规则时的替代行为 (`always_pass`, `always_fail`) | enum | `always_fail` | 否 |
 
-  ``` yaml
-  file_tags:
-    vaild_tags: 
-      - flutter
-    expressions:
-      - inputs:
-          - ...
-          - ...
-        name: flutter
-        tags: flutter
-        substitute: always_fail
-        patterns:
-          - add_address(?:@\dx)?.png
-  ```
+**匹配逻辑 (kind)**:
+- `or`: 满足任一 pattern 即匹配。
+- `and`: 必须满足所有 pattern 才匹配。
+- `reversed_or`: 满足任一 pattern 则 **不** 匹配 (反向筛选)。
 
-- 匹配指定多个标记类型
+**注意**: 若指定了 `patterns` 或 `files` (即存在匹配规则)，则必须显式指定 `kind`。
 
-  ``` yaml
-  file_tags:
-    vaild_tags: 
-      - tag_a
-      - tag_b
-      - ...
-    expressions:
-      - inputs:
-          - ...
-          - ...
-        name: tag_a
-        tags: tag_a
-        substitute: always_fail
-        patterns:
-          - ...
-      - inputs:
-          - ...
-          - ...
-        name: tag_b
-        tags: tag_b
-        substitute: always_fail
-        patterns:
-          - ...
-      - ...
-  ```
+## 示例
 
-- 匹配指定多个标记类型差集
+### 1. 简单打标签 (全部标记)
 
-  ``` yaml
-  file_tags:
-    vaild_tags: 
-      - tag_a
-      - ...
-    exclude_tags:
-      - tag_b
-      - ...
-    expressions:
-      - inputs:
-          - ...
-          - ...
-        name: tag_a
-        tags: tag_a
-        substitute: always_fail
-        patterns:
-          - ...
-      - inputs:
-          - ...
-          - ...
-        name: tag_b
-        tags: tag_b
-        substitute: always_fail
-        patterns:
-          - ...
-      - ...
-  ```
+```yaml
+file_tags:
+  vaild_tags: ["flutter"]
+  expressions:
+    - name: flutter_assets
+      inputs:
+        - products/flutter/2.0x
+        - products/flutter/3.0x
+      tags: ["flutter"]
+      substitute: always_pass
+```
 
-# 字段说明
+### 2. 通过正则筛选 (白名单)
 
-| 字段名       | 描述                     | 类型               | 默认值 | 是否必填 |
-| ------------ | ------------------------ | ------------------ | ------ | -------- |
-| vaild_tags   | 参与任务的文件标记类别   | string \| [string] | | 是 |
-| exclude_tags | 不参与任务的文件标记类别 | string \| [string] | | 是 |
-| expressions  | 文件标记的规则组        | [object] [结构说明](#filetagsexpressions)           | | 是 |
+```yaml
+file_tags:
+  vaild_tags: ["ios"]
+  expressions:
+    - name: ios_filter
+      inputs: ["assets/mixed"]
+      tags: ["ios"]
+      kind: or
+      patterns:
+        - ".*_ios\\.png$"
+        - ".*_common\\.png$"
+```
 
-## file_tags.expressions
+### 3. 通过文件列表筛选
 
-| 字段名       | 描述                     | 类型               | 默认值 | 是否必填 |
-| ------------ | ------------------------ | ------------------ | ------ | -------- |
-| name  | 文件标记的规则组名, 目前不参与任务逻辑 | string           | | 否 |
-| kind  | 匹配模式: <br />and: 通过全部 pattern 才会被标记 tags<br />or: 通过任一 pattern 就会被标记 tags<br/>reversed_or: 未通过任一 pattern 就会被标记 | enum | | 当存在 patterns \| files 时必填 |
-| tags | 文件标记 | string \|[string] | | 是 |
-| substitute | 无任何匹配规则时策略<br />always_pass: 全部标记<br />always_fail: 全部不标记 | enum | always_fail | 否 |
-| patterns | 匹配规则, 若规则能匹配完整文件名, 则视为该规则通过 | string \|[string] | [] | 否 |
-| files | 待匹配的文件 | string \|[string] | [] | 否 |
+```yaml
+# rules.txt 内容:
+# ^icon_.*
+# ^bg_.*
 
-# 注意事项
+file_tags:
+  vaild_tags: ["valid_icons"]
+  expressions:
+    - name: icon_filter
+      inputs: ["assets/images"]
+      tags: ["valid_icons"]
+      kind: or
+      files: ["rules.txt"]
+```
 
-- file_tags.expressions:
+### 4. 排除特定文件 (黑名单)
 
-  - 利用 kind == or, 可以建立白名单机制
-  - 利用 kind == reversed_or, 可以建立黑名单机制
-
-- 真正参与任务的文件: 
-
-    > vaild_tags 匹配到的文件, 移除 exclude_tags 匹配到的文件.
-    
-    具体实现:
-
-    ```swift
-    func vaild_files() -> Set<STFile> {
-        var vailds = Set<STFile>()
-        model.vaild_tags.forEach { tag in
-            if let files = store[tag] {
-                vailds.formUnion(files)
-            }
-        }
-        var exclude = Set<STFile>()
-        model.exclude_tags.forEach { tag in
-            if let files = store[tag] {
-                exclude.formUnion(files)
-            }
-        }
-        return vailds.subtracting(exclude)
-    }
-    ```
+```yaml
+file_tags:
+  vaild_tags: ["all"]
+  exclude_tags: ["draft"]
+  expressions:
+    - name: all_files
+      inputs: ["assets"]
+      tags: ["all"]
+      substitute: always_pass
+      
+    - name: draft_filter
+      inputs: ["assets"]
+      tags: ["draft"]
+      kind: or
+      patterns: ["^draft_.*"]
+```

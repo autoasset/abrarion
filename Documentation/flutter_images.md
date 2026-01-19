@@ -1,66 +1,61 @@
 # flutter_images
 
-- 按路径导入资源
+用于处理 Flutter 图片资源，自动生成 Dart 引用代码。
 
-    ```yaml
-    flutter_images:
-        pubspec: publish-template-flutter/pubspec.yaml
-        output_resources_path: publish-template-flutter/resources
-        template: ...
-        inputs:
-            - publish-template-khala/products/flutter/2.0x
-            - publish-template-khala/products/flutter/3.0x      
-    ```
+## 配置示例
 
-- 按标签导入资源
-    
-    > [file_tags 结构参考](./file_tags.md)
+### 按路径导入资源
 
-    ```yaml
-    flutter_images:
-        pubspec: ...
-        output_resources_path: ...
-        template: ...
-        file_tags: 结构参考 `file_tags`
-    ```
+```yaml
+flutter_images:
+  pubspec: publish-template-flutter/pubspec.yaml
+  output_resources_path: publish-template-flutter/resources
+  template:
+    output: publish-template-flutter/lib/abrarion_images.dart
+    class_name: AppImages
+    package_name: my_package
+  inputs:
+    - publish-template-khala/products/flutter/2.0x
+    - publish-template-khala/products/flutter/3.0x      
+```
 
-- 生成硬编码文件
+### 按标签导入资源
 
-    ```yaml
-    flutter_images:
-        inputs: ...
-        pubspec: ...
-        output_resources_path: ...
-        template:
-            variable_name_type: camel
-            package_name: abrarion
-            class_name: AbrarionImages
-            output: publish-template-flutter/lib/abrarion_images.dart
-    ```
+> [file_tags 结构参考](./file_tags.md)
 
-# 字段说明
+```yaml
+flutter_images:
+  pubspec: publish-template-flutter/pubspec.yaml
+  output_resources_path: publish-template-flutter/resources
+  template: ...
+  file_tags: ...
+```
 
-## flutter_images
+## 字段说明
 
-| 字段名       | 描述                     | 类型               | 默认值 | 是否必填 |
-| ------------ | ------------------------ | ------------------ | ------ | -------- |
-| output_resources_path | flutter resources 文件夹位置, 用于资源拷贝 resources/images/2.0x, resources/images/3.0x...等 | string |  | 是 |
-| pubspec | flutter pubspec 所在位置, 用于锚定生成资源文件相对路径 (不做 pubspec 内容更改) | string |  | 是 |
-| inputs | 用于扫描的资源文件路径, 可以是文件或文件夹形式, 文件夹会扫描其内文件 | string \| [string] |  | 否 |
-| file_tags | file_tags 与 inputs 同时存在时, 只有 file_tags 参与任务. | [结构说明](./file_tags.md) |  | 否 |
-| template | 用于生成映射资源的硬编码 dart 文件 | [结构说明](#flutterimagestemplate) |  | 否 |
+### flutter_images
 
-## flutter_images.template
+| 字段名 | 描述 | 类型 | 默认值 | 是否必填 |
+| :--- | :--- | :--- | :--- | :--- |
+| output_resources_path | flutter resources 文件夹位置, 用于资源拷贝 (会自动创建 images/2.0x, images/3.0x 等子目录) | string | | 是 |
+| pubspec | flutter pubspec.yaml 文件路径, 用于计算相对路径 | string | | 是 |
+| template | 用于生成 Dart 引用代码的配置 | [FlutterCodeOptions](#fluttercodeoptions) | | 是 |
+| inputs | 用于扫描的资源文件路径或文件夹 | string \| [string] | | 否 (inputs 与 file_tags 二选一) |
+| file_tags | 按标签筛选文件 | [XCFileTags](./file_tags.md) | | 否 (inputs 与 file_tags 二选一) |
 
-| 字段名       | 描述                     | 类型               | 默认值 | 是否必填 |
-| ------------ | ------------------------ | ------------------ | ------ | -------- |
-| variable_name_type | camel: 驼峰 <br />snake: 下划线<br /> none: 文件名 | enum | camel | 否|
+### FlutterCodeOptions
 
-# 注意事项
+| 字段名 | 描述 | 类型 | 默认值 | 是否必填 |
+| :--- | :--- | :--- | :--- | :--- |
+| output | 生成的 Dart 文件路径 | string | | 否 |
+| class_name | 生成的类名 | string | | 是 |
+| package_name | 包名 (用于 Image.asset 的 package 参数) | string | | 是 |
+| variable_name_type | 变量命名风格: `camel` (驼峰), `snake` (下划线), `none` (原文件名) | enum | camel | 否 |
+| color_prefix_when_name_is_hex | 当颜色名为 Hex 时的前缀 (仅用于颜色生成) | string | c_ | 否 |
 
-- 参与任务的文件数据类型: png, jpeg, gif
-- 参与任务的文件命名要求:
-    
-    - png, jpeg, gif 需要带上倍率标识
-    
-        > 例如: xx@2x.jpg
+## 注意事项
+
+- **支持格式**: png, jpeg, gif
+- **命名规范**:
+    - 文件名应包含倍率标识 (如 `icon@2x.png`, `bg@3x.jpg`)
+    - 自动识别并归类到对应的倍率目录 (2.0x, 3.0x)

@@ -1,48 +1,76 @@
 # android_images
 
-- 按路径导入资源
-    ```yaml
-    android_images:
-        output_resources_path: publish-template-android/library/src/main/res
-        inputs:
-            - publish-template-khala/products/flutter/2.0x
-            - publish-template-khala/products/flutter/3.0x      
-    ```
+用于处理 Android 图片资源 (Drawable/Mipmap)。
 
-- 按标签导入资源
-    
-    > [file_tags 结构参考](./file_tags.md)
+## 配置示例
 
-    ```yaml
-    android_images:
-        output_resources_path: ...
-        # file_tags 与 inputs 同时存在时, 只有 file_tags 参与任务.
-        file_tags: 结构参考 `file_tags`
-    ```
+### 按路径导入资源
 
-# 字段说明
+```yaml
+android_images:
+  output_resources_path: app/src/main/res
+  inputs:
+    - assets/images
+```
 
-| 字段名       | 描述                     | 类型               | 默认值 | 是否必填 |
-| ------------ | ------------------------ | ------------------ | ------ | -------- |
-| output_resources_path | android resources 文件夹位置, 用于资源拷贝 | string |  | 是 |
-| inputs | 用于扫描的资源文件路径, 可以是文件或文件夹形式, 文件夹会扫描其内文件 | string \| [string] |  | 否 |
-| file_tags | file_tags 与 inputs 同时存在时, 只有 file_tags 参与任务. | [结构说明](./file_tags.md) |  | 否 |
-| substitute_inputs | 备选的文件, 用于复制文件至 drawable-ldpi \| drawable-mdpi 等目录下 | [结构说明](#androidimagessubstituteinputs) |  | 否 |
+### 按标签导入资源
 
-## android_images.substitute_inputs 
+> [file_tags 结构参考](./file_tags.md)
 
-| 字段名       | 描述                     | 类型               | 默认值 | 是否必填 |
-| ------------ | ------------------------ | ------------------ | ------ | -------- |
-| density | [Android 密度限定符](https://developer.android.com/studio/write/resource-manager?hl=zh-cn)<br/>drawable<br/>drawable-ldpi<br/>drawable-mdpi<br/>drawable-hdpi<br/>drawable-xhdpi<br/>drawable-xxhdpi<br/>drawable-xxhdpi  | enum |  | 是 |
-| tags | 被标记的文件组 [参考 file_tags](./file_tags.md) | string \| [string] |  | 否 |
+```yaml
+android_images:
+  output_resources_path: app/src/main/res
+  file_tags: ...
+```
 
-# 注意事项
+### 包含特殊分辨率处理
 
-- 参与任务的文件数据类型: png, jpeg, gif, xml
-- 参与任务的文件命名要求:
-    
-    - png, jpeg, gif 需要带上倍率标识
-    
-        > 例如: xx@2x.jpg
+```yaml
+android_images:
+  output_resources_path: app/src/main/res
+  inputs: ...
+  substitute_inputs:
+    - density: drawable-ldpi
+      tags: ["low_res_icon"]
+```
 
-    - xml 则不需要带上倍率标识
+## 字段说明
+
+### android_images
+
+| 字段名 | 描述 | 类型 | 默认值 | 是否必填 |
+| :--- | :--- | :--- | :--- | :--- |
+| output_resources_path | Android `res` 文件夹路径 | string | | 是 |
+| inputs | 用于扫描的资源文件路径或文件夹 | string \| [string] | | 否 |
+| file_tags | 按标签筛选文件 | [XCFileTags](./file_tags.md) | | 否 |
+| substitute_inputs | 备选输入源 (通常用于特定 density 的补充) | [CustomInput](#custominput)[] | | 否 |
+| custom_inputs | 自定义输入源 (功能同 substitute_inputs) | [CustomInput](#custominput)[] | | 否 |
+
+### CustomInput
+
+| 字段名 | 描述 | 类型 | 默认值 | 是否必填 |
+| :--- | :--- | :--- | :--- | :--- |
+| density | Android 资源目录类型 (如 `drawable`, `drawable-hdpi` 等) | enum | | 是 |
+| tags | 筛选文件的标签列表 | [string] | | 是 |
+
+**支持的 Density 类型**:
+- `drawable`
+- `drawable-ldpi`
+- `drawable-mdpi`
+- `drawable-hdpi`
+- `drawable-xhdpi`
+- `drawable-xxhdpi`
+- `drawable-xxxhdpi`
+- `drawable-night` ... (以及其他标准 Android density 限定符)
+
+## 注意事项
+
+- **支持格式**: png, jpeg, gif, xml
+- **倍率映射**:
+    - `@1x` -> `drawable-mdpi`
+    - `@2x` -> `drawable-xhdpi`
+    - `@3x` -> `drawable-xxhdpi`
+    - `@4x` -> `drawable-xxxhdpi`
+    - 矢量图 (vector) -> `drawable`
+- **命名规范**:
+    - `.9.png` 文件会自动处理后缀，保持 `.9.png` 格式或去除 `.9` 部分作为文件名 (视具体逻辑而定，通常保持文件名一致性)

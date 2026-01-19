@@ -1,23 +1,29 @@
-# Mission: Core Execution Engine
+# MISSION ENGINE
+
+**Context:** Core Architecture / Plugin System
+**Reason:** Central orchestration logic
 
 ## OVERVIEW
-The `Mission` module is the central nervous system of Abrarion. It implements a mission-driven architecture where complex automation workflows are broken down into discrete, reusable tasks ("Missions").
+The `Mission` module is the nervous system of `abrarion`. It implements the plugin registry and execution loop that drives all asset generation.
 
 ## ARCHITECTURE
-Abrarion follows a strict registry-based execution pattern:
-1. **Registry**: `MissionManager` holds a mapping of keys to `MissionInstance` implementations.
-2. **Context**: `MissionContext` maintains shared state, including dynamic variables (`VariablesManager`) and a shell execution environment (`StemShell`).
-3. **Execution**: Missions are defined in JSON/YAML. The manager parses these definitions and invokes the corresponding instances.
+- **Registry Pattern**: `MissionManager` holds a map of `String` (key) -> `MissionInstance` (Maker).
+- **Recursive Execution**: `MissionTask` is itself a `MissionInstance`, allowing missions to trigger other missions (nested workflows).
+- **Context Propagation**: `MissionContext` passes `VariablesManager` and `StemShell` to every task.
 
 ## KEY SYMBOLS
-- **`MissionInstance` (Protocol)**: The base interface for all tasks. Requires a `logger` and an `evaluate(from:context:)` method for execution logic.
-- **`MissionManager` (Class)**: The orchestrator. Handles registration of mission types and sequential execution of tasks with performance tracking.
-- **`MissionContext` (Struct)**: Carries the `VariablesManager` for `${VAR}` interpolation and `StemShell` for system commands.
-- **`MissionTask` (Struct)**: A special `MissionInstance` that enables recursive task execution and loading configurations from external YAML/JSON files.
+| Symbol | Role | Notes |
+|--------|------|-------|
+| `MissionInstance` | **Protocol** | Base interface for ALL makers. Requires `evaluate(json:context:)`. |
+| `MissionManager` | **Orchestrator** | Registers makers, measures performance, executes tasks sequentially. |
+| `MissionTask` | **Factory/Root** | The "Master" mission. Registers all Makers in `missionManger(context:)`. |
 
-## EXTENDING
-To add new functionality to Abrarion:
-1. Implement the `MissionInstance` protocol in a new type.
-2. Define the execution logic within the `evaluate` method.
-3. Register the new instance in `MissionTask.missionManger(context:)` with a unique key.
-4. Use the key in your `missions.yaml` to trigger the task.
+## EXTENSION POINT
+To add a new platform (e.g., "Tizen"):
+1. Create `TizenMaker` conforming to `MissionInstance`.
+2. Register it in `MissionTask.swift`: `manager.register(TizenMaker(), for: "tizen_assets")`.
+3. Use key `"tizen_assets"` in YAML config.
+
+## CONVENTIONS
+- **Performance**: Manager logs execution duration for every task.
+- **Config**: Supports external config files via `path` argument in JSON/YAML.
