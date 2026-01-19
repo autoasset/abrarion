@@ -55,7 +55,7 @@ class IconFontTests: XCTestCase {
             let maker = XCIconFontMaker()
             let input = JSONModeOptions()
             let options = try await XCIconFontMaker.Options(from: JSON(data: jsonEncoder.encode(input)), variables: .init())
-            try await maker.evaluate(options: options, context: .init())
+            try await maker.evaluate(options: options, context: .init(shell: .init()))
             
             try assert {
                 try STFolder(input.template_dependent_output).subFilePaths().isEmpty == false

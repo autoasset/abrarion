@@ -176,6 +176,7 @@ public struct MissionTask: MissionInstance {
         missionManager.register(XCImageMaker(), for: "xcassets_images")
         missionManager.register(XCIconFontMaker(), for: "xcassets_iconfonts")
         missionManager.register(XCDataMaker(), for: "xcassets_datas")
+        missionManager.register(HarmonyOSColorMaker(), for: "harmonyos_colors")
         return missionManager
     }
 

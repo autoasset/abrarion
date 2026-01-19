@@ -62,7 +62,7 @@ final class MissionTests: XCTestCase {
             }
         }
         """
-        try await manager.run(from: JSON(parseJSON: json), context: .init())
+        try await manager.run(from: JSON(parseJSON: json), context: .init(shell: .init()))
         assert(mission.jsons[0] == JSON())
         assert(mission.jsons[1].stringValue == "task-forward")
         assert(JSON(rawValue: mission.jsons[2].dictionaryValue.mapValues(\.object))! == ["id": 0, "inputs": "./"])
